@@ -51,6 +51,33 @@ button:active { opacity: 0.8; }
 .back { margin-bottom: 20px; }
 .hidden { display: none; }
 .info { color: #bbb; line-height: 1.6; }
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0 14px;
+  border: 1px solid #66542d;
+  border-radius: 8px;
+  background: #111;
+  color: white;
+  font-size: 16px;
+}
+label { color: #ddd; }
+.small { color: #aaa; font-size: 13px; }
+.value {
+  color: #d4af60;
+  font-size: 28px;
+  font-weight: bold;
+}
+.chart {
+  width: 100%;
+  height: 230px;
+  margin-top: 15px;
+}
+.entry {
+  border-bottom: 1px solid #444;
+  padding: 9px 0;
+  color: #ddd;
+}
 footer {
   text-align: center;
   padding: 25px;
@@ -69,111 +96,385 @@ footer {
 <main>
 
 <section id="home">
-  <div class="card">
-    <h2>Allenamento</h2>
-    <p>Programmi ed esercizi personalizzati.</p>
-    <button onclick="apri('allenamento')">
-      Apri Allenamento
-    </button>
-  </div>
 
-  <div class="card">
-    <h2>Forge Nutrition</h2>
-    <p>Alimentazione e monitoraggio nutrizionale.</p>
-    <button onclick="apri('nutrizione')">
-      Apri Alimentazione
-    </button>
-  </div>
+<div class="card">
+<h2>Allenamento</h2>
+<p>Programmi ed esercizi personalizzati.</p>
+<button onclick="apri('allenamento')">Apri Allenamento</button>
+</div>
 
-  <div class="card">
-    <h2>Progress Evolution</h2>
-    <p>Misure, fotografie e progressi.</p>
-    <button onclick="apri('progressi')">
-      Apri Progressi
-    </button>
-  </div>
+<div class="card">
+<h2>Forge Nutrition</h2>
+<p>Alimentazione e monitoraggio nutrizionale.</p>
+<button onclick="apri('nutrizione')">Apri Alimentazione</button>
+</div>
 
-  <div class="card">
-    <h2>Prenotazioni</h2>
-    <p>Gestione delle sessioni di allenamento.</p>
-    <button onclick="apri('prenotazioni')">
-      Apri Prenotazioni
-    </button>
-  </div>
+<div class="card">
+<h2>Progress Evolution</h2>
+<p>Misure, fotografie e progressi.</p>
+<button onclick="apri('progressi')">Apri Progressi</button>
+</div>
 
-  <div class="card">
-    <h2>Pacchetti Lezioni</h2>
-    <p>Lezioni acquistate, utilizzate e rimanenti.</p>
-    <button onclick="apri('pacchetti')">
-      Apri Pacchetti
-    </button>
-  </div>
+<div class="card">
+<h2>Forge Hydration</h2>
+<p>Registra l'acqua bevuta e controlla i progressi.</p>
+<button onclick="apri('acqua')">Apri Monitoraggio Acqua</button>
+</div>
+
+<div class="card">
+<h2>Forge Weight</h2>
+<p>Registra il peso e visualizza l'andamento.</p>
+<button onclick="apri('peso')">Apri Monitoraggio Peso</button>
+</div>
+
+<div class="card">
+<h2>Prenotazioni</h2>
+<p>Gestione delle sessioni di allenamento.</p>
+<button onclick="apri('prenotazioni')">Apri Prenotazioni</button>
+</div>
+
+<div class="card">
+<h2>Pacchetti Lezioni</h2>
+<p>Lezioni acquistate, utilizzate e rimanenti.</p>
+<button onclick="apri('pacchetti')">Apri Pacchetti</button>
+</div>
+
+<div class="card">
+<h2>👑 Forge Premium</h2>
+<p>Contenuti esclusivi riservati agli abbonati.</p>
+<button onclick="apri('premium')">Apri Forge Premium</button>
+</div>
+
 </section>
 
 <section id="dettaglio" class="hidden">
-  <button class="back" onclick="torna()">
-    ← Torna alla Home
-  </button>
-  <div class="card">
-    <h2 id="titolo"></h2>
-    <p id="descrizione" class="info"></p>
-  </div>
+<button class="back" onclick="torna()">← Torna alla Home</button>
+
+<div class="card">
+<h2 id="titolo"></h2>
+<p id="descrizione" class="info"></p>
+
+<div id="areaAcqua" class="hidden">
+<label for="quantitaAcqua">Acqua bevuta (ml)</label>
+<input type="number" id="quantitaAcqua" min="1" step="50" value="250">
+<button onclick="salvaAcqua()">Aggiungi acqua</button>
+<p>Totale oggi:</p>
+<div id="totaleAcqua" class="value">0 L</div>
+<p class="small">Puoi registrare più bicchieri durante la giornata.</p>
+</div>
+
+<div id="areaPeso" class="hidden">
+<label for="valorePeso">Peso corporeo (kg)</label>
+<input type="number" id="valorePeso" min="1" max="500" step="0.1" placeholder="Es. 82.5">
+<button onclick="salvaPeso()">Salva pesata di oggi</button>
+<p>Ultima pesata:</p>
+<div id="ultimoPeso" class="value">—</div>
+<p id="variazionePeso" class="small"></p>
+</div>
+
+<div id="areaGrafici" class="hidden">
+<label for="periodo">Visualizza andamento</label>
+<select id="periodo" onchange="aggiornaGrafici()">
+<option value="giorni">Giorni (ultimi 7)</option>
+<option value="settimane">Settimane (ultime 8)</option>
+<option value="mesi">Mesi (ultimi 12)</option>
+</select>
+<svg id="grafico" class="chart" viewBox="0 0 340 230" role="img" aria-label="Grafico andamento"></svg>
+<div id="storico"></div>
+</div>
+
+<div id="areaPremium" class="hidden">
+<p>👑 Area riservata agli abbonati Forge Premium.</p>
+<p class="info">Video, guide e programmi esclusivi saranno disponibili dopo l'attivazione dell'abbonamento.</p>
+<p><strong>Prezzo mensile:</strong> da configurare.</p>
+<p class="small">I pagamenti e i rinnovi automatici non sono ancora attivi. Il prezzo sarà modificabile dal futuro pannello amministratore.</p>
+<button disabled style="opacity:.5">Abbonamento non ancora disponibile</button>
+</div>
+
+</div>
 </section>
 
 </main>
 
-<footer>
-Forge Coaching © 2026
-</footer>
+<footer>Forge Coaching © 2026</footer>
 
 <script>
 const sezioni = {
-  allenamento: {
-    titolo: "Allenamento",
-    testo: "Qui saranno disponibili i programmi di allenamento assegnati dal coach, con giornate, esercizi, serie, ripetizioni e registrazione dei risultati."
-  },
-  nutrizione: {
-    titolo: "Forge Nutrition",
-    testo: "Qui saranno disponibili i piani alimentari assegnati, il diario dei pasti, le calorie, i macronutrienti e il monitoraggio dell'acqua."
-  },
-  progressi: {
-    titolo: "Progress Evolution",
-    testo: "Qui potrai consultare e registrare misure corporee, fotografie di progresso e confronti prima e dopo."
-  },
-  prenotazioni: {
-    titolo: "Prenotazioni",
-    testo: "Qui sarà disponibile il calendario delle sessioni, con richieste di prenotazione e conferma da parte del coach."
-  },
-  pacchetti: {
-    titolo: "Pacchetti Lezioni",
-    testo: "Qui saranno visualizzate le lezioni acquistate, quelle già svolte e quelle ancora disponibili."
-  }
+ allenamento: {
+  titolo:"Allenamento",
+  testo:"Qui saranno disponibili i programmi assegnati dal coach, con esercizi, serie, ripetizioni e risultati."
+ },
+ nutrizione: {
+  titolo:"Forge Nutrition",
+  testo:"Qui saranno disponibili i piani alimentari, il diario dei pasti, le calorie e i macronutrienti."
+ },
+ progressi: {
+  titolo:"Progress Evolution",
+  testo:"Qui potrai registrare misure corporee, fotografie e confronti prima e dopo."
+ },
+ acqua: {
+  titolo:"Forge Hydration",
+  testo:"Registra l'acqua bevuta ogni giorno e controlla il tuo andamento."
+ },
+ peso: {
+  titolo:"Forge Weight",
+  testo:"Registra il tuo peso corporeo e osserva le variazioni nel tempo."
+ },
+ prenotazioni: {
+  titolo:"Prenotazioni",
+  testo:"Qui sarà disponibile il calendario delle sessioni con richieste e conferme del coach."
+ },
+ pacchetti: {
+  titolo:"Pacchetti Lezioni",
+  testo:"Qui saranno visualizzate le lezioni acquistate, svolte e rimanenti."
+ },
+ premium: {
+  titolo:"Forge Premium",
+  testo:"Contenuti esclusivi con abbonamento mensile a rinnovo automatico."
+ }
 };
 
+let sezioneAttuale = "";
+
+function leggi(chiave) {
+ try {
+  return JSON.parse(localStorage.getItem(chiave)) || [];
+ } catch(e) {
+  return [];
+ }
+}
+
+function scrivi(chiave, dati) {
+ try {
+  localStorage.setItem(chiave, JSON.stringify(dati));
+  return true;
+ } catch(e) {
+  alert("Impossibile salvare i dati sul dispositivo.");
+  return false;
+ }
+}
+
+function dataLocale(d = new Date()) {
+ const y = d.getFullYear();
+ const m = String(d.getMonth()+1).padStart(2,"0");
+ const g = String(d.getDate()).padStart(2,"0");
+ return y+"-"+m+"-"+g;
+}
+
 function apri(nome) {
-  const sezione = sezioni[nome];
-  if (!sezione) return;
+ const s = sezioni[nome];
+ if (!s) return;
+ sezioneAttuale = nome;
 
-  document.getElementById("titolo").textContent =
-    sezione.titolo;
-  document.getElementById("descrizione").textContent =
-    sezione.testo;
+ document.getElementById("titolo").textContent = s.titolo;
+ document.getElementById("descrizione").textContent = s.testo;
 
-  document.getElementById("home")
-    .classList.add("hidden");
-  document.getElementById("dettaglio")
-    .classList.remove("hidden");
+ ["areaAcqua","areaPeso","areaGrafici","areaPremium"].forEach(id=>{
+  document.getElementById(id).classList.add("hidden");
+ });
 
-  window.scrollTo(0, 0);
+ if(nome==="acqua") {
+  document.getElementById("areaAcqua").classList.remove("hidden");
+  document.getElementById("areaGrafici").classList.remove("hidden");
+  aggiornaAcqua();
+ }
+ if(nome==="peso") {
+  document.getElementById("areaPeso").classList.remove("hidden");
+  document.getElementById("areaGrafici").classList.remove("hidden");
+  aggiornaPeso();
+ }
+ if(nome==="premium") {
+  document.getElementById("areaPremium").classList.remove("hidden");
+ }
+
+ document.getElementById("home").classList.add("hidden");
+ document.getElementById("dettaglio").classList.remove("hidden");
+ window.scrollTo(0,0);
 }
 
 function torna() {
-  document.getElementById("dettaglio")
-    .classList.add("hidden");
-  document.getElementById("home")
-    .classList.remove("hidden");
+ document.getElementById("dettaglio").classList.add("hidden");
+ document.getElementById("home").classList.remove("hidden");
+ sezioneAttuale = "";
+ window.scrollTo(0,0);
+}
 
-  window.scrollTo(0, 0);
+function salvaAcqua() {
+ const ml = Number(document.getElementById("quantitaAcqua").value);
+ if(!Number.isFinite(ml) || ml<=0 || ml>10000) {
+  alert("Inserisci una quantità valida in ml.");
+  return;
+ }
+ const dati = leggi("forge_demo_acqua");
+ dati.push({data:dataLocale(),ml:ml});
+ if(scrivi("forge_demo_acqua",dati)) aggiornaAcqua();
+}
+
+function salvaPeso() {
+ const kg = Number(document.getElementById("valorePeso").value);
+ if(!Number.isFinite(kg) || kg<1 || kg>500) {
+  alert("Inserisci un peso valido in kg.");
+  return;
+ }
+ const dati = leggi("forge_demo_peso");
+ const oggi = dataLocale();
+ const indice = dati.findIndex(x=>x.data===oggi);
+ if(indice>=0) dati[indice].kg=kg;
+ else dati.push({data:oggi,kg:kg});
+ if(scrivi("forge_demo_peso",dati)) aggiornaPeso();
+}
+
+function aggiornaAcqua() {
+ const dati=leggi("forge_demo_acqua");
+ const oggi=dataLocale();
+ const ml=dati.filter(x=>x.data===oggi)
+  .reduce((s,x)=>s+Number(x.ml),0);
+ document.getElementById("totaleAcqua").textContent=
+  (ml/1000).toFixed(2)+" L";
+ aggiornaGrafici();
+}
+
+function aggiornaPeso() {
+ const dati=leggi("forge_demo_peso")
+  .sort((a,b)=>a.data.localeCompare(b.data));
+ const ultimo=dati[dati.length-1];
+ document.getElementById("ultimoPeso").textContent=
+  ultimo ? Number(ultimo.kg).toFixed(1)+" kg" : "—";
+
+ const precedente=dati[dati.length-2];
+ const testo=document.getElementById("variazionePeso");
+ if(ultimo && precedente) {
+  const diff=Number(ultimo.kg)-Number(precedente.kg);
+  testo.textContent="Variazione dalla pesata precedente: "+
+   (diff>0?"+":"")+diff.toFixed(1)+" kg";
+ } else testo.textContent="";
+
+ aggiornaGrafici();
+}
+
+function chiavePeriodo(data,periodo) {
+ const d=new Date(data+"T12:00:00");
+ if(periodo==="mesi") return data.slice(0,7);
+ if(periodo==="settimane") {
+  const giorno=(d.getDay()+6)%7;
+  d.setDate(d.getDate()-giorno);
+  return dataLocale(d);
+ }
+ return data;
+}
+
+function periodi(periodo) {
+ const oggi=new Date();
+ const risultato=[];
+ const quantita=periodo==="mesi"?12:periodo==="settimane"?8:7;
+ for(let i=quantita-1;i>=0;i--) {
+  const d=new Date(oggi);
+  if(periodo==="mesi") {
+   d.setDate(1);
+   d.setMonth(d.getMonth()-i);
+  } else if(periodo==="settimane") {
+   d.setDate(d.getDate()-i*7);
+  } else d.setDate(d.getDate()-i);
+  risultato.push(chiavePeriodo(dataLocale(d),periodo));
+ }
+ return risultato;
+}
+
+function aggiornaGrafici() {
+ if(!["acqua","peso"].includes(sezioneAttuale)) return;
+
+ const acqua=sezioneAttuale==="acqua";
+ const periodo=document.getElementById("periodo").value;
+ const dati=leggi(acqua?"forge_demo_acqua":"forge_demo_peso");
+ const chiavi=periodi(periodo);
+ const valori=chiavi.map(chiave=>{
+  const righe=dati.filter(x=>chiavePeriodo(x.data,periodo)===chiave);
+  if(!righe.length) return null;
+  if(acqua) return righe.reduce((s,x)=>s+Number(x.ml),0)/1000;
+  return righe.reduce((s,x)=>s+Number(x.kg),0)/righe.length;
+ });
+
+ disegnaGrafico(chiavi,valori,acqua?"L":"kg");
+
+ const storico=document.getElementById("storico");
+ storico.replaceChildren();
+ const titolo=document.createElement("h3");
+ titolo.textContent="Storico";
+ storico.appendChild(titolo);
+
+ let presenti=0;
+ chiavi.forEach((chiave,i)=>{
+  if(valori[i]===null) return;
+  presenti++;
+  const r=document.createElement("div");
+  r.className="entry";
+  r.textContent=chiave+" — "+valori[i].toFixed(2)+" "+(acqua?"L":"kg");
+  storico.appendChild(r);
+ });
+ if(!presenti) {
+  const p=document.createElement("p");
+  p.className="small";
+  p.textContent="Nessuna registrazione nel periodo selezionato.";
+  storico.appendChild(p);
+ }
+}
+
+function disegnaGrafico(etichette,valori,unita) {
+ const svg=document.getElementById("grafico");
+ svg.replaceChildren();
+ const ns="http://www.w3.org/2000/svg";
+ const crea=(tag,attrs,testo)=>{
+  const el=document.createElementNS(ns,tag);
+  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
+  if(testo!==undefined) el.textContent=testo;
+  svg.appendChild(el);
+  return el;
+ };
+
+ const presenti=valori.filter(v=>v!==null && Number.isFinite(v));
+ if(!presenti.length) {
+  crea("text",{x:170,y:110,fill:"#aaa","text-anchor":"middle",
+   "font-size":13},"Nessun dato da mostrare");
+  return;
+ }
+
+ let min=Math.min(...presenti),max=Math.max(...presenti);
+ const margine=Math.max((max-min)*0.2,unita==="kg"?0.5:0.2);
+ min=Math.max(0,min-margine);
+ max+=margine;
+ const x=i=>35+i*(285/Math.max(1,valori.length-1));
+ const y=v=>190-(v-min)/(max-min)*150;
+
+ for(let i=0;i<4;i++) {
+  const yy=40+i*50;
+  crea("line",{x1:35,y1:yy,x2:325,y2:yy,stroke:"#444"});
+ }
+
+ let segmento=[];
+ function traccia() {
+  if(segmento.length>1)
+   crea("polyline",{points:segmento.join(" "),fill:"none",
+    stroke:"#d4af60","stroke-width":3,
+    "stroke-linecap":"round","stroke-linejoin":"round"});
+  segmento=[];
+ }
+ valori.forEach((v,i)=>{
+  if(v===null) {traccia();return;}
+  segmento.push(x(i)+","+y(v));
+ });
+ traccia();
+
+ valori.forEach((v,i)=>{
+  if(v===null)return;
+  crea("circle",{cx:x(i),cy:y(v),r:4,fill:"#d4af60"});
+ });
+
+ crea("text",{x:35,y:20,fill:"#d4af60","font-size":12},
+  max.toFixed(1)+" "+unita);
+ crea("text",{x:35,y:212,fill:"#aaa","font-size":12},
+  min.toFixed(1)+" "+unita);
+ crea("text",{x:170,y:227,fill:"#aaa","font-size":11,
+  "text-anchor":"middle"},"Andamento nel periodo selezionato");
 }
 </script>
 
