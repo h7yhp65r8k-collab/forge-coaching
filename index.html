@@ -1,61 +1,182 @@
 
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#0b0b0d">
-<title>Forge Coaching</title>
+<meta name="theme-color" content="#08090b">
+<title>Forge Coaching Premium</title>
 <style>
+:root{
+--bg:#08090b;
+--panel:#17181c;
+--gold:#e9c675;
+--gold2:#b88a39;
+--text:#f5f5f5;
+--muted:#a4a5ab;
+--line:#51442e;
+}
 *{box-sizing:border-box}
-body{margin:0;background:#0b0b0d;color:#f5f5f5;font-family:Arial,sans-serif}
-header{text-align:center;padding:26px 16px;border-bottom:1px solid #a98538}
-h1{color:#d4af60;margin:0 0 8px}
-.subtitle,.small,.muted{color:#aaa}
-.small,.muted{font-size:13px}
-main{padding:20px;max-width:760px;margin:auto}
-.card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:20px;margin-bottom:16px}
-.card h2{color:#d4af60;margin-top:0}
-button{background:#d4af60;color:#111;border:0;padding:12px 14px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:9px}
-button.secondary{background:#29292e;color:#d4af60;border:1px solid #78612e}
-button:disabled{opacity:.5;cursor:not-allowed}
-input{width:100%;padding:12px;margin:8px 0;background:#101014;border:1px solid #66542d;border-radius:8px;color:#fff;font-size:16px}
+body{
+margin:0;background:var(--bg);color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
+}
+header{
+text-align:center;padding:26px 16px;
+background:radial-gradient(ellipse at top,#382b18,#08090b 70%);
+border-bottom:1px solid #58452b
+}
+header h1{margin:0;color:var(--gold);letter-spacing:5px;font-size:30px}
+.subtitle{color:#c3a25d;font-size:11px;letter-spacing:4px;margin-top:5px}
+main{max-width:800px;margin:auto;padding:15px}
+.card{
+background:linear-gradient(145deg,#1b1b20,#111216);
+border:1px solid var(--line);
+border-radius:20px;padding:20px;margin-bottom:16px
+}
+h2{color:var(--gold);margin:0 0 14px}
+h3{color:var(--gold)}
+.small,.muted{color:var(--muted);font-size:13px}
+button{
+width:100%;margin-top:9px;padding:13px;
+border:0;border-radius:12px;
+background:linear-gradient(120deg,#f4dc95,#c49a48);
+color:#17130d;font-size:15px;font-weight:750;cursor:pointer
+}
+button.secondary{
+background:#25262b;color:var(--gold);
+border:1px solid #756039
+}
+button:disabled{opacity:.5}
+input{
+width:100%;padding:13px;margin:8px 0;
+background:#101115;border:1px solid #766039;
+border-radius:11px;color:white;font-size:16px
+}
 label{display:block;margin-top:10px;color:#ddd}
 .hidden{display:none!important}
-.status{padding:12px;border-radius:8px;background:#25252b;margin:12px 0;white-space:pre-wrap}
+.status{
+padding:12px;margin:12px 0;border-radius:10px;
+background:#26262a;white-space:pre-wrap
+}
 .error{color:#ff9999}
-.success{color:#9de2ad}
+.success{color:#a7e4b4}
 nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 nav button{margin:0;min-height:65px}
 footer{text-align:center;color:#777;font-size:12px;padding:25px}
-.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.filters button{font-size:12px;padding:10px 4px}
-.filters button.active{background:#d4af60;color:#111}
-.filters button:not(.active){background:#29292e;color:#d4af60;border:1px solid #78612e}
-.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
-.stat{background:#101014;border:1px solid #514329;border-radius:9px;padding:12px}
+.weight-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.weight-icon{
+width:50px;height:50px;display:grid;place-items:center;
+border:1px solid var(--gold2);border-radius:15px;
+font-size:27px;color:var(--gold)
+}
+.weight-head h2{color:white;margin:0 0 4px}
+.weight-head p{margin:0;color:var(--muted);font-size:13px}
+.hero{
+background:radial-gradient(circle at 10% 0%,#3b2e1b,#16171a 65%);
+border:1px solid #96733b;border-radius:21px;
+padding:20px;margin:15px 0
+}
+.hero-label{color:#d6d0c5;font-size:14px}
+.hero-value{
+font-size:clamp(40px,10vw,60px);
+font-weight:800;color:#f4d479;
+letter-spacing:-2px;margin:7px 0
+}
+.delta{
+display:inline-block;padding:7px 11px;
+border-radius:12px;background:#343237;
+color:var(--gold);font-size:13px;font-weight:700
+}
+.delta.up{background:#3c2024;color:#ff8787}
+.delta.down{background:#1b382a;color:#8cdda8}
+.hero-details{
+display:grid;grid-template-columns:1fr 1fr;
+gap:10px;margin-top:20px
+}
+.hero-details>div{border-top:1px solid #584a33;padding-top:11px}
+.hero-details span{display:block;color:#aaa;font-size:12px}
+.hero-details strong{display:block;margin-top:5px;font-size:17px}
+.goal-row{display:flex;gap:9px;align-items:center}
+.goal-row input{flex:1;min-width:0}
+.goal-row button{width:auto;margin:0}
+.filters{
+display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+gap:6px;margin:19px 0
+}
+.filters button{
+margin:0;padding:12px 3px;font-size:12px;
+background:#242427;color:#d6b466;
+border:1px solid #5b4a30
+}
+.filters button.active{
+background:linear-gradient(120deg,#f3d888,#c69a44);
+color:#15120c
+}
+.chart-panel{
+background:linear-gradient(145deg,#19191c,#101114);
+border:1px solid #56472e;border-radius:19px;
+padding:14px 9px;margin-top:14px
+}
+.panel-heading{
+display:flex;justify-content:space-between;
+align-items:center;gap:8px;padding:0 8px
+}
+.panel-heading h3{margin:6px 0 8px;font-size:18px}
+.panel-heading span{color:#aaa;font-size:11px;text-align:right}
+.chart{width:100%;height:auto;display:block;touch-action:manipulation}
+.chart text{fill:#a8a8ae;font-size:11px}
+.chart-tip{
+min-height:28px;text-align:center;
+color:var(--gold);font-size:13px;margin-top:6px
+}
+.stats{
+display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+gap:10px;margin:15px 0
+}
+.stat{
+background:#141519;border:1px solid #6a522e;
+border-radius:15px;padding:15px
+}
 .stat span{display:block;color:#aaa;font-size:12px}
-.stat strong{display:block;color:#d4af60;font-size:19px;margin-top:5px}
-.chart{width:100%;height:auto;display:block;background:#111115;border-radius:10px;margin-top:12px;touch-action:manipulation}
-.chart text{fill:#aaa;font-size:12px}
-.chart-tip{min-height:25px;text-align:center;color:#d4af60;font-size:13px;margin-top:8px}
-.history{margin-top:18px}
-.history h3{color:#d4af60;font-size:17px}
-.history-item{display:flex;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid #35302a;font-size:14px}
-.history-item strong{color:#d4af60;white-space:nowrap}
-@media(max-width:430px){.card{padding:15px}}
+.stat strong{
+display:block;color:#f0ce75;
+font-size:21px;margin-top:7px
+}
+.history{margin-top:22px}
+.history-item{
+display:flex;justify-content:space-between;align-items:center;
+gap:10px;padding:13px 10px;
+background:#15161a;border:1px solid #393432;
+border-radius:12px;margin:8px 0;font-size:13px
+}
+.history-item strong{color:#f0cf7a;font-size:16px;white-space:nowrap}
+.history-item span{color:#c8c8cc}
+.history-item button{width:auto;margin:0;padding:7px 9px;font-size:12px}
+.notice{color:#aaa;font-size:13px;margin:13px 0}
+@media(max-width:430px){
+main{padding:12px}
+.card{padding:15px}
+.hero{padding:15px}
+header h1{font-size:25px}
+.hero-value{font-size:43px}
+}
 </style>
 </head>
 <body>
+
 <header>
-<h1>FORGE COACHING</h1>
-<div class="subtitle">Allenamento • Nutrizione • Evoluzione</div>
+<h1>FORGE</h1>
+<div class="subtitle">C O A C H I N G</div>
 </header>
+
 <main>
 <section id="loading" class="card">
 <h2>Caricamento...</h2>
 <p>Connessione a Forge Coaching.</p>
 </section>
+
 <section id="auth" class="card hidden">
 <h2>Accedi a Forge Coaching</h2>
 <label>Email</label>
@@ -63,39 +184,44 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <label>Password</label>
 <input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
 <button id="loginBtn">Accedi</button>
-<button class="secondary" id="signupBtn">Crea nuovo account</button>
-<button class="secondary" id="forgotBtn">Password dimenticata?</button>
+<button id="signupBtn" class="secondary">Crea nuovo account</button>
+<button id="forgotBtn" class="secondary">Password dimenticata?</button>
 <div id="authStatus" class="status hidden"></div>
 </section>
+
 <section id="forgot" class="card hidden">
 <h2>Recupera password</h2>
 <p>Riceverai un link per impostare una nuova password.</p>
 <input id="recoveryEmail" type="email" autocomplete="email" placeholder="La tua email">
 <button id="sendRecoveryBtn">Invia email di recupero</button>
-<button class="secondary" id="backLoginBtn">Torna all'accesso</button>
+<button id="backLoginBtn" class="secondary">Torna all'accesso</button>
 <div id="forgotStatus" class="status hidden"></div>
 </section>
+
 <section id="reset" class="card hidden">
 <h2>Imposta nuova password</h2>
 <p>Inserisci e conferma la nuova password.</p>
 <label>Nuova password</label>
-<input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Almeno 8 caratteri">
+<input id="newPassword" type="password" autocomplete="new-password" minlength="8">
 <label>Conferma nuova password</label>
-<input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Ripeti la nuova password">
+<input id="confirmPassword" type="password" autocomplete="new-password" minlength="8">
 <button id="savePasswordBtn">Salva nuova password</button>
 <div id="resetStatus" class="status hidden"></div>
 </section>
+
 <section id="pending" class="card hidden">
 <h2>Account in attesa</h2>
 <p>Il tuo account deve essere approvato dall'amministratore.</p>
 <button id="pendingLogoutBtn" class="secondary">Esci</button>
 </section>
+
 <section id="app" class="hidden">
 <div class="card">
 <h2 id="welcome">Benvenuto</h2>
 <p id="roleInfo" class="small"></p>
 <button id="logoutBtn" class="secondary">Esci dall'account</button>
 </div>
+
 <div class="card">
 <h2>Le tue sezioni</h2>
 <nav>
@@ -113,40 +239,49 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <button data-section="Profilo">Profilo</button>
 </nav>
 </div>
+
 <div id="sectionCard" class="card hidden">
+<div id="sectionHeading">
 <h2 id="sectionTitle"></h2>
 <p id="sectionText" class="muted"></p>
+</div>
 <div id="sectionContent"></div>
 <button id="closeSectionBtn" class="secondary">Chiudi sezione</button>
 </div>
 </section>
 </main>
+
 <footer>Forge Coaching • La tua evoluzione</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
+
 const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
 const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
 const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
+
 const $=id=>document.getElementById(id);
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
 auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
+
 let currentUser=null;
 let resetting=false;
 let resetReady=false;
 let activeSection='';
 let activePeriod='entry';
 let loadSerial=0;
-const sections=['loading','auth','forgot','reset','pending','app'];
+
+const screens=['loading','auth','forgot','reset','pending','app'];
 
 function show(id){
-sections.forEach(x=>$(x).classList.toggle('hidden',x!==id));
+screens.forEach(x=>$(x).classList.toggle('hidden',x!==id));
 }
 function status(id,msg,error=false){
-const el=$(id);
-el.textContent=msg;
-el.className='status '+(error?'error':'success');
+const e=$(id);
+e.textContent=msg;
+e.className='status '+(error?'error':'success');
 }
 function friendly(e){
 const msg=e?.message||String(e);
@@ -162,6 +297,7 @@ const h=new URLSearchParams(location.hash.slice(1));
 return q.get('type')==='recovery'||h.get('type')==='recovery';
 }
 const initialRecovery=recoveryUrl();
+
 function recoveryErrorInUrl(){
 const q=new URLSearchParams(location.search);
 const h=new URLSearchParams(location.hash.slice(1));
@@ -194,29 +330,30 @@ if(access!=='approved'){
 show('pending');
 return;
 }
-$('welcome').textContent=role==='admin'?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
+$('welcome').textContent=role==='admin'
+?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
 $('roleInfo').textContent='Account: '+currentUser.email+' • Ruolo: '+role;
 show('app');
 }
 
 $('loginBtn').onclick=async()=>{
-const email=$('email').value.trim(),password=$('password').value;
+const email=$('email').value.trim();
+const password=$('password').value;
 if(!email||!password)return status('authStatus','Inserisci email e password.',true);
 $('loginBtn').disabled=true;
 try{
 const {error}=await db.auth.signInWithPassword({email,password});
 if(error)throw error;
 await userState();
-}catch(e){
-status('authStatus',friendly(e),true);
-}finally{
-$('loginBtn').disabled=false;
-}
+}catch(e){status('authStatus',friendly(e),true)}
+finally{$('loginBtn').disabled=false}
 };
 
 $('signupBtn').onclick=async()=>{
-const email=$('email').value.trim(),password=$('password').value;
-if(!email||password.length<8)return status('authStatus','Inserisci email e password di almeno 8 caratteri.',true);
+const email=$('email').value.trim();
+const password=$('password').value;
+if(!email||password.length<8)
+return status('authStatus','Inserisci email e password di almeno 8 caratteri.',true);
 $('signupBtn').disabled=true;
 try{
 const {error}=await db.auth.signUp({
@@ -224,11 +361,8 @@ email,password,options:{emailRedirectTo:SITE_URL}
 });
 if(error)throw error;
 status('authStatus','Registrazione inviata. Controlla la tua email e attendi l’approvazione.');
-}catch(e){
-status('authStatus',friendly(e),true);
-}finally{
-$('signupBtn').disabled=false;
-}
+}catch(e){status('authStatus',friendly(e),true)}
+finally{$('signupBtn').disabled=false}
 };
 
 $('forgotBtn').onclick=()=>{
@@ -245,18 +379,19 @@ try{
 const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:SITE_URL});
 if(error)throw error;
 status('forgotStatus','Se l’indirizzo è registrato, riceverai un’email con il link per reimpostare la password.');
-}catch(e){
-status('forgotStatus',friendly(e),true);
-}finally{
-$('sendRecoveryBtn').disabled=false;
-}
+}catch(e){status('forgotStatus',friendly(e),true)}
+finally{$('sendRecoveryBtn').disabled=false}
 };
 
 $('savePasswordBtn').onclick=async()=>{
-const p=$('newPassword').value,c=$('confirmPassword').value;
-if(!resetting||!resetReady)return status('resetStatus','Link di recupero non verificato. Richiedi un nuovo link.',true);
-if(p.length<8)return status('resetStatus','La password deve contenere almeno 8 caratteri.',true);
-if(p!==c)return status('resetStatus','Le password non coincidono.',true);
+const p=$('newPassword').value;
+const c=$('confirmPassword').value;
+if(!resetting||!resetReady)
+return status('resetStatus','Link di recupero non verificato.',true);
+if(p.length<8)
+return status('resetStatus','La password deve contenere almeno 8 caratteri.',true);
+if(p!==c)
+return status('resetStatus','Le password non coincidono.',true);
 $('savePasswordBtn').disabled=true;
 try{
 const {data:{session}}=await db.auth.getSession();
@@ -271,11 +406,8 @@ $('newPassword').value='';
 $('confirmPassword').value='';
 show('auth');
 status('authStatus','Password modificata. Accedi con la nuova password.');
-}catch(e){
-status('resetStatus',friendly(e),true);
-}finally{
-$('savePasswordBtn').disabled=false;
-}
+}catch(e){status('resetStatus',friendly(e),true)}
+finally{$('savePasswordBtn').disabled=false}
 };
 
 async function logout(){
@@ -324,6 +456,12 @@ periodValue:'total_calories'
 }
 };
 
+function el(tag,cls='',text=''){
+const e=document.createElement(tag);
+if(cls)e.className=cls;
+e.textContent=text;
+return e;
+}
 function formatNum(n,dec=0){
 return Number(n).toLocaleString('it-IT',{maximumFractionDigits:dec});
 }
@@ -335,11 +473,7 @@ const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
 return m.year+'-'+m.month+'-'+m.day;
 }
 function dateParts(s){
-const p=new Intl.DateTimeFormat('en-CA',{
-timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
-}).formatToParts(new Date(s));
-const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
-return {date:m.year+'-'+m.month+'-'+m.day};
+return {date:localDate(new Date(s))};
 }
 function weekStart(s){
 const d=new Date(s+'T12:00:00Z');
@@ -356,16 +490,11 @@ hour:'2-digit',minute:'2-digit'
 if(period==='month')return key.slice(5)+'/'+key.slice(2,4);
 return key.slice(8,10)+'/'+key.slice(5,7);
 }
-
-/* Forge V3: singole registrazioni e aggregazioni */
 function aggregate(entries,cfg,period){
 const valid=entries.filter(e=>
-e[cfg.time]&&
-Number.isFinite(Number(e[cfg.field]))&&
+e[cfg.time]&&Number.isFinite(Number(e[cfg.field]))&&
 Number(e[cfg.field])>0
-).slice().sort((a,b)=>
-new Date(a[cfg.time])-new Date(b[cfg.time])
-);
+).slice().sort((a,b)=>new Date(a[cfg.time])-new Date(b[cfg.time]));
 
 if(period==='entry'){
 return valid.slice(-30).map(e=>({
@@ -376,7 +505,6 @@ label:chartLabel(e[cfg.time],period)
 }
 
 const groups=new Map();
-
 if(cfg.unit==='kg'){
 const days=new Map();
 for(const e of valid){
@@ -397,7 +525,6 @@ if(!groups.has(key))groups.set(key,[]);
 groups.get(key).push(Number(e[cfg.field]));
 }
 }
-
 return [...groups.entries()]
 .sort((a,b)=>a[0].localeCompare(b[0]))
 .map(([key,values])=>({
@@ -435,24 +562,95 @@ const root=$('sectionContent');
 root.replaceChildren();
 const cfg=config[name];
 
+if(name==='Forge Weight'){
+$('sectionHeading').classList.add('hidden');
+const head=el('div','weight-head');
+const icon=el('div','weight-icon','⚖');
+const copy=el('div');
+copy.append(
+el('h2','','Forge Weight'),
+el('p','','Il tuo percorso, ogni giorno.')
+);
+head.append(icon,copy);
+root.append(head);
+
+const hero=el('div','hero');
+hero.append(el('div','hero-label','Peso attuale'));
+const value=el('div','hero-value','— kg');
+value.id='weightCurrent';
+hero.append(value);
+const delta=el('div','delta','In attesa di dati');
+delta.id='weightDelta';
+hero.append(delta);
+const details=el('div','hero-details');
+
+const start=el('div');
+start.append(el('span','','Peso iniziale'));
+const startVal=el('strong','','—');
+startVal.id='weightInitial';
+start.append(startVal);
+
+const goal=el('div');
+goal.append(el('span','','Obiettivo'));
+const goalVal=el('strong','','Non impostato');
+goalVal.id='weightGoal';
+goal.append(goalVal);
+details.append(start,goal);
+hero.append(details);
+root.append(hero);
+
+const goalBox=el('div');
+goalBox.append(el('label','','Imposta il tuo obiettivo (kg)'));
+const goalRow=el('div','goal-row');
+const goalInput=el('input');
+goalInput.type='number';
+goalInput.step='0.1';
+goalInput.min='1';
+goalInput.max='500';
+goalInput.placeholder='Es. 82';
+const goalSave=el('button','','Salva');
+goalRow.append(goalInput,goalSave);
+goalBox.append(goalRow);
+root.append(goalBox);
+
+const goalKey='forge_weight_goal_'+currentUser.id;
+const stored=localStorage.getItem(goalKey);
+if(stored&&Number(stored)>0){
+goalVal.textContent=formatNum(stored,1)+' kg';
+goalInput.value=stored;
+}
+goalSave.onclick=()=>{
+const n=Number(goalInput.value);
+if(!Number.isFinite(n)||n<=0||n>500){
+alert('Inserisci un obiettivo valido.');
+return;
+}
+localStorage.setItem(goalKey,String(n));
+goalVal.textContent=formatNum(n,1)+' kg';
+};
+}else{
+$('sectionHeading').classList.remove('hidden');
+}
+
 if(cfg.table){
-const label=document.createElement('label');
-label.textContent=name==='Forge Hydration'?'Aggiungi acqua (ml)':'Registra peso (kg)';
-const input=document.createElement('input');
-input.id='metricInput';
+const form=el('div');
+const label=el('label','',
+name==='Forge Hydration'?'Aggiungi acqua (ml)':'Registra peso (kg)');
+const input=el('input');
 input.type='number';
 input.min='1';
-input.max=name==='Forge Hydration'?'10000':'500';
-input.step=name==='Forge Hydration'?'1':'0.1';
-input.placeholder=name==='Forge Hydration'?'Es. 250':'Es. 82.5';
+input.max=cfg.unit==='ml'?'10000':'500';
+input.step=cfg.unit==='ml'?'1':'0.1';
+input.placeholder=cfg.unit==='ml'?'Es. 250':'Es. 82.5';
+const save=el('button','','+ Salva registrazione');
+const msg=el('div','status hidden');
+msg.id='metricStatus';
 
-const save=document.createElement('button');
-save.textContent='Salva registrazione';
 save.onclick=async()=>{
 const n=Number(input.value);
 if(!input.value.trim()||!Number.isFinite(n)||n<=0||
-(name==='Forge Hydration'&&(n>10000||!Number.isInteger(n)))||
-(name==='Forge Weight'&&n>500)){
+(cfg.unit==='ml'&&(n>10000||!Number.isInteger(n)))||
+(cfg.unit==='kg'&&n>500)){
 return status('metricStatus','Inserisci un valore valido.',true);
 }
 save.disabled=true;
@@ -468,26 +666,18 @@ status('metricStatus','Registrazione salvata su Supabase.');
 await loadChart(name);
 }catch(e){
 status('metricStatus',friendly(e),true);
-}finally{
-save.disabled=false;
-}
+}finally{save.disabled=false}
 };
-const msg=document.createElement('div');
-msg.id='metricStatus';
-msg.className='status hidden';
-root.append(label,input,save,msg);
+form.append(label,input,save,msg);
+root.append(form);
 }
 
 if(name==='Forge Nutrition'){
-const note=document.createElement('p');
-note.className='muted';
-note.textContent='Il grafico legge calorie e macronutrienti dalle viste Supabase. L’inserimento dei pasti sarà aggiunto in una fase successiva.';
-root.append(note);
+root.append(el('p','muted',
+'Il grafico legge calorie e macronutrienti dalle viste Supabase. L’inserimento dei pasti sarà aggiunto successivamente.'));
 }
 
-const filters=document.createElement('div');
-filters.className='filters';
-
+const filters=el('div','filters');
 for(const [key,label] of [
 ['entry','Singole'],
 ['day','Giorni'],
@@ -495,50 +685,54 @@ for(const [key,label] of [
 ['month','Mesi']
 ]){
 if(key==='entry'&&name==='Forge Nutrition')continue;
-const b=document.createElement('button');
-b.textContent=label;
+const b=el('button',key===activePeriod?'active':'',label);
 b.dataset.period=key;
-b.className=key===activePeriod?'active':'';
 b.onclick=()=>{
 activePeriod=key;
 filters.querySelectorAll('button').forEach(x=>
-x.classList.toggle('active',x.dataset.period===key)
-);
+x.classList.toggle('active',x.dataset.period===key));
 loadChart(name);
 };
 filters.append(b);
 }
+root.append(filters);
 
-const stats=document.createElement('div');
-stats.id='metricStats';
-stats.className='stats';
+const panel=el('div','chart-panel');
+const heading=el('div','panel-heading');
+heading.append(el('h3','',
+name==='Forge Weight'?'Andamento peso':
+name==='Forge Hydration'?'Andamento idratazione':'Andamento calorie'));
+const range=el('span');
+range.id='chartRange';
+heading.append(range);
 
 const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
 svg.id='metricChart';
 svg.classList.add('chart');
-svg.setAttribute('viewBox','0 0 600 260');
+svg.setAttribute('viewBox','0 0 600 270');
 svg.setAttribute('role','img');
 svg.setAttribute('aria-label','Grafico andamento');
 
-const tip=document.createElement('div');
+const tip=el('div','chart-tip');
 tip.id='chartTip';
-tip.className='chart-tip';
+panel.append(heading,svg,tip);
+root.append(panel);
 
-const message=document.createElement('p');
+const stats=el('div','stats');
+stats.id='metricStats';
+const message=el('p','notice');
 message.id='chartMessage';
-message.className='muted';
-root.append(filters,stats,svg,tip,message);
+root.append(stats,message);
 
 if(name==='Forge Weight'){
-const history=document.createElement('div');
+const history=el('div','history');
 history.id='weightHistory';
-history.className='history';
 root.append(history);
 }
 loadChart(name);
 }
 
-function svgEl(tag,attrs,text){
+function svgEl(tag,attrs={},text){
 const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
 for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);
 if(text!==undefined)e.textContent=text;
@@ -549,7 +743,13 @@ function drawChart(rows,unit){
 const svg=$('metricChart');
 svg.replaceChildren();
 $('chartTip').textContent='';
-if(!rows.length)return;
+
+if(!rows.length){
+svg.append(svgEl('text',{
+x:300,y:135,'text-anchor':'middle'
+},'Nessun dato da visualizzare'));
+return;
+}
 
 const values=rows.map(r=>Number(r.value));
 const rawMin=Math.min(...values);
@@ -561,75 +761,87 @@ const pad=unit==='kg'
 const min=unit==='kg'?rawMin-pad:Math.max(0,rawMin-pad);
 const max=rawMax+pad;
 const spread=max-min||1;
-const left=67,right=565,top=38,bottom=194;
-
+const left=58,right=568,top=38,bottom=208;
 const x=i=>rows.length===1
-?(left+right)/2
-:left+i*(right-left)/(rows.length-1);
+?(left+right)/2:left+i*(right-left)/(rows.length-1);
 const y=v=>bottom-(v-min)/spread*(bottom-top);
+
+const defs=svgEl('defs');
+const grad=svgEl('linearGradient',{
+id:'forgeAreaGradient',x1:'0',y1:'0',x2:'0',y2:'1'
+});
+grad.append(
+svgEl('stop',{offset:'0%','stop-color':'#e8bd60','stop-opacity':'.38'}),
+svgEl('stop',{offset:'100%','stop-color':'#e8bd60','stop-opacity':'.01'})
+);
+defs.append(grad);
+svg.append(defs);
 
 for(let j=0;j<=4;j++){
 const yy=top+j*(bottom-top)/4;
 const tick=max-j*spread/4;
 svg.append(svgEl('line',{
 x1:left,y1:yy,x2:right,y2:yy,
-stroke:'#45403a','stroke-dasharray':'4 5'
+stroke:'#48413a','stroke-dasharray':'4 5'
 }));
 svg.append(svgEl('text',{
-x:left-8,y:yy+4,'text-anchor':'end'
+x:left-7,y:yy+4,'text-anchor':'end'
 },formatNum(tick,unit==='kg'?1:0)));
 }
 
 if(rows.length>1){
+const points=rows.map((r,i)=>x(i)+','+y(values[i])).join(' ');
+svg.append(svgEl('polygon',{
+points:left+','+bottom+' '+points+' '+right+','+bottom,
+fill:'url(#forgeAreaGradient)'
+}));
 svg.append(svgEl('polyline',{
-points:rows.map((r,i)=>x(i)+','+y(values[i])).join(' '),
-fill:'none',
-stroke:'#d4af60',
-'stroke-width':3,
+points,fill:'none',stroke:'#f0cd76',
+'stroke-width':3.5,
 'stroke-linecap':'round',
 'stroke-linejoin':'round'
 }));
 }
 
-const every=Math.max(1,Math.ceil(rows.length/5));
-
+const every=Math.max(1,Math.ceil(rows.length/4));
 rows.forEach((r,i)=>{
 const cx=x(i),cy=y(values[i]);
-const circle=svgEl('circle',{
-cx,cy,
-r:rows.length===1?5:4.5,
-fill:'#d4af60',
-stroke:'#111115',
-'stroke-width':1.5,
-tabindex:0,
-role:'button',
+const hit=svgEl('circle',{
+cx,cy,r:13,fill:'transparent',
+tabindex:0,role:'button',
 'aria-label':r.label+' '+formatNum(r.value,2)+' '+unit
 });
-
+const dot=svgEl('circle',{
+cx,cy,r:rows.length===1?6:4.5,
+fill:'#f1cf77',stroke:'#171717',
+'stroke-width':1.5,'pointer-events':'none'
+});
 const select=()=>{
 $('chartTip').textContent=r.label+' • '+formatNum(r.value,2)+' '+unit;
-svg.querySelectorAll('circle').forEach(c=>c.setAttribute('r','4.5'));
-circle.setAttribute('r','7');
+svg.querySelectorAll('.selected-halo').forEach(n=>n.remove());
+svg.append(svgEl('circle',{
+cx,cy,r:10,fill:'none',stroke:'#f1cf77',
+'stroke-width':1.5,class:'selected-halo',
+'pointer-events':'none'
+}));
 };
-
-circle.addEventListener('click',select);
-circle.addEventListener('keydown',e=>{
+hit.addEventListener('click',select);
+hit.addEventListener('keydown',e=>{
 if(e.key==='Enter'||e.key===' '){
 e.preventDefault();
 select();
 }
 });
-svg.append(circle);
-
-if(i===0||i===rows.length-1||rows.length<=5||i%every===0){
+svg.append(dot,hit);
+if(i===0||i===rows.length-1||rows.length<=4||i%every===0){
+const label=r.label.length>11?r.label.slice(0,5):r.label;
 svg.append(svgEl('text',{
-x:cx,y:224,'text-anchor':'middle'
-},r.label));
+x:cx,y:237,'text-anchor':'middle'
+},label));
 }
 });
-
 $('chartTip').textContent=rows.length===1
-?'Un solo punto disponibile in questa vista.'
+?'Una sola registrazione disponibile.'
 :'Tocca un punto dorato per vedere il valore.';
 }
 
@@ -637,54 +849,40 @@ function renderWeightHistory(entries){
 const root=$('weightHistory');
 if(!root)return;
 root.replaceChildren();
-
-const title=document.createElement('h3');
-title.textContent='Storico delle pesate';
-root.append(title);
+root.append(el('h3','','Storico delle pesate'));
 
 const valid=entries.filter(e=>
 e.recorded_at&&Number.isFinite(Number(e.weight_kg))
 ).slice().sort((a,b)=>
-new Date(b.recorded_at)-new Date(a.recorded_at)
-);
+new Date(b.recorded_at)-new Date(a.recorded_at));
 
 if(!valid.length){
-const p=document.createElement('p');
-p.className='muted';
-p.textContent='Nessuna pesata registrata.';
-root.append(p);
+root.append(el('p','muted','Nessuna pesata registrata.'));
 return;
 }
-
-const note=document.createElement('p');
-note.className='muted';
-note.textContent='Ultime 20 registrazioni, comprese quelle dello stesso giorno.';
-root.append(note);
+root.append(el('p','small',
+'Ultime 20 registrazioni, comprese quelle dello stesso giorno.'));
 
 for(const e of valid.slice(0,20)){
-const item=document.createElement('div');
-item.className='history-item';
-const date=document.createElement('span');
-date.textContent=new Intl.DateTimeFormat('it-IT',{
+const item=el('div','history-item');
+const date=el('span','',
+new Intl.DateTimeFormat('it-IT',{
 timeZone:'Europe/Rome',
 day:'2-digit',month:'2-digit',year:'numeric',
 hour:'2-digit',minute:'2-digit'
-}).format(new Date(e.recorded_at));
-const value=document.createElement('strong');
-value.textContent=formatNum(e.weight_kg,2)+' kg';
+}).format(new Date(e.recorded_at)));
+const value=el('strong','',formatNum(e.weight_kg,2)+' kg');
 item.append(date,value);
 root.append(item);
 }
 }
 
 function addStat(label,value){
-const card=document.createElement('div');
-card.className='stat';
-const s=document.createElement('span');
-const strong=document.createElement('strong');
-s.textContent=label;
-strong.textContent=value;
-card.append(s,strong);
+const card=el('div','stat');
+card.append(
+el('span','',label),
+el('strong','',value)
+);
 $('metricStats').append(card);
 }
 
@@ -698,11 +896,11 @@ msg.textContent='Caricamento dati...';
 $('metricStats').replaceChildren();
 $('metricChart').replaceChildren();
 $('chartTip').textContent='';
+$('chartRange').textContent='';
 if($('weightHistory'))$('weightHistory').replaceChildren();
 
 try{
 if(!currentUser)throw new Error('Accedi per visualizzare i dati.');
-
 let rows=[],latest=null,entries=[];
 
 if(cfg.table){
@@ -714,20 +912,52 @@ const {data,error}=await db.from(cfg.table)
 
 if(error)throw error;
 if(serial!==loadSerial||activeSection!==name)return;
-
 entries=data||[];
 rows=aggregate(entries,cfg,period);
 
 if(name==='Forge Hydration'){
 const today=localDate();
-const todayTotal=entries
-.filter(e=>e.recorded_at&&dateParts(e.recorded_at).date===today)
-.reduce((sum,e)=>sum+Number(e.amount_ml||0),0);
-addStat('Acqua assunta oggi',formatNum(todayTotal)+' ml');
+const total=entries.filter(e=>
+e.recorded_at&&dateParts(e.recorded_at).date===today
+).reduce((s,e)=>s+Number(e.amount_ml||0),0);
+addStat('Acqua assunta oggi',formatNum(total)+' ml');
 }
 
-if(name==='Forge Weight')renderWeightHistory(entries);
+if(name==='Forge Weight'){
+renderWeightHistory(entries);
+const valid=entries.filter(e=>
+e.recorded_at&&Number(e.weight_kg)>0
+).slice().sort((a,b)=>
+new Date(a.recorded_at)-new Date(b.recorded_at));
 
+if(valid.length){
+const first=Number(valid[0].weight_kg);
+const last=Number(valid[valid.length-1].weight_kg);
+const diff=last-first;
+const pct=first?diff/first*100:0;
+
+$('weightCurrent').textContent=formatNum(last,1)+' kg';
+$('weightInitial').textContent=formatNum(first,1)+' kg';
+
+const delta=$('weightDelta');
+delta.textContent=(diff>0?'+':'')+formatNum(diff,2)+
+' kg ('+(pct>0?'+':'')+formatNum(pct,1)+'%)';
+delta.className='delta '+(diff>0?'up':diff<0?'down':'');
+
+addStat('Peso medio',
+formatNum(valid.reduce((s,e)=>s+Number(e.weight_kg),0)/valid.length,2)+' kg');
+addStat('Variazione totale',
+(diff>0?'+':'')+formatNum(diff,2)+' kg');
+addStat('Peso massimo',
+formatNum(Math.max(...valid.map(e=>Number(e.weight_kg))),2)+' kg');
+addStat('Peso minimo',
+formatNum(Math.min(...valid.map(e=>Number(e.weight_kg))),2)+' kg');
+}else{
+$('weightCurrent').textContent='— kg';
+$('weightInitial').textContent='—';
+$('weightDelta').textContent='Nessun dato';
+}
+}
 }else{
 let query;
 if(period==='day'){
@@ -740,12 +970,11 @@ query=db.from(cfg.period).select('*')
 .eq('period_type',period)
 .order('period_start',{ascending:false}).limit(12);
 }
-
 const {data,error}=await query;
 if(serial!==loadSerial||activeSection!==name)return;
 if(error)throw error;
-
 latest=data?.[0];
+
 rows=(data||[]).slice().reverse().map(r=>{
 const key=String(r[period==='day'?'day':'period_start']||'').slice(0,10);
 return {
@@ -757,27 +986,23 @@ label:chartLabel(key,period)
 }
 
 if(!rows.length){
+drawChart([],cfg.unit);
 msg.textContent='Nessun dato registrato per questo intervallo.';
 return;
 }
 
 drawChart(rows,cfg.unit);
+$('chartRange').textContent=rows[0].label+' – '+rows[rows.length-1].label;
 const last=Number(rows[rows.length-1].value);
 const first=Number(rows[0].value);
 const diff=last-first;
 
-addStat(
-period==='entry'?'Ultima registrazione':
+if(name!=='Forge Weight'){
+addStat(period==='entry'?'Ultima registrazione':
 period==='day'?'Ultimo valore':'Ultimo periodo',
-formatNum(last,2)+' '+cfg.unit
-);
+formatNum(last,2)+' '+cfg.unit);
 addStat('Variazione',
-(diff>0?'+':'')+formatNum(diff,2)+' '+cfg.unit
-);
-
-if(name==='Forge Weight'){
-addStat('Valore iniziale',formatNum(first,2)+' kg');
-addStat('Punti visualizzati',String(rows.length));
+(diff>0?'+':'')+formatNum(diff,2)+' '+cfg.unit);
 }
 
 if(name==='Forge Nutrition'&&latest){
@@ -785,15 +1010,13 @@ addStat('Proteine',formatNum(latest.total_protein||0,1)+' g');
 addStat('Carboidrati',formatNum(latest.total_carbohydrates||0,1)+' g');
 addStat('Grassi',formatNum(latest.total_fat||0,1)+' g');
 }
-
 msg.textContent=rows.length+
 ' punti visualizzati. Dati letti da Supabase.'+
 (entries.length===1000
 ?' Sono state lette le 1000 registrazioni più recenti.':'');
 }catch(e){
-if(serial===loadSerial){
+if(serial===loadSerial)
 msg.textContent='Impossibile leggere i dati: '+friendly(e);
-}
 }
 }
 
@@ -825,7 +1048,8 @@ return;
 const {data:{session},error}=await db.auth.getSession();
 if(error||!session){
 show('reset');
-status('resetStatus','Link non valido o scaduto. Richiedi un nuovo recupero password.',true);
+status('resetStatus',
+'Link non valido o scaduto. Richiedi un nuovo recupero password.',true);
 return;
 }
 resetReady=true;
