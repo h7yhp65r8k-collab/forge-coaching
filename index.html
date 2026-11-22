@@ -189,6 +189,8 @@ let currentUser=null;
 let recoveryMode=false;
 let recoveryVerified=false;
 let sezioneAttuale='';
+let datiOnline={acqua:[],peso:[]};
+let caricamentoDati=0;
 let authVersion=0;
 let resetBusy=false;
 
@@ -469,6 +471,8 @@ async function annullaRecupero(){
 }
 
 async function esci(){
+ caricamentoDati++;
+ datiOnline={acqua:[],peso:[]};
  recoveryMode=false;
  recoveryVerified=false;
  currentUser=null;
@@ -530,6 +534,9 @@ async function controllaSessione(){
    return;
   }
 
+  if(!currentUser||currentUser.id!==user.id)
+   datiOnline={acqua:[],peso:[]};
+
   currentUser=user;
   $('utenteEmail').textContent=user.email||'';
 
@@ -565,13 +572,11 @@ function apri(nome){
  if(nome==='acqua'){
   $('areaAcqua').classList.remove('hidden');
   $('areaGrafici').classList.remove('hidden');
-  aggiornaAcqua();
  }
 
  if(nome==='peso'){
   $('areaPeso').classList.remove('hidden');
   $('areaGrafici').classList.remove('hidden');
-  aggiornaPeso();
  }
 
  if(nome==='premium')
@@ -580,6 +585,9 @@ function apri(nome){
  $('home').classList.add('hidden');
  $('dettaglio').classList.remove('hidden');
  window.scrollTo(0,0);
+
+ if(nome==='acqua'||nome==='peso')
+  caricaMonitoraggio(nome);
 }
 
 function torna(){
@@ -589,29 +597,7 @@ function torna(){
  window.scrollTo(0,0);
 }
 
-// Dati dimostrativi locali: non sincronizzati con Supabase.
-function chiave(tipo){
- return 'forge_demo_'+tipo+'_'+(currentUser?.id||'anon');
-}
-
-function leggi(tipo){
- try{
-  const x=JSON.parse(localStorage.getItem(chiave(tipo)));
-  return Array.isArray(x)?x:[];
- }catch(e){
-  return [];
- }
-}
-
-function scrivi(tipo,dati){
- try{
-  localStorage.setItem(chiave(tipo),JSON.stringify(dati));
-  return true;
- }catch(e){
-  alert('Impossibile salvare sul dispositivo.');
-  return false;
- }
-}
+// MONITORAGGIO ONLINE SUPABASE
 
 function dataLocale(d=new Date()){
  return d.getFullYear()+'-'+
@@ -619,56 +605,127 @@ function dataLocale(d=new Date()){
   String(d.getDate()).padStart(2,'0');
 }
 
-function salvaAcqua(){
- const ml=Number($('quantitaAcqua').value);
-
- if(!Number.isFinite(ml)||ml<=0||ml>10000)
-  return alert('Inserisci una quantità valida in ml.');
-
- const dati=leggi('acqua');
- dati.push({data:dataLocale(),ml});
-
- if(scrivi('acqua',dati))aggiornaAcqua();
+function tabella(tipo){
+ return tipo==='acqua'?
+  'forge_water_entries':'forge_weight_entries';
 }
 
-function salvaPeso(){
+function righe(tipo){
+ return datiOnline[tipo]||[];
+}
+
+function giornoRegistrazione(iso){
+ return dataLocale(new Date(iso));
+}
+
+async function caricaMonitoraggio(tipo){
+ if(!db||!currentUser)return;
+
+ const versione=++caricamentoDati;
+ const nomeUtente=currentUser.id;
+ const storico=$('storico');
+
+ storico.textContent='Caricamento dati da Supabase...';
+
+ const {data,error}=await db.from(tabella(tipo))
+  .select(tipo==='acqua'?
+   'id,amount_ml,recorded_at':
+   'id,weight_kg,recorded_at')
+  .eq('user_id',nomeUtente)
+  .order('recorded_at',{ascending:true})
+  .limit(5000);
+
+ if(versione!==caricamentoDati||
+    !currentUser||
+    currentUser.id!==nomeUtente||
+    sezioneAttuale!==tipo)return;
+
+ if(error){
+  storico.textContent='Errore lettura dati: '+
+   erroreTesto(error);
+  return;
+ }
+
+ datiOnline[tipo]=(data||[]).map(x=>({
+  data:giornoRegistrazione(x.recorded_at),
+  timestamp:x.recorded_at,
+  ...(tipo==='acqua'?
+   {ml:Number(x.amount_ml)}:
+   {kg:Number(x.weight_kg)})
+ }));
+
+ if(tipo==='acqua')aggiornaAcqua();
+ else aggiornaPeso();
+}
+
+async function salvaAcqua(){
+ if(!db||!currentUser)
+  return alert('Accedi per registrare acqua.');
+
+ const ml=Number($('quantitaAcqua').value);
+
+ if(!Number.isInteger(ml)||ml<1||ml>10000)
+  return alert('Inserisci una quantità valida in ml.');
+
+ const {error}=await db.from('forge_water_entries')
+  .insert({
+   user_id:currentUser.id,
+   amount_ml:ml
+  });
+
+ if(error)
+  return alert('Salvataggio non riuscito: '+
+   erroreTesto(error));
+
+ await caricaMonitoraggio('acqua');
+}
+
+async function salvaPeso(){
+ if(!db||!currentUser)
+  return alert('Accedi per registrare il peso.');
+
  const kg=Number($('valorePeso').value);
 
  if(!Number.isFinite(kg)||kg<1||kg>500)
   return alert('Inserisci un peso valido in kg.');
 
- const dati=leggi('peso');
- const oggi=dataLocale();
- const indice=dati.findIndex(x=>x.data===oggi);
+ const {error}=await db.from('forge_weight_entries')
+  .insert({
+   user_id:currentUser.id,
+   weight_kg:kg
+  });
 
- if(indice>=0)dati[indice].kg=kg;
- else dati.push({data:oggi,kg});
+ if(error)
+  return alert('Salvataggio non riuscito: '+
+   erroreTesto(error));
 
- if(scrivi('peso',dati))aggiornaPeso();
+ await caricaMonitoraggio('peso');
 }
 
 function aggiornaAcqua(){
- const ml=leggi('acqua')
+ const ml=righe('acqua')
   .filter(x=>x.data===dataLocale())
-  .reduce((s,x)=>s+Number(x.ml),0);
+  .reduce((s,x)=>s+x.ml,0);
 
- $('totaleAcqua').textContent=(ml/1000).toFixed(2)+' L';
+ $('totaleAcqua').textContent=
+  (ml/1000).toFixed(2)+' L';
+
  aggiornaGrafici();
 }
 
 function aggiornaPeso(){
- const dati=leggi('peso')
-  .sort((a,b)=>a.data.localeCompare(b.data));
+ const dati=[...righe('peso')]
+  .sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
 
  const ultimo=dati.at(-1);
  const precedente=dati.at(-2);
 
  $('ultimoPeso').textContent=ultimo?
-  Number(ultimo.kg).toFixed(1)+' kg':'—';
+  ultimo.kg.toFixed(1)+' kg':'—';
 
  $('variazionePeso').textContent=ultimo&&precedente?
   'Variazione dalla pesata precedente: '+
-  ((ultimo.kg-precedente.kg)>0?'+':'')+
+  (ultimo.kg-precedente.kg>0?'+':'')+
   (ultimo.kg-precedente.kg).toFixed(1)+' kg':'';
 
  aggiornaGrafici();
@@ -715,19 +772,20 @@ function aggiornaGrafici(){
 
  const acqua=sezioneAttuale==='acqua';
  const periodo=$('periodo').value;
- const dati=leggi(acqua?'acqua':'peso');
+ const dati=righe(acqua?'acqua':'peso');
  const chiavi=periodi(periodo);
 
  const valori=chiavi.map(k=>{
-  const righe=dati.filter(x=>
+  const righePeriodo=dati.filter(x=>
    chiavePeriodo(x.data,periodo)===k
   );
 
-  if(!righe.length)return null;
+  if(!righePeriodo.length)return null;
 
   return acqua?
-   righe.reduce((s,x)=>s+Number(x.ml),0)/1000:
-   righe.reduce((s,x)=>s+Number(x.kg),0)/righe.length;
+   righePeriodo.reduce((s,x)=>s+Number(x.ml),0)/1000:
+   righePeriodo.reduce((s,x)=>s+Number(x.kg),0)/
+   righePeriodo.length;
  });
 
  disegnaGrafico(chiavi,valori,acqua?'L':'kg');
@@ -769,9 +827,11 @@ function disegnaGrafico(etichette,valori,unita){
 
  const crea=(tag,attrs,testo)=>{
   const el=document.createElementNS(ns,tag);
+
   Object.entries(attrs).forEach(([k,v])=>
    el.setAttribute(k,v)
   );
+
   if(testo!==undefined)el.textContent=testo;
   svg.appendChild(el);
  };
@@ -802,17 +862,18 @@ function disegnaGrafico(etichette,valori,unita){
  const x=i=>35+i*(285/Math.max(1,valori.length-1));
  const y=v=>190-(v-min)/(max-min)*150;
 
- for(let i=0;i<4;i++)
+ for(let i=0;i<4;i++){
   crea('line',{
    x1:35,y1:40+i*50,
    x2:325,y2:40+i*50,
    stroke:'#444'
   });
+ }
 
  let segmento=[];
 
  function traccia(){
-  if(segmento.length>1)
+  if(segmento.length>1){
    crea('polyline',{
     points:segmento.join(' '),
     fill:'none',
@@ -821,22 +882,29 @@ function disegnaGrafico(etichette,valori,unita){
     'stroke-linecap':'round',
     'stroke-linejoin':'round'
    });
+  }
   segmento=[];
  }
 
  valori.forEach((v,i)=>{
-  if(v===null){traccia();return}
+  if(v===null){
+   traccia();
+   return;
+  }
   segmento.push(x(i)+','+y(v));
  });
 
  traccia();
 
  valori.forEach((v,i)=>{
-  if(v!==null)
+  if(v!==null){
    crea('circle',{
-    cx:x(i),cy:y(v),
-    r:4,fill:'#d4af60'
+    cx:x(i),
+    cy:y(v),
+    r:4,
+    fill:'#d4af60'
    });
+  }
  });
 
  crea('text',{
