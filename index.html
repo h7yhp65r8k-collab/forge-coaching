@@ -12,8 +12,8 @@
 body{margin:0;background:#0b0b0d;color:#f5f5f5;font-family:Arial,sans-serif}
 header{text-align:center;padding:26px 16px;border-bottom:1px solid #a98538}
 h1{color:#d4af60;margin:0 0 8px}
-.subtitle,.small{color:#aaa}
-.small{font-size:13px}
+.subtitle,.small,.muted{color:#aaa}
+.small,.muted{font-size:13px}
 main{padding:20px;max-width:760px;margin:auto}
 .card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:20px;margin-bottom:16px}
 .card h2{color:#d4af60;margin-top:0}
@@ -28,10 +28,9 @@ label{display:block;margin-top:10px;color:#ddd}
 .success{color:#9de2ad}
 nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 nav button{margin:0;min-height:65px}
-a{color:#d4af60}
 footer{text-align:center;color:#777;font-size:12px;padding:25px}
-.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.filters button{font-size:13px}
+.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.filters button{font-size:12px;padding:10px 4px}
 .filters button.active{background:#d4af60;color:#111}
 .filters button:not(.active){background:#29292e;color:#d4af60;border:1px solid #78612e}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
@@ -39,18 +38,13 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 .stat span{display:block;color:#aaa;font-size:12px}
 .stat strong{display:block;color:#d4af60;font-size:19px;margin-top:5px}
 .chart{width:100%;height:auto;display:block;background:#111115;border-radius:10px;margin-top:12px;touch-action:manipulation}
-.chart text{fill:#aaa;font-size:11px}
-.muted{color:#aaa;font-size:13px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.chart text{fill:#aaa;font-size:12px}
+.chart-tip{min-height:25px;text-align:center;color:#d4af60;font-size:13px;margin-top:8px}
 .history{margin-top:18px}
 .history h3{color:#d4af60;font-size:17px}
-.history-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid #35302a;font-size:14px}
+.history-item{display:flex;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid #35302a;font-size:14px}
 .history-item strong{color:#d4af60;white-space:nowrap}
-.chart-tip{min-height:25px;text-align:center;color:#d4af60;font-size:13px;margin-top:8px}
-@media(max-width:430px){
-.card{padding:15px}
-.row{grid-template-columns:1fr}
-}
+@media(max-width:430px){.card{padding:15px}}
 </style>
 </head>
 <body>
@@ -63,7 +57,6 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <h2>Caricamento...</h2>
 <p>Connessione a Forge Coaching.</p>
 </section>
-
 <section id="auth" class="card hidden">
 <h2>Accedi a Forge Coaching</h2>
 <label>Email</label>
@@ -75,7 +68,6 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <button class="secondary" id="forgotBtn">Password dimenticata?</button>
 <div id="authStatus" class="status hidden"></div>
 </section>
-
 <section id="forgot" class="card hidden">
 <h2>Recupera password</h2>
 <p>Riceverai un link per impostare una nuova password.</p>
@@ -84,7 +76,6 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <button class="secondary" id="backLoginBtn">Torna all'accesso</button>
 <div id="forgotStatus" class="status hidden"></div>
 </section>
-
 <section id="reset" class="card hidden">
 <h2>Imposta nuova password</h2>
 <p>Inserisci e conferma la nuova password.</p>
@@ -95,13 +86,11 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <button id="savePasswordBtn">Salva nuova password</button>
 <div id="resetStatus" class="status hidden"></div>
 </section>
-
 <section id="pending" class="card hidden">
 <h2>Account in attesa</h2>
 <p>Il tuo account deve essere approvato dall'amministratore.</p>
 <button id="pendingLogoutBtn" class="secondary">Esci</button>
 </section>
-
 <section id="app" class="hidden">
 <div class="card">
 <h2 id="welcome">Benvenuto</h2>
@@ -134,62 +123,46 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 </section>
 </main>
 <footer>Forge Coaching • La tua evoluzione</footer>
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
-
 const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
 const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
 const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
-
 const $=id=>document.getElementById(id);
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-auth:{
-persistSession:true,
-autoRefreshToken:true,
-detectSessionInUrl:true
-}
+auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
-
 let currentUser=null;
 let resetting=false;
 let resetReady=false;
 let activeSection='';
-let activePeriod='day';
+let activePeriod='entry';
 let loadSerial=0;
-
 const sections=['loading','auth','forgot','reset','pending','app'];
 
 function show(id){
 sections.forEach(x=>$(x).classList.toggle('hidden',x!==id));
 }
-
 function status(id,msg,error=false){
 const el=$(id);
 el.textContent=msg;
 el.className='status '+(error?'error':'success');
 }
-
 function friendly(e){
 const msg=e?.message||String(e);
 return /rate limit|too many requests|over_email_send_rate_limit/i.test(msg)
-?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.'
-:msg;
+?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.':msg;
 }
-
 function cleanUrl(){
 history.replaceState({},document.title,location.pathname);
 }
-
 function recoveryUrl(){
 const q=new URLSearchParams(location.search);
 const h=new URLSearchParams(location.hash.slice(1));
 return q.get('type')==='recovery'||h.get('type')==='recovery';
 }
-
 const initialRecovery=recoveryUrl();
-
 function recoveryErrorInUrl(){
 const q=new URLSearchParams(location.search);
 const h=new URLSearchParams(location.hash.slice(1));
@@ -205,40 +178,30 @@ show('auth');
 return;
 }
 currentUser=session.user;
-
 const [roles,accessResult]=await Promise.all([
 db.from('user_roles').select('role').eq('user_id',currentUser.id),
 db.from('account_access').select('status').eq('user_id',currentUser.id)
 ]);
-
 if(roles.error||accessResult.error){
 show('pending');
 return;
 }
-
 let role='client';
 if(roles.data?.some(r=>r.role==='admin'))role='admin';
 else if(roles.data?.some(r=>r.role==='trainer'))role='trainer';
 else if(roles.data?.some(r=>r.role==='premium'))role='premium';
-
 const access=accessResult.data?.[0]?.status||'pending';
-
 if(access!=='approved'){
 show('pending');
 return;
 }
-
-$('welcome').textContent=role==='admin'
-?'Amministratore riconosciuto'
-:'Benvenuto in Forge Coaching';
-
+$('welcome').textContent=role==='admin'?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
 $('roleInfo').textContent='Account: '+currentUser.email+' • Ruolo: '+role;
 show('app');
 }
 
 $('loginBtn').onclick=async()=>{
-const email=$('email').value.trim();
-const password=$('password').value;
+const email=$('email').value.trim(),password=$('password').value;
 if(!email||!password)return status('authStatus','Inserisci email e password.',true);
 $('loginBtn').disabled=true;
 try{
@@ -253,14 +216,12 @@ $('loginBtn').disabled=false;
 };
 
 $('signupBtn').onclick=async()=>{
-const email=$('email').value.trim();
-const password=$('password').value;
+const email=$('email').value.trim(),password=$('password').value;
 if(!email||password.length<8)return status('authStatus','Inserisci email e password di almeno 8 caratteri.',true);
 $('signupBtn').disabled=true;
 try{
 const {error}=await db.auth.signUp({
-email,password,
-options:{emailRedirectTo:SITE_URL}
+email,password,options:{emailRedirectTo:SITE_URL}
 });
 if(error)throw error;
 status('authStatus','Registrazione inviata. Controlla la tua email e attendi l’approvazione.');
@@ -275,7 +236,6 @@ $('forgotBtn').onclick=()=>{
 $('recoveryEmail').value=$('email').value;
 show('forgot');
 };
-
 $('backLoginBtn').onclick=()=>show('auth');
 
 $('sendRecoveryBtn').onclick=async()=>{
@@ -294,8 +254,7 @@ $('sendRecoveryBtn').disabled=false;
 };
 
 $('savePasswordBtn').onclick=async()=>{
-const p=$('newPassword').value;
-const c=$('confirmPassword').value;
+const p=$('newPassword').value,c=$('confirmPassword').value;
 if(!resetting||!resetReady)return status('resetStatus','Link di recupero non verificato. Richiedi un nuovo link.',true);
 if(p.length<8)return status('resetStatus','La password deve contenere almeno 8 caratteri.',true);
 if(p!==c)return status('resetStatus','Le password non coincidono.',true);
@@ -329,7 +288,6 @@ resetReady=false;
 cleanUrl();
 show('auth');
 }
-
 $('logoutBtn').onclick=logout;
 $('pendingLogoutBtn').onclick=logout;
 
@@ -350,20 +308,17 @@ const config={
 table:'forge_water_entries',
 field:'amount_ml',
 time:'recorded_at',
-label:'Acqua',
 unit:'ml'
 },
 'Forge Weight':{
 table:'forge_weight_entries',
 field:'weight_kg',
 time:'recorded_at',
-label:'Peso',
 unit:'kg'
 },
 'Forge Nutrition':{
 daily:'forge_nutrition_daily_chart',
 period:'forge_nutrition_period_chart',
-label:'Calorie',
 unit:'kcal',
 dayValue:'total_calories',
 periodValue:'total_calories'
@@ -371,98 +326,74 @@ periodValue:'total_calories'
 };
 
 function formatNum(n,dec=0){
-return Number(n).toLocaleString('it-IT',{
-maximumFractionDigits:dec
-});
+return Number(n).toLocaleString('it-IT',{maximumFractionDigits:dec});
 }
-
 function localDate(d=new Date()){
 const p=new Intl.DateTimeFormat('en-CA',{
-timeZone:'Europe/Rome',
-year:'numeric',
-month:'2-digit',
-day:'2-digit'
+timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
 }).formatToParts(d);
 const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
 return m.year+'-'+m.month+'-'+m.day;
 }
-
 function dateParts(s){
 const p=new Intl.DateTimeFormat('en-CA',{
-timeZone:'Europe/Rome',
-year:'numeric',
-month:'2-digit',
-day:'2-digit'
+timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
 }).formatToParts(new Date(s));
 const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
-return {
-year:Number(m.year),
-month:Number(m.month),
-day:Number(m.day),
-date:m.year+'-'+m.month+'-'+m.day
-};
+return {date:m.year+'-'+m.month+'-'+m.day};
 }
-
 function weekStart(s){
 const d=new Date(s+'T12:00:00Z');
-const weekday=(d.getUTCDay()+6)%7;
-d.setUTCDate(d.getUTCDate()-weekday);
+d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);
 return d.toISOString().slice(0,10);
 }
+function chartLabel(key,period){
+if(period==='entry'){
+return new Intl.DateTimeFormat('it-IT',{
+timeZone:'Europe/Rome',day:'2-digit',month:'2-digit',
+hour:'2-digit',minute:'2-digit'
+}).format(new Date(key));
+}
+if(period==='month')return key.slice(5)+'/'+key.slice(2,4);
+return key.slice(8,10)+'/'+key.slice(5,7);
+}
 
-/*
-FORGE CHART ENGINE V2
-Peso: ultima pesata giornaliera.
-Settimane e mesi: media delle ultime pesate
-dei singoli giorni, senza sovrappesare
-giornate con più registrazioni.
-Acqua: somma dei valori.
-*/
-
+/* Forge V3: singole registrazioni e aggregazioni */
 function aggregate(entries,cfg,period){
-const groups=new Map();
 const valid=entries.filter(e=>
 e[cfg.time]&&
 Number.isFinite(Number(e[cfg.field]))&&
 Number(e[cfg.field])>0
-).sort((a,b)=>
+).slice().sort((a,b)=>
 new Date(a[cfg.time])-new Date(b[cfg.time])
 );
 
-if(cfg.unit==='kg'){
-const daily=new Map();
-for(const e of valid){
-const key=dateParts(e[cfg.time]).date;
-daily.set(key,{
-key,
+if(period==='entry'){
+return valid.slice(-30).map(e=>({
+key:e[cfg.time],
 value:Number(e[cfg.field]),
-time:e[cfg.time]
-});
-}
-const days=[...daily.values()].sort((a,b)=>a.key.localeCompare(b.key));
-
-if(period==='day'){
-return days.slice(-30).map(r=>({
-...r,
-label:r.key.slice(8,10)+'/'+r.key.slice(5,7)
+label:chartLabel(e[cfg.time],period)
 }));
 }
 
-for(const r of days){
-const key=period==='week'
-?weekStart(r.key)
-:r.key.slice(0,7);
+const groups=new Map();
+
+if(cfg.unit==='kg'){
+const days=new Map();
+for(const e of valid){
+days.set(dateParts(e[cfg.time]).date,Number(e[cfg.field]));
+}
+for(const [day,value] of days){
+const key=period==='day'?day:
+period==='week'?weekStart(day):day.slice(0,7);
 if(!groups.has(key))groups.set(key,[]);
-groups.get(key).push(r.value);
+groups.get(key).push(value);
 }
 }else{
 for(const e of valid){
-const parts=dateParts(e[cfg.time]);
-const key=period==='day'
-?parts.date
-:period==='week'
-?weekStart(parts.date)
-:parts.date.slice(0,7);
+const day=dateParts(e[cfg.time]).date;
+const key=period==='day'?day:
+period==='week'?weekStart(day):day.slice(0,7);
 if(!groups.has(key))groups.set(key,[]);
 groups.get(key).push(Number(e[cfg.field]));
 }
@@ -470,25 +401,20 @@ groups.get(key).push(Number(e[cfg.field]));
 
 return [...groups.entries()]
 .sort((a,b)=>a[0].localeCompare(b[0]))
-.map(([key,values])=>{
-const value=cfg.unit==='ml'
-?values.reduce((a,b)=>a+b,0)
-:values.reduce((a,b)=>a+b,0)/values.length;
-return {
+.map(([key,values])=>({
 key,
-value,
-label:period==='month'
-?key.slice(5)+'/'+key.slice(2,4)
-:key.slice(8,10)+'/'+key.slice(5,7)
-};
-})
+value:cfg.unit==='ml'
+?values.reduce((a,b)=>a+b,0)
+:values.reduce((a,b)=>a+b,0)/values.length,
+label:chartLabel(key,period)
+}))
 .slice(period==='day'?-30:-12);
 }
 
 function showSection(name){
 loadSerial++;
 activeSection=name;
-activePeriod='day';
+activePeriod=name==='Forge Weight'?'entry':'day';
 $('sectionTitle').textContent=name;
 $('sectionText').textContent=descriptions[name]||'Dati collegati al tuo account.';
 $('sectionContent').replaceChildren();
@@ -496,11 +422,9 @@ $('sectionCard').classList.remove('hidden');
 if(config[name])renderDashboard(name);
 $('sectionCard').scrollIntoView({behavior:'smooth'});
 }
-
 document.querySelectorAll('[data-section]').forEach(b=>{
 b.onclick=()=>showSection(b.dataset.section);
 });
-
 $('closeSectionBtn').onclick=()=>{
 loadSerial++;
 activeSection='';
@@ -514,10 +438,7 @@ const cfg=config[name];
 
 if(cfg.table){
 const label=document.createElement('label');
-label.textContent=name==='Forge Hydration'
-?'Aggiungi acqua (ml)'
-:'Registra peso (kg)';
-
+label.textContent=name==='Forge Hydration'?'Aggiungi acqua (ml)':'Registra peso (kg)';
 const input=document.createElement('input');
 input.id='metricInput';
 input.type='number';
@@ -528,16 +449,13 @@ input.placeholder=name==='Forge Hydration'?'Es. 250':'Es. 82.5';
 
 const save=document.createElement('button');
 save.textContent='Salva registrazione';
-
 save.onclick=async()=>{
 const n=Number(input.value);
-if(!input.value.trim()||
-!Number.isFinite(n)||
-n<=0||
+if(!input.value.trim()||!Number.isFinite(n)||n<=0||
 (name==='Forge Hydration'&&(n>10000||!Number.isInteger(n)))||
-(name==='Forge Weight'&&n>500))
+(name==='Forge Weight'&&n>500)){
 return status('metricStatus','Inserisci un valore valido.',true);
-
+}
 save.disabled=true;
 try{
 const {error}=await db.from(cfg.table).insert({
@@ -555,7 +473,6 @@ status('metricStatus',friendly(e),true);
 save.disabled=false;
 }
 };
-
 const msg=document.createElement('div');
 msg.id='metricStatus';
 msg.className='status hidden';
@@ -565,7 +482,7 @@ root.append(label,input,save,msg);
 if(name==='Forge Nutrition'){
 const note=document.createElement('p');
 note.className='muted';
-note.textContent='Il grafico legge le calorie e i macronutrienti dal diario alimentare già presente su Supabase. L’inserimento dei pasti sarà aggiunto nella prossima fase.';
+note.textContent='Il grafico legge calorie e macronutrienti dalle viste Supabase. L’inserimento dei pasti sarà aggiunto in una fase successiva.';
 root.append(note);
 }
 
@@ -573,10 +490,12 @@ const filters=document.createElement('div');
 filters.className='filters';
 
 for(const [key,label] of [
+['entry','Singole'],
 ['day','Giorni'],
 ['week','Settimane'],
 ['month','Mesi']
 ]){
+if(key==='entry'&&name==='Forge Nutrition')continue;
 const b=document.createElement('button');
 b.textContent=label;
 b.dataset.period=key;
@@ -609,7 +528,6 @@ tip.className='chart-tip';
 const message=document.createElement('p');
 message.id='chartMessage';
 message.className='muted';
-
 root.append(filters,stats,svg,tip,message);
 
 if(name==='Forge Weight'){
@@ -618,7 +536,6 @@ history.id='weightHistory';
 history.className='history';
 root.append(history);
 }
-
 loadChart(name);
 }
 
@@ -633,58 +550,40 @@ function drawChart(rows,unit){
 const svg=$('metricChart');
 svg.replaceChildren();
 $('chartTip').textContent='';
-
 if(!rows.length)return;
 
 const values=rows.map(r=>Number(r.value));
 const rawMin=Math.min(...values);
 const rawMax=Math.max(...values);
 const range=rawMax-rawMin;
-
-let padding;
-if(unit==='kg')padding=Math.max(range*.2,.5);
-else padding=Math.max(range*.15,rawMax*.05,1);
-
-let min=rawMin-padding;
-let max=rawMax+padding;
-
-if(unit!=='kg')min=Math.max(0,min);
-
+const pad=unit==='kg'
+?Math.max(range*.2,.5)
+:Math.max(range*.15,rawMax*.05,1);
+const min=unit==='kg'?rawMin-pad:Math.max(0,rawMin-pad);
+const max=rawMax+pad;
 const spread=max-min||1;
-
-const left=67;
-const right=565;
-const top=38;
-const bottom=194;
-const width=right-left;
+const left=67,right=565,top=38,bottom=194;
 
 const x=i=>rows.length===1
 ?(left+right)/2
-:left+i*width/(rows.length-1);
-
+:left+i*(right-left)/(rows.length-1);
 const y=v=>bottom-(v-min)/spread*(bottom-top);
 
 for(let j=0;j<=4;j++){
 const yy=top+j*(bottom-top)/4;
 const tick=max-j*spread/4;
-
 svg.append(svgEl('line',{
 x1:left,y1:yy,x2:right,y2:yy,
-stroke:'#45403a',
-'stroke-dasharray':'4 5'
+stroke:'#45403a','stroke-dasharray':'4 5'
 }));
-
 svg.append(svgEl('text',{
-x:left-8,y:yy+4,
-'text-anchor':'end'
+x:left-8,y:yy+4,'text-anchor':'end'
 },formatNum(tick,unit==='kg'?1:0)));
 }
 
 if(rows.length>1){
-const points=rows.map((r,i)=>x(i)+','+y(values[i])).join(' ');
-
 svg.append(svgEl('polyline',{
-points,
+points:rows.map((r,i)=>x(i)+','+y(values[i])).join(' '),
 fill:'none',
 stroke:'#d4af60',
 'stroke-width':3,
@@ -693,12 +592,10 @@ stroke:'#d4af60',
 }));
 }
 
-const labelEvery=Math.max(1,Math.ceil(rows.length/6));
+const every=Math.max(1,Math.ceil(rows.length/5));
 
 rows.forEach((r,i)=>{
-const cx=x(i);
-const cy=y(values[i]);
-
+const cx=x(i),cy=y(values[i]);
 const circle=svgEl('circle',{
 cx,cy,
 r:rows.length===1?5:4.5,
@@ -707,45 +604,34 @@ stroke:'#111115',
 'stroke-width':1.5,
 tabindex:0,
 role:'button',
-'aria-label':r.key+' '+formatNum(r.value,2)+' '+unit
+'aria-label':r.label+' '+formatNum(r.value,2)+' '+unit
 });
 
-const selectPoint=()=>{
-$('chartTip').textContent=
-r.key+' • '+formatNum(r.value,2)+' '+unit;
+const select=()=>{
+$('chartTip').textContent=r.label+' • '+formatNum(r.value,2)+' '+unit;
 svg.querySelectorAll('circle').forEach(c=>c.setAttribute('r','4.5'));
 circle.setAttribute('r','7');
 };
 
-circle.addEventListener('click',selectPoint);
+circle.addEventListener('click',select);
 circle.addEventListener('keydown',e=>{
 if(e.key==='Enter'||e.key===' '){
 e.preventDefault();
-selectPoint();
+select();
 }
 });
-
 svg.append(circle);
 
-if(i===0||
-i===rows.length-1||
-rows.length<=6||
-i%labelEvery===0){
+if(i===0||i===rows.length-1||rows.length<=5||i%every===0){
 svg.append(svgEl('text',{
-x:cx,
-y:224,
-'text-anchor':'middle'
+x:cx,y:224,'text-anchor':'middle'
 },r.label));
 }
 });
 
-if(rows.length===1){
-$('chartTip').textContent=
-'Un solo giorno o periodo disponibile. La linea apparirà con almeno due periodi distinti.';
-}else{
-$('chartTip').textContent=
-'Tocca un punto dorato per visualizzare il valore.';
-}
+$('chartTip').textContent=rows.length===1
+?'Un solo punto disponibile in questa vista.'
+:'Tocca un punto dorato per vedere il valore.';
 }
 
 function renderWeightHistory(entries){
@@ -757,9 +643,11 @@ const title=document.createElement('h3');
 title.textContent='Storico delle pesate';
 root.append(title);
 
-const valid=entries
-.filter(e=>e.recorded_at&&Number.isFinite(Number(e.weight_kg)))
-.sort((a,b)=>new Date(b.recorded_at)-new Date(a.recorded_at));
+const valid=entries.filter(e=>
+e.recorded_at&&Number.isFinite(Number(e.weight_kg))
+).slice().sort((a,b)=>
+new Date(b.recorded_at)-new Date(a.recorded_at)
+);
 
 if(!valid.length){
 const p=document.createElement('p');
@@ -771,29 +659,34 @@ return;
 
 const note=document.createElement('p');
 note.className='muted';
-note.textContent='Tutte le pesate, comprese quelle effettuate nello stesso giorno. Ultime 20 registrazioni.';
+note.textContent='Ultime 20 registrazioni, comprese quelle dello stesso giorno.';
 root.append(note);
 
 for(const e of valid.slice(0,20)){
 const item=document.createElement('div');
 item.className='history-item';
-
 const date=document.createElement('span');
 date.textContent=new Intl.DateTimeFormat('it-IT',{
 timeZone:'Europe/Rome',
-day:'2-digit',
-month:'2-digit',
-year:'numeric',
-hour:'2-digit',
-minute:'2-digit'
+day:'2-digit',month:'2-digit',year:'numeric',
+hour:'2-digit',minute:'2-digit'
 }).format(new Date(e.recorded_at));
-
 const value=document.createElement('strong');
 value.textContent=formatNum(e.weight_kg,2)+' kg';
-
 item.append(date,value);
 root.append(item);
 }
+}
+
+function addStat(label,value){
+const card=document.createElement('div');
+card.className='stat';
+const s=document.createElement('span');
+const strong=document.createElement('strong');
+s.textContent=label;
+strong.textContent=value;
+card.append(s,strong);
+$('metricStats').append(card);
 }
 
 async function loadChart(name){
@@ -806,15 +699,12 @@ msg.textContent='Caricamento dati...';
 $('metricStats').replaceChildren();
 $('metricChart').replaceChildren();
 $('chartTip').textContent='';
-
 if($('weightHistory'))$('weightHistory').replaceChildren();
 
 try{
 if(!currentUser)throw new Error('Accedi per visualizzare i dati.');
 
-let rows=[];
-let latest=null;
-let entries=[];
+let rows=[],latest=null,entries=[];
 
 if(cfg.table){
 const {data,error}=await db.from(cfg.table)
@@ -831,55 +721,40 @@ rows=aggregate(entries,cfg,period);
 
 if(name==='Forge Hydration'){
 const today=localDate();
-
 const todayTotal=entries
 .filter(e=>e.recorded_at&&dateParts(e.recorded_at).date===today)
 .reduce((sum,e)=>sum+Number(e.amount_ml||0),0);
-
 addStat('Acqua assunta oggi',formatNum(todayTotal)+' ml');
 }
 
-if(name==='Forge Weight'){
-renderWeightHistory(entries);
-}
+if(name==='Forge Weight')renderWeightHistory(entries);
 
 }else{
 let query;
-
 if(period==='day'){
-query=db.from(cfg.daily)
-.select('*')
+query=db.from(cfg.daily).select('*')
 .eq('user_id',currentUser.id)
-.order('day',{ascending:false})
-.limit(30);
+.order('day',{ascending:false}).limit(30);
 }else{
-query=db.from(cfg.period)
-.select('*')
+query=db.from(cfg.period).select('*')
 .eq('user_id',currentUser.id)
 .eq('period_type',period)
-.order('period_start',{ascending:false})
-.limit(12);
+.order('period_start',{ascending:false}).limit(12);
 }
 
 const {data,error}=await query;
-
 if(serial!==loadSerial||activeSection!==name)return;
 if(error)throw error;
 
 latest=data?.[0];
-
-rows=(data||[])
-.slice()
-.reverse()
-.map(r=>{
+rows=(data||[]).slice().reverse().map(r=>{
 const key=String(r[period==='day'?'day':'period_start']||'').slice(0,10);
 return {
 key,
 value:Number(r[period==='day'?cfg.dayValue:cfg.periodValue]),
-label:key.slice(8,10)+'/'+key.slice(5,7)
+label:chartLabel(key,period)
 };
-})
-.filter(r=>Number.isFinite(r.value));
+}).filter(r=>Number.isFinite(r.value));
 }
 
 if(!rows.length){
@@ -888,24 +763,22 @@ return;
 }
 
 drawChart(rows,cfg.unit);
-
 const last=Number(rows[rows.length-1].value);
 const first=Number(rows[0].value);
-const difference=last-first;
+const diff=last-first;
 
 addStat(
+period==='entry'?'Ultima registrazione':
 period==='day'?'Ultimo valore':'Ultimo periodo',
 formatNum(last,2)+' '+cfg.unit
 );
-
-addStat(
-'Variazione',
-(difference>0?'+':'')+formatNum(difference,2)+' '+cfg.unit
+addStat('Variazione',
+(diff>0?'+':'')+formatNum(diff,2)+' '+cfg.unit
 );
 
 if(name==='Forge Weight'){
 addStat('Valore iniziale',formatNum(first,2)+' kg');
-addStat('Periodi registrati',String(rows.length));
+addStat('Punti visualizzati',String(rows.length));
 }
 
 if(name==='Forge Nutrition'&&latest){
@@ -915,28 +788,14 @@ addStat('Grassi',formatNum(latest.total_fat||0,1)+' g');
 }
 
 msg.textContent=rows.length+
-' periodi visualizzati. I dati vengono letti da Supabase.'+
-(cfg.table&&entries.length===1000
+' punti visualizzati. Dati letti da Supabase.'+
+(entries.length===1000
 ?' Sono state lette le 1000 registrazioni più recenti.':'');
 }catch(e){
 if(serial===loadSerial){
 msg.textContent='Impossibile leggere i dati: '+friendly(e);
 }
 }
-}
-
-function addStat(label,value){
-const card=document.createElement('div');
-card.className='stat';
-
-const s=document.createElement('span');
-const strong=document.createElement('strong');
-
-s.textContent=label;
-strong.textContent=value;
-
-card.append(s,strong);
-$('metricStats').append(card);
 }
 
 db.auth.onAuthStateChange(event=>{
@@ -958,27 +817,22 @@ try{
 if(initialRecovery){
 resetting=true;
 show('loading');
-
 const err=recoveryErrorInUrl();
 if(err){
 show('reset');
 status('resetStatus',err,true);
 return;
 }
-
 const {data:{session},error}=await db.auth.getSession();
-
 if(error||!session){
 show('reset');
 status('resetStatus','Link non valido o scaduto. Richiedi un nuovo recupero password.',true);
 return;
 }
-
 resetReady=true;
 show('reset');
 return;
 }
-
 await userState();
 }catch(e){
 show('auth');
