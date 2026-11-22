@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -11,7 +12,8 @@
 body{margin:0;background:#0b0b0d;color:#f5f5f5;font-family:Arial,sans-serif}
 header{text-align:center;padding:26px 16px;border-bottom:1px solid #a98538}
 h1{color:#d4af60;margin:0 0 8px}
-.subtitle,.small{color:#aaa}.small{font-size:13px}
+.subtitle,.small{color:#aaa}
+.small{font-size:13px}
 main{padding:20px;max-width:760px;margin:auto}
 .card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:20px;margin-bottom:16px}
 .card h2{color:#d4af60;margin-top:0}
@@ -22,7 +24,8 @@ input{width:100%;padding:12px;margin:8px 0;background:#101014;border:1px solid #
 label{display:block;margin-top:10px;color:#ddd}
 .hidden{display:none!important}
 .status{padding:12px;border-radius:8px;background:#25252b;margin:12px 0;white-space:pre-wrap}
-.error{color:#ff9999}.success{color:#9de2ad}
+.error{color:#ff9999}
+.success{color:#9de2ad}
 nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 nav button{margin:0;min-height:65px}
 a{color:#d4af60}
@@ -35,11 +38,19 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 .stat{background:#101014;border:1px solid #514329;border-radius:9px;padding:12px}
 .stat span{display:block;color:#aaa;font-size:12px}
 .stat strong{display:block;color:#d4af60;font-size:19px;margin-top:5px}
-.chart{width:100%;height:235px;display:block;background:#111115;border-radius:10px;margin-top:12px}
+.chart{width:100%;height:auto;display:block;background:#111115;border-radius:10px;margin-top:12px;touch-action:manipulation}
 .chart text{fill:#aaa;font-size:11px}
 .muted{color:#aaa;font-size:13px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-@media(max-width:430px){.card{padding:15px}.row{grid-template-columns:1fr}}
+.history{margin-top:18px}
+.history h3{color:#d4af60;font-size:17px}
+.history-item{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid #35302a;font-size:14px}
+.history-item strong{color:#d4af60;white-space:nowrap}
+.chart-tip{min-height:25px;text-align:center;color:#d4af60;font-size:13px;margin-top:8px}
+@media(max-width:430px){
+.card{padding:15px}
+.row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -48,16 +59,23 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <div class="subtitle">Allenamento • Nutrizione • Evoluzione</div>
 </header>
 <main>
-<section id="loading" class="card"><h2>Caricamento...</h2><p>Connessione a Forge Coaching.</p></section>
+<section id="loading" class="card">
+<h2>Caricamento...</h2>
+<p>Connessione a Forge Coaching.</p>
+</section>
+
 <section id="auth" class="card hidden">
 <h2>Accedi a Forge Coaching</h2>
-<label>Email</label><input id="email" type="email" autocomplete="email" placeholder="La tua email">
-<label>Password</label><input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
+<label>Email</label>
+<input id="email" type="email" autocomplete="email" placeholder="La tua email">
+<label>Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
 <button id="loginBtn">Accedi</button>
 <button class="secondary" id="signupBtn">Crea nuovo account</button>
 <button class="secondary" id="forgotBtn">Password dimenticata?</button>
 <div id="authStatus" class="status hidden"></div>
 </section>
+
 <section id="forgot" class="card hidden">
 <h2>Recupera password</h2>
 <p>Riceverai un link per impostare una nuova password.</p>
@@ -66,6 +84,7 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <button class="secondary" id="backLoginBtn">Torna all'accesso</button>
 <div id="forgotStatus" class="status hidden"></div>
 </section>
+
 <section id="reset" class="card hidden">
 <h2>Imposta nuova password</h2>
 <p>Inserisci e conferma la nuova password.</p>
@@ -76,11 +95,13 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <button id="savePasswordBtn">Salva nuova password</button>
 <div id="resetStatus" class="status hidden"></div>
 </section>
+
 <section id="pending" class="card hidden">
 <h2>Account in attesa</h2>
 <p>Il tuo account deve essere approvato dall'amministratore.</p>
 <button id="pendingLogoutBtn" class="secondary">Esci</button>
 </section>
+
 <section id="app" class="hidden">
 <div class="card">
 <h2 id="welcome">Benvenuto</h2>
@@ -113,71 +134,168 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 </section>
 </main>
 <footer>Forge Coaching • La tua evoluzione</footer>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
+
 const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
 const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
 const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
+
 const $=id=>document.getElementById(id);
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-let currentUser=null,resetting=false,resetReady=false,activeSection='',activePeriod='day',loadSerial=0;
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+auth:{
+persistSession:true,
+autoRefreshToken:true,
+detectSessionInUrl:true
+}
+});
+
+let currentUser=null;
+let resetting=false;
+let resetReady=false;
+let activeSection='';
+let activePeriod='day';
+let loadSerial=0;
+
 const sections=['loading','auth','forgot','reset','pending','app'];
-function show(id){sections.forEach(x=>$(x).classList.toggle('hidden',x!==id))}
-function status(id,msg,error=false){const el=$(id);el.textContent=msg;el.className='status '+(error?'error':'success')}
-function friendly(e){const msg=e?.message||String(e);return /rate limit|too many requests|over_email_send_rate_limit/i.test(msg)?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.':msg}
-function cleanUrl(){history.replaceState({},document.title,location.pathname)}
-function recoveryUrl(){const q=new URLSearchParams(location.search),h=new URLSearchParams(location.hash.slice(1));return q.get('type')==='recovery'||h.get('type')==='recovery'}
+
+function show(id){
+sections.forEach(x=>$(x).classList.toggle('hidden',x!==id));
+}
+
+function status(id,msg,error=false){
+const el=$(id);
+el.textContent=msg;
+el.className='status '+(error?'error':'success');
+}
+
+function friendly(e){
+const msg=e?.message||String(e);
+return /rate limit|too many requests|over_email_send_rate_limit/i.test(msg)
+?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.'
+:msg;
+}
+
+function cleanUrl(){
+history.replaceState({},document.title,location.pathname);
+}
+
+function recoveryUrl(){
+const q=new URLSearchParams(location.search);
+const h=new URLSearchParams(location.hash.slice(1));
+return q.get('type')==='recovery'||h.get('type')==='recovery';
+}
+
 const initialRecovery=recoveryUrl();
-function recoveryErrorInUrl(){const q=new URLSearchParams(location.search),h=new URLSearchParams(location.hash.slice(1));return q.get('error_description')||h.get('error_description')||null}
+
+function recoveryErrorInUrl(){
+const q=new URLSearchParams(location.search);
+const h=new URLSearchParams(location.hash.slice(1));
+return q.get('error_description')||h.get('error_description')||null;
+}
+
 async function userState(){
 if(resetting)return;
 const {data:{session},error}=await db.auth.getSession();
-if(error||!session){currentUser=null;show('auth');return}
+if(error||!session){
+currentUser=null;
+show('auth');
+return;
+}
 currentUser=session.user;
+
 const [roles,accessResult]=await Promise.all([
 db.from('user_roles').select('role').eq('user_id',currentUser.id),
 db.from('account_access').select('status').eq('user_id',currentUser.id)
 ]);
-if(roles.error||accessResult.error){show('pending');return}
+
+if(roles.error||accessResult.error){
+show('pending');
+return;
+}
+
 let role='client';
 if(roles.data?.some(r=>r.role==='admin'))role='admin';
 else if(roles.data?.some(r=>r.role==='trainer'))role='trainer';
 else if(roles.data?.some(r=>r.role==='premium'))role='premium';
+
 const access=accessResult.data?.[0]?.status||'pending';
-if(access!=='approved'){show('pending');return}
-$('welcome').textContent=role==='admin'?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
+
+if(access!=='approved'){
+show('pending');
+return;
+}
+
+$('welcome').textContent=role==='admin'
+?'Amministratore riconosciuto'
+:'Benvenuto in Forge Coaching';
+
 $('roleInfo').textContent='Account: '+currentUser.email+' • Ruolo: '+role;
 show('app');
 }
+
 $('loginBtn').onclick=async()=>{
-const email=$('email').value.trim(),password=$('password').value;
+const email=$('email').value.trim();
+const password=$('password').value;
 if(!email||!password)return status('authStatus','Inserisci email e password.',true);
 $('loginBtn').disabled=true;
-try{const {error}=await db.auth.signInWithPassword({email,password});if(error)throw error;await userState()}
-catch(e){status('authStatus',friendly(e),true)}
-finally{$('loginBtn').disabled=false}
+try{
+const {error}=await db.auth.signInWithPassword({email,password});
+if(error)throw error;
+await userState();
+}catch(e){
+status('authStatus',friendly(e),true);
+}finally{
+$('loginBtn').disabled=false;
+}
 };
+
 $('signupBtn').onclick=async()=>{
-const email=$('email').value.trim(),password=$('password').value;
+const email=$('email').value.trim();
+const password=$('password').value;
 if(!email||password.length<8)return status('authStatus','Inserisci email e password di almeno 8 caratteri.',true);
 $('signupBtn').disabled=true;
-try{const {error}=await db.auth.signUp({email,password,options:{emailRedirectTo:SITE_URL}});if(error)throw error;status('authStatus','Registrazione inviata. Controlla la tua email e attendi l’approvazione.')}
-catch(e){status('authStatus',friendly(e),true)}
-finally{$('signupBtn').disabled=false}
+try{
+const {error}=await db.auth.signUp({
+email,password,
+options:{emailRedirectTo:SITE_URL}
+});
+if(error)throw error;
+status('authStatus','Registrazione inviata. Controlla la tua email e attendi l’approvazione.');
+}catch(e){
+status('authStatus',friendly(e),true);
+}finally{
+$('signupBtn').disabled=false;
+}
 };
-$('forgotBtn').onclick=()=>{$('recoveryEmail').value=$('email').value;show('forgot')};
+
+$('forgotBtn').onclick=()=>{
+$('recoveryEmail').value=$('email').value;
+show('forgot');
+};
+
 $('backLoginBtn').onclick=()=>show('auth');
+
 $('sendRecoveryBtn').onclick=async()=>{
 const email=$('recoveryEmail').value.trim();
 if(!email)return status('forgotStatus','Inserisci la tua email.',true);
 $('sendRecoveryBtn').disabled=true;
-try{const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:SITE_URL});if(error)throw error;status('forgotStatus','Se l’indirizzo è registrato, riceverai un’email con il link per reimpostare la password.')}
-catch(e){status('forgotStatus',friendly(e),true)}
-finally{$('sendRecoveryBtn').disabled=false}
+try{
+const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:SITE_URL});
+if(error)throw error;
+status('forgotStatus','Se l’indirizzo è registrato, riceverai un’email con il link per reimpostare la password.');
+}catch(e){
+status('forgotStatus',friendly(e),true);
+}finally{
+$('sendRecoveryBtn').disabled=false;
+}
 };
+
 $('savePasswordBtn').onclick=async()=>{
-const p=$('newPassword').value,c=$('confirmPassword').value;
+const p=$('newPassword').value;
+const c=$('confirmPassword').value;
 if(!resetting||!resetReady)return status('resetStatus','Link di recupero non verificato. Richiedi un nuovo link.',true);
 if(p.length<8)return status('resetStatus','La password deve contenere almeno 8 caratteri.',true);
 if(p!==c)return status('resetStatus','Le password non coincidono.',true);
@@ -188,17 +306,33 @@ if(!session)throw new Error('Sessione scaduta. Richiedi un nuovo link.');
 const {error}=await db.auth.updateUser({password:p});
 if(error)throw error;
 await db.auth.signOut();
-resetting=false;resetReady=false;cleanUrl();
-$('newPassword').value='';$('confirmPassword').value='';
-show('auth');status('authStatus','Password modificata. Accedi con la nuova password.');
-}catch(e){status('resetStatus',friendly(e),true)}
-finally{$('savePasswordBtn').disabled=false}
-};
-async function logout(){
-loadSerial++;await db.auth.signOut();currentUser=null;resetting=false;resetReady=false;cleanUrl();show('auth');
+resetting=false;
+resetReady=false;
+cleanUrl();
+$('newPassword').value='';
+$('confirmPassword').value='';
+show('auth');
+status('authStatus','Password modificata. Accedi con la nuova password.');
+}catch(e){
+status('resetStatus',friendly(e),true);
+}finally{
+$('savePasswordBtn').disabled=false;
 }
+};
+
+async function logout(){
+loadSerial++;
+await db.auth.signOut();
+currentUser=null;
+resetting=false;
+resetReady=false;
+cleanUrl();
+show('auth');
+}
+
 $('logoutBtn').onclick=logout;
 $('pendingLogoutBtn').onclick=logout;
+
 const descriptions={
 'Allenamento':'Programmi assegnati dal coach, esercizi e registri degli allenamenti.',
 'Progress Evolution':'Archivio fotografico, misure corporee e confronti dei progressi nel tempo.',
@@ -210,45 +344,151 @@ const descriptions={
 'Pacchetti lezioni':'Riepilogo delle lezioni acquistate, utilizzate e rimanenti.',
 'Profilo':'Informazioni del tuo account e dati personali.'
 };
+
 const config={
-'Forge Hydration':{table:'forge_water_entries',field:'amount_ml',time:'recorded_at',label:'Acqua',unit:'ml'},
-'Forge Weight':{table:'forge_weight_entries',field:'weight_kg',time:'recorded_at',label:'Peso',unit:'kg'},
-'Forge Nutrition':{daily:'forge_nutrition_daily_chart',period:'forge_nutrition_period_chart',label:'Calorie',unit:'kcal',dayValue:'total_calories',periodValue:'total_calories'}
+'Forge Hydration':{
+table:'forge_water_entries',
+field:'amount_ml',
+time:'recorded_at',
+label:'Acqua',
+unit:'ml'
+},
+'Forge Weight':{
+table:'forge_weight_entries',
+field:'weight_kg',
+time:'recorded_at',
+label:'Peso',
+unit:'kg'
+},
+'Forge Nutrition':{
+daily:'forge_nutrition_daily_chart',
+period:'forge_nutrition_period_chart',
+label:'Calorie',
+unit:'kcal',
+dayValue:'total_calories',
+periodValue:'total_calories'
+}
 };
-function formatNum(n,dec=0){return Number(n).toLocaleString('it-IT',{maximumFractionDigits:dec})}
+
+function formatNum(n,dec=0){
+return Number(n).toLocaleString('it-IT',{
+maximumFractionDigits:dec
+});
+}
+
 function localDate(d=new Date()){
-const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(d);
+const p=new Intl.DateTimeFormat('en-CA',{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}).formatToParts(d);
 const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
 return m.year+'-'+m.month+'-'+m.day;
 }
+
 function dateParts(s){
-const p=new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(s));
+const p=new Intl.DateTimeFormat('en-CA',{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}).formatToParts(new Date(s));
 const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
-return {year:Number(m.year),month:Number(m.month),day:Number(m.day),date:m.year+'-'+m.month+'-'+m.day};
+return {
+year:Number(m.year),
+month:Number(m.month),
+day:Number(m.day),
+date:m.year+'-'+m.month+'-'+m.day
+};
 }
+
 function weekStart(s){
 const d=new Date(s+'T12:00:00Z');
 const weekday=(d.getUTCDay()+6)%7;
 d.setUTCDate(d.getUTCDate()-weekday);
 return d.toISOString().slice(0,10);
 }
+
+/*
+FORGE CHART ENGINE V2
+Peso: ultima pesata giornaliera.
+Settimane e mesi: media delle ultime pesate
+dei singoli giorni, senza sovrappesare
+giornate con più registrazioni.
+Acqua: somma dei valori.
+*/
+
 function aggregate(entries,cfg,period){
 const groups=new Map();
-for(const e of entries){
-const n=Number(e[cfg.field]);
-if(!Number.isFinite(n)||!e[cfg.time])continue;
-const parts=dateParts(e[cfg.time]);
-const key=period==='day'?parts.date:period==='week'?weekStart(parts.date):parts.date.slice(0,7);
+const valid=entries.filter(e=>
+e[cfg.time]&&
+Number.isFinite(Number(e[cfg.field]))&&
+Number(e[cfg.field])>0
+).sort((a,b)=>
+new Date(a[cfg.time])-new Date(b[cfg.time])
+);
+
+if(cfg.unit==='kg'){
+const daily=new Map();
+for(const e of valid){
+const key=dateParts(e[cfg.time]).date;
+daily.set(key,{
+key,
+value:Number(e[cfg.field]),
+time:e[cfg.time]
+});
+}
+const days=[...daily.values()].sort((a,b)=>a.key.localeCompare(b.key));
+
+if(period==='day'){
+return days.slice(-30).map(r=>({
+...r,
+label:r.key.slice(8,10)+'/'+r.key.slice(5,7)
+}));
+}
+
+for(const r of days){
+const key=period==='week'
+?weekStart(r.key)
+:r.key.slice(0,7);
 if(!groups.has(key))groups.set(key,[]);
-groups.get(key).push(n);
+groups.get(key).push(r.value);
 }
-return [...groups.entries()].sort((a,b)=>a[0].localeCompare(b[0])).map(([key,values])=>{
-const value=cfg.unit==='ml'?values.reduce((a,b)=>a+b,0):values.reduce((a,b)=>a+b,0)/values.length;
-return {key,value,label:period==='month'?key.slice(5)+'/'+key.slice(2,4):key.slice(5)};
-}).slice(period==='day'?-30:-12);
+}else{
+for(const e of valid){
+const parts=dateParts(e[cfg.time]);
+const key=period==='day'
+?parts.date
+:period==='week'
+?weekStart(parts.date)
+:parts.date.slice(0,7);
+if(!groups.has(key))groups.set(key,[]);
+groups.get(key).push(Number(e[cfg.field]));
 }
+}
+
+return [...groups.entries()]
+.sort((a,b)=>a[0].localeCompare(b[0]))
+.map(([key,values])=>{
+const value=cfg.unit==='ml'
+?values.reduce((a,b)=>a+b,0)
+:values.reduce((a,b)=>a+b,0)/values.length;
+return {
+key,
+value,
+label:period==='month'
+?key.slice(5)+'/'+key.slice(2,4)
+:key.slice(8,10)+'/'+key.slice(5,7)
+};
+})
+.slice(period==='day'?-30:-12);
+}
+
 function showSection(name){
-loadSerial++;activeSection=name;activePeriod='day';
+loadSerial++;
+activeSection=name;
+activePeriod='day';
 $('sectionTitle').textContent=name;
 $('sectionText').textContent=descriptions[name]||'Dati collegati al tuo account.';
 $('sectionContent').replaceChildren();
@@ -256,156 +496,494 @@ $('sectionCard').classList.remove('hidden');
 if(config[name])renderDashboard(name);
 $('sectionCard').scrollIntoView({behavior:'smooth'});
 }
-document.querySelectorAll('[data-section]').forEach(b=>{b.onclick=()=>showSection(b.dataset.section)});
-$('closeSectionBtn').onclick=()=>{loadSerial++;activeSection='';$('sectionCard').classList.add('hidden')};
+
+document.querySelectorAll('[data-section]').forEach(b=>{
+b.onclick=()=>showSection(b.dataset.section);
+});
+
+$('closeSectionBtn').onclick=()=>{
+loadSerial++;
+activeSection='';
+$('sectionCard').classList.add('hidden');
+};
+
 function renderDashboard(name){
 const root=$('sectionContent');
 root.replaceChildren();
 const cfg=config[name];
+
 if(cfg.table){
 const label=document.createElement('label');
-label.textContent=name==='Forge Hydration'?'Aggiungi acqua (ml)':'Registra peso (kg)';
+label.textContent=name==='Forge Hydration'
+?'Aggiungi acqua (ml)'
+:'Registra peso (kg)';
+
 const input=document.createElement('input');
-input.id='metricInput';input.type='number';input.min='1';
+input.id='metricInput';
+input.type='number';
+input.min='1';
 input.max=name==='Forge Hydration'?'10000':'500';
 input.step=name==='Forge Hydration'?'1':'0.1';
 input.placeholder=name==='Forge Hydration'?'Es. 250':'Es. 82.5';
+
 const save=document.createElement('button');
 save.textContent='Salva registrazione';
+
 save.onclick=async()=>{
 const n=Number(input.value);
-if(!Number.isFinite(n)||n<=0||(name==='Forge Hydration'&&(n>10000||!Number.isInteger(n)))||(name==='Forge Weight'&&n>500))
+if(!input.value.trim()||
+!Number.isFinite(n)||
+n<=0||
+(name==='Forge Hydration'&&(n>10000||!Number.isInteger(n)))||
+(name==='Forge Weight'&&n>500))
 return status('metricStatus','Inserisci un valore valido.',true);
+
 save.disabled=true;
 try{
-const {error}=await db.from(cfg.table).insert({user_id:currentUser.id,[cfg.field]:n,[cfg.time]:new Date().toISOString()});
+const {error}=await db.from(cfg.table).insert({
+user_id:currentUser.id,
+[cfg.field]:n,
+[cfg.time]:new Date().toISOString()
+});
 if(error)throw error;
-input.value='';status('metricStatus','Registrazione salvata su Supabase.');
+input.value='';
+status('metricStatus','Registrazione salvata su Supabase.');
 await loadChart(name);
-}catch(e){status('metricStatus',friendly(e),true)}
-finally{save.disabled=false}
+}catch(e){
+status('metricStatus',friendly(e),true);
+}finally{
+save.disabled=false;
+}
 };
+
 const msg=document.createElement('div');
-msg.id='metricStatus';msg.className='status hidden';
+msg.id='metricStatus';
+msg.className='status hidden';
 root.append(label,input,save,msg);
 }
+
 if(name==='Forge Nutrition'){
 const note=document.createElement('p');
 note.className='muted';
 note.textContent='Il grafico legge le calorie e i macronutrienti dal diario alimentare già presente su Supabase. L’inserimento dei pasti sarà aggiunto nella prossima fase.';
 root.append(note);
 }
+
 const filters=document.createElement('div');
 filters.className='filters';
-for(const [key,label] of [['day','Giorni'],['week','Settimane'],['month','Mesi']]){
+
+for(const [key,label] of [
+['day','Giorni'],
+['week','Settimane'],
+['month','Mesi']
+]){
 const b=document.createElement('button');
-b.textContent=label;b.dataset.period=key;b.className=key===activePeriod?'active':'';
+b.textContent=label;
+b.dataset.period=key;
+b.className=key===activePeriod?'active':'';
 b.onclick=()=>{
 activePeriod=key;
-filters.querySelectorAll('button').forEach(x=>x.classList.toggle('active',x.dataset.period===key));
+filters.querySelectorAll('button').forEach(x=>
+x.classList.toggle('active',x.dataset.period===key)
+);
 loadChart(name);
 };
 filters.append(b);
 }
-const stats=document.createElement('div');stats.id='metricStats';stats.className='stats';
+
+const stats=document.createElement('div');
+stats.id='metricStats';
+stats.className='stats';
+
 const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-svg.id='metricChart';svg.classList.add('chart');svg.setAttribute('viewBox','0 0 600 235');svg.setAttribute('role','img');svg.setAttribute('aria-label','Grafico andamento');
-const message=document.createElement('p');message.id='chartMessage';message.className='muted';
-root.append(filters,stats,svg,message);
+svg.id='metricChart';
+svg.classList.add('chart');
+svg.setAttribute('viewBox','0 0 600 260');
+svg.setAttribute('role','img');
+svg.setAttribute('aria-label','Grafico andamento');
+
+const tip=document.createElement('div');
+tip.id='chartTip';
+tip.className='chart-tip';
+
+const message=document.createElement('p');
+message.id='chartMessage';
+message.className='muted';
+
+root.append(filters,stats,svg,tip,message);
+
+if(name==='Forge Weight'){
+const history=document.createElement('div');
+history.id='weightHistory';
+history.className='history';
+root.append(history);
+}
+
 loadChart(name);
 }
+
 function svgEl(tag,attrs,text){
 const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
 for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);
 if(text!==undefined)e.textContent=text;
 return e;
 }
+
 function drawChart(rows,unit){
-const svg=$('metricChart');svg.replaceChildren();
+const svg=$('metricChart');
+svg.replaceChildren();
+$('chartTip').textContent='';
+
 if(!rows.length)return;
+
 const values=rows.map(r=>Number(r.value));
-const min=Math.min(...values),max=Math.max(...values),spread=max-min||1;
-const x=i=>rows.length===1?300:46+i*510/(rows.length-1);
-const y=v=>184-(v-min)/spread*135;
-for(let j=0;j<4;j++)svg.append(svgEl('line',{x1:40,y1:30+j*52,x2:570,y2:30+j*52,stroke:'#45403a','stroke-dasharray':'4 5'}));
-svg.append(svgEl('polyline',{points:rows.map((r,i)=>x(i)+','+y(values[i])).join(' '),fill:'none',stroke:'#d4af60','stroke-width':3,'stroke-linecap':'round','stroke-linejoin':'round'}));
-rows.forEach((r,i)=>{
-svg.append(svgEl('circle',{cx:x(i),cy:y(values[i]),r:3.8,fill:'#d4af60'}));
-if(i===0||i===rows.length-1||rows.length<=7||i%Math.ceil(rows.length/6)===0)
-svg.append(svgEl('text',{x:x(i),y:219,'text-anchor':'middle'},r.label));
-});
-svg.append(svgEl('text',{x:46,y:17},formatNum(max,2)+' '+unit));
-svg.append(svgEl('text',{x:46,y:199},formatNum(min,2)+' '+unit));
+const rawMin=Math.min(...values);
+const rawMax=Math.max(...values);
+const range=rawMax-rawMin;
+
+let padding;
+if(unit==='kg')padding=Math.max(range*.2,.5);
+else padding=Math.max(range*.15,rawMax*.05,1);
+
+let min=rawMin-padding;
+let max=rawMax+padding;
+
+if(unit!=='kg')min=Math.max(0,min);
+
+const spread=max-min||1;
+
+const left=67;
+const right=565;
+const top=38;
+const bottom=194;
+const width=right-left;
+
+const x=i=>rows.length===1
+?(left+right)/2
+:left+i*width/(rows.length-1);
+
+const y=v=>bottom-(v-min)/spread*(bottom-top);
+
+for(let j=0;j<=4;j++){
+const yy=top+j*(bottom-top)/4;
+const tick=max-j*spread/4;
+
+svg.append(svgEl('line',{
+x1:left,y1:yy,x2:right,y2:yy,
+stroke:'#45403a',
+'stroke-dasharray':'4 5'
+}));
+
+svg.append(svgEl('text',{
+x:left-8,y:yy+4,
+'text-anchor':'end'
+},formatNum(tick,unit==='kg'?1:0)));
 }
+
+if(rows.length>1){
+const points=rows.map((r,i)=>x(i)+','+y(values[i])).join(' ');
+
+svg.append(svgEl('polyline',{
+points,
+fill:'none',
+stroke:'#d4af60',
+'stroke-width':3,
+'stroke-linecap':'round',
+'stroke-linejoin':'round'
+}));
+}
+
+const labelEvery=Math.max(1,Math.ceil(rows.length/6));
+
+rows.forEach((r,i)=>{
+const cx=x(i);
+const cy=y(values[i]);
+
+const circle=svgEl('circle',{
+cx,cy,
+r:rows.length===1?5:4.5,
+fill:'#d4af60',
+stroke:'#111115',
+'stroke-width':1.5,
+tabindex:0,
+role:'button',
+'aria-label':r.key+' '+formatNum(r.value,2)+' '+unit
+});
+
+const selectPoint=()=>{
+$('chartTip').textContent=
+r.key+' • '+formatNum(r.value,2)+' '+unit;
+svg.querySelectorAll('circle').forEach(c=>c.setAttribute('r','4.5'));
+circle.setAttribute('r','7');
+};
+
+circle.addEventListener('click',selectPoint);
+circle.addEventListener('keydown',e=>{
+if(e.key==='Enter'||e.key===' '){
+e.preventDefault();
+selectPoint();
+}
+});
+
+svg.append(circle);
+
+if(i===0||
+i===rows.length-1||
+rows.length<=6||
+i%labelEvery===0){
+svg.append(svgEl('text',{
+x:cx,
+y:224,
+'text-anchor':'middle'
+},r.label));
+}
+});
+
+if(rows.length===1){
+$('chartTip').textContent=
+'Un solo giorno o periodo disponibile. La linea apparirà con almeno due periodi distinti.';
+}else{
+$('chartTip').textContent=
+'Tocca un punto dorato per visualizzare il valore.';
+}
+}
+
+function renderWeightHistory(entries){
+const root=$('weightHistory');
+if(!root)return;
+root.replaceChildren();
+
+const title=document.createElement('h3');
+title.textContent='Storico delle pesate';
+root.append(title);
+
+const valid=entries
+.filter(e=>e.recorded_at&&Number.isFinite(Number(e.weight_kg)))
+.sort((a,b)=>new Date(b.recorded_at)-new Date(a.recorded_at));
+
+if(!valid.length){
+const p=document.createElement('p');
+p.className='muted';
+p.textContent='Nessuna pesata registrata.';
+root.append(p);
+return;
+}
+
+const note=document.createElement('p');
+note.className='muted';
+note.textContent='Tutte le pesate, comprese quelle effettuate nello stesso giorno. Ultime 20 registrazioni.';
+root.append(note);
+
+for(const e of valid.slice(0,20)){
+const item=document.createElement('div');
+item.className='history-item';
+
+const date=document.createElement('span');
+date.textContent=new Intl.DateTimeFormat('it-IT',{
+timeZone:'Europe/Rome',
+day:'2-digit',
+month:'2-digit',
+year:'numeric',
+hour:'2-digit',
+minute:'2-digit'
+}).format(new Date(e.recorded_at));
+
+const value=document.createElement('strong');
+value.textContent=formatNum(e.weight_kg,2)+' kg';
+
+item.append(date,value);
+root.append(item);
+}
+}
+
 async function loadChart(name){
-const serial=++loadSerial,cfg=config[name],period=activePeriod;
+const serial=++loadSerial;
+const cfg=config[name];
+const period=activePeriod;
 const msg=$('chartMessage');
+
 msg.textContent='Caricamento dati...';
-$('metricStats').replaceChildren();$('metricChart').replaceChildren();
+$('metricStats').replaceChildren();
+$('metricChart').replaceChildren();
+$('chartTip').textContent='';
+
+if($('weightHistory'))$('weightHistory').replaceChildren();
+
 try{
 if(!currentUser)throw new Error('Accedi per visualizzare i dati.');
-let rows=[],latest=null;
+
+let rows=[];
+let latest=null;
+let entries=[];
+
 if(cfg.table){
-const {data,error}=await db.from(cfg.table).select('*').eq('user_id',currentUser.id).order(cfg.time,{ascending:false}).limit(1000);
+const {data,error}=await db.from(cfg.table)
+.select('*')
+.eq('user_id',currentUser.id)
+.order(cfg.time,{ascending:false})
+.limit(1000);
+
 if(error)throw error;
 if(serial!==loadSerial||activeSection!==name)return;
-const entries=data||[];
+
+entries=data||[];
 rows=aggregate(entries,cfg,period);
+
 if(name==='Forge Hydration'){
 const today=localDate();
-const todayTotal=entries.filter(e=>dateParts(e.recorded_at).date===today).reduce((sum,e)=>sum+Number(e.amount_ml||0),0);
-const card=document.createElement('div');card.className='stat';
-const s=document.createElement('span');s.textContent='Acqua assunta oggi';
-const strong=document.createElement('strong');strong.textContent=formatNum(todayTotal)+' ml';
-card.append(s,strong);$('metricStats').append(card);
+
+const todayTotal=entries
+.filter(e=>e.recorded_at&&dateParts(e.recorded_at).date===today)
+.reduce((sum,e)=>sum+Number(e.amount_ml||0),0);
+
+addStat('Acqua assunta oggi',formatNum(todayTotal)+' ml');
 }
+
+if(name==='Forge Weight'){
+renderWeightHistory(entries);
+}
+
 }else{
 let query;
-if(period==='day')query=db.from(cfg.daily).select('*').eq('user_id',currentUser.id).order('day',{ascending:false}).limit(30);
-else query=db.from(cfg.period).select('*').eq('user_id',currentUser.id).eq('period_type',period).order('period_start',{ascending:false}).limit(12);
+
+if(period==='day'){
+query=db.from(cfg.daily)
+.select('*')
+.eq('user_id',currentUser.id)
+.order('day',{ascending:false})
+.limit(30);
+}else{
+query=db.from(cfg.period)
+.select('*')
+.eq('user_id',currentUser.id)
+.eq('period_type',period)
+.order('period_start',{ascending:false})
+.limit(12);
+}
+
 const {data,error}=await query;
+
 if(serial!==loadSerial||activeSection!==name)return;
 if(error)throw error;
+
 latest=data?.[0];
-rows=(data||[]).slice().reverse().map(r=>({value:Number(r[period==='day'?cfg.dayValue:cfg.periodValue]),label:String(r[period==='day'?'day':'period_start']||'').slice(5)}));
+
+rows=(data||[])
+.slice()
+.reverse()
+.map(r=>{
+const key=String(r[period==='day'?'day':'period_start']||'').slice(0,10);
+return {
+key,
+value:Number(r[period==='day'?cfg.dayValue:cfg.periodValue]),
+label:key.slice(8,10)+'/'+key.slice(5,7)
+};
+})
+.filter(r=>Number.isFinite(r.value));
 }
-if(!rows.length){msg.textContent='Nessun dato registrato per questo intervallo.';return}
+
+if(!rows.length){
+msg.textContent='Nessun dato registrato per questo intervallo.';
+return;
+}
+
 drawChart(rows,cfg.unit);
-const last=Number(rows[rows.length-1].value),first=Number(rows[0].value);
-const cards=[
-[period==='day'?'Ultimo valore':'Ultimo periodo',formatNum(last,2)+' '+cfg.unit],
-['Variazione',(last-first>0?'+':'')+formatNum(last-first,2)+' '+cfg.unit]
-];
-if(name==='Forge Nutrition'&&latest)cards.push(
-['Proteine',formatNum(latest.total_protein||0,1)+' g'],
-['Carboidrati',formatNum(latest.total_carbohydrates||0,1)+' g'],
-['Grassi',formatNum(latest.total_fat||0,1)+' g']
+
+const last=Number(rows[rows.length-1].value);
+const first=Number(rows[0].value);
+const difference=last-first;
+
+addStat(
+period==='day'?'Ultimo valore':'Ultimo periodo',
+formatNum(last,2)+' '+cfg.unit
 );
-for(const [label,value] of cards){
-const card=document.createElement('div');card.className='stat';
-const s=document.createElement('span'),strong=document.createElement('strong');
-s.textContent=label;strong.textContent=value;card.append(s,strong);$('metricStats').append(card);
+
+addStat(
+'Variazione',
+(difference>0?'+':'')+formatNum(difference,2)+' '+cfg.unit
+);
+
+if(name==='Forge Weight'){
+addStat('Valore iniziale',formatNum(first,2)+' kg');
+addStat('Periodi registrati',String(rows.length));
 }
-msg.textContent=rows.length+' periodi visualizzati. I dati vengono letti da Supabase.';
-}catch(e){if(serial===loadSerial)msg.textContent='Impossibile leggere i dati: '+friendly(e)}
+
+if(name==='Forge Nutrition'&&latest){
+addStat('Proteine',formatNum(latest.total_protein||0,1)+' g');
+addStat('Carboidrati',formatNum(latest.total_carbohydrates||0,1)+' g');
+addStat('Grassi',formatNum(latest.total_fat||0,1)+' g');
 }
+
+msg.textContent=rows.length+
+' periodi visualizzati. I dati vengono letti da Supabase.'+
+(cfg.table&&entries.length===1000
+?' Sono state lette le 1000 registrazioni più recenti.':'');
+}catch(e){
+if(serial===loadSerial){
+msg.textContent='Impossibile leggere i dati: '+friendly(e);
+}
+}
+}
+
+function addStat(label,value){
+const card=document.createElement('div');
+card.className='stat';
+
+const s=document.createElement('span');
+const strong=document.createElement('strong');
+
+s.textContent=label;
+strong.textContent=value;
+
+card.append(s,strong);
+$('metricStats').append(card);
+}
+
 db.auth.onAuthStateChange(event=>{
-if(event==='PASSWORD_RECOVERY'){resetting=true;resetReady=true;show('reset');return}
+if(event==='PASSWORD_RECOVERY'){
+resetting=true;
+resetReady=true;
+show('reset');
+return;
+}
 if(resetting)return;
-if(event==='SIGNED_OUT'){currentUser=null;show('auth')}
+if(event==='SIGNED_OUT'){
+currentUser=null;
+show('auth');
+}
 });
+
 (async()=>{
 try{
 if(initialRecovery){
-resetting=true;show('loading');
+resetting=true;
+show('loading');
+
 const err=recoveryErrorInUrl();
-if(err){show('reset');status('resetStatus',decodeURIComponent(err),true);return}
-const {data:{session},error}=await db.auth.getSession();
-if(error||!session){show('reset');status('resetStatus','Link non valido o scaduto. Richiedi un nuovo recupero password.',true);return}
-resetReady=true;show('reset');return;
+if(err){
+show('reset');
+status('resetStatus',err,true);
+return;
 }
+
+const {data:{session},error}=await db.auth.getSession();
+
+if(error||!session){
+show('reset');
+status('resetStatus','Link non valido o scaduto. Richiedi un nuovo recupero password.',true);
+return;
+}
+
+resetReady=true;
+show('reset');
+return;
+}
+
 await userState();
-}catch(e){show('auth');status('authStatus',friendly(e),true)}
+}catch(e){
+show('auth');
+status('authStatus',friendly(e),true);
+}
 })();
 </script>
 </body>
