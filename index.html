@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -16,6 +17,7 @@ main{padding:22px;max-width:650px;margin:auto}
 .card h2{color:#d4af60;margin-top:0}
 button{background:#d4af60;color:#111;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:8px}
 button:disabled{opacity:.5}
+.secondary{background:transparent;color:#d4af60;border:1px solid #a98538}
 .back{margin-bottom:20px}
 .hidden{display:none!important}
 .info{color:#bbb;line-height:1.6}
@@ -33,21 +35,35 @@ footer{text-align:center;padding:25px;color:#888;font-size:12px}
 </style>
 </head>
 <body>
+
 <header>
 <h1>FORGE COACHING</h1>
 <div class="subtitle">Train. Evolve. Become.</div>
 </header>
+
 <main>
 <section id="auth" class="card">
 <h2>Accedi a Forge Coaching</h2>
 <label for="email">Email</label>
 <input id="email" type="email" autocomplete="email" placeholder="La tua email">
 <label for="password">Password</label>
-<input id="password" type="password" autocomplete="current-password" placeholder="Almeno 6 caratteri">
+<input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
 <button id="loginBtn" onclick="accedi()">Accedi</button>
-<button id="signupBtn" onclick="registrati()">Crea un account</button>
-<p class="small">I nuovi account richiedono l'approvazione del coach. Dopo la registrazione potrebbe essere necessario confermare l'email.</p>
-<p id="authMsg" role="status"></p>
+<button id="forgotBtn" class="secondary" onclick="recuperaPassword()">Password dimenticata?</button>
+<button id="signupBtn" class="secondary" onclick="registrati()">Crea un account</button>
+<p class="small">I nuovi account richiedono l'approvazione del coach. Potrebbe essere necessario confermare l'email.</p>
+<p id="authMsg" role="status" aria-live="polite"></p>
+</section>
+
+<section id="resetPassword" class="card hidden">
+<h2>Imposta una nuova password</h2>
+<p class="info">Inserisci e conferma la tua nuova password.</p>
+<label for="nuovaPassword">Nuova password</label>
+<input id="nuovaPassword" type="password" autocomplete="new-password" minlength="6">
+<label for="confermaPassword">Conferma nuova password</label>
+<input id="confermaPassword" type="password" autocomplete="new-password" minlength="6">
+<button id="savePasswordBtn" onclick="salvaNuovaPassword()">Salva nuova password</button>
+<p id="resetMsg" role="status" aria-live="polite"></p>
 </section>
 
 <section id="pending" class="card hidden">
@@ -170,9 +186,11 @@ const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
 const db=window.supabase?.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 const $=id=>document.getElementById(id);
+const REDIRECT_URL=location.origin+location.pathname;
 
 let currentUser=null;
 let sezioneAttuale='';
+let recoveryMode=false;
 
 const sezioni={
  allenamento:{
@@ -215,12 +233,17 @@ function messaggio(t,errore=false){
 }
 
 function busy(v){
- $('loginBtn').disabled=v;
- $('signupBtn').disabled=v;
+ ['loginBtn','signupBtn','forgotBtn']
+  .forEach(id=>$(id).disabled=v);
+}
+
+function mostra(id){
+ ['auth','pending','app','resetPassword']
+  .forEach(x=>$(x).classList.toggle('hidden',x!==id));
 }
 
 async function accedi(){
- if(!db)return messaggio('Libreria Supabase non caricata. Riprova con connessione internet.',true);
+ if(!db)return messaggio('Libreria Supabase non caricata. Controlla la connessione.',true);
  const email=$('email').value.trim();
  const password=$('password').value;
  if(!email||!password)return messaggio('Inserisci email e password.',true);
@@ -248,7 +271,7 @@ async function registrati(){
   const {data,error}=await db.auth.signUp({
    email,
    password,
-   options:{emailRedirectTo:location.origin+location.pathname}
+   options:{emailRedirectTo:REDIRECT_URL}
   });
   if(error)throw error;
   messaggio(data.session?
@@ -262,35 +285,112 @@ async function registrati(){
  }
 }
 
+async function recuperaPassword(){
+ if(!db)return messaggio('Supabase non disponibile.',true);
+ const email=$('email').value.trim();
+
+ if(!email){
+  return messaggio(
+   'Inserisci la tua email e premi di nuovo Password dimenticata?.',
+   true
+  );
+ }
+
+ busy(true);
+ try{
+  const {error}=await db.auth.resetPasswordForEmail(email,{
+   redirectTo:REDIRECT_URL
+  });
+  if(error)throw error;
+
+  messaggio(
+   'Se l’indirizzo è registrato, riceverai un’email con il link per reimpostare la password. Controlla anche lo spam.'
+  );
+ }catch(e){
+  messaggio(e.message||'Impossibile inviare la richiesta. Riprova più tardi.',true);
+ }finally{
+  busy(false);
+ }
+}
+
+async function salvaNuovaPassword(){
+ if(!db)return;
+
+ const password=$('nuovaPassword').value;
+ const conferma=$('confermaPassword').value;
+ const msg=$('resetMsg');
+ const btn=$('savePasswordBtn');
+
+ if(password.length<6){
+  msg.textContent='Usa almeno 6 caratteri.';
+  msg.className='error';
+  return;
+ }
+
+ if(password!==conferma){
+  msg.textContent='Le password non coincidono.';
+  msg.className='error';
+  return;
+ }
+
+ btn.disabled=true;
+
+ try{
+  const {data,error:userError}=await db.auth.getUser();
+  if(userError||!data.user)
+   throw new Error('Link non valido o scaduto. Richiedi un nuovo recupero.');
+
+  const {error}=await db.auth.updateUser({password});
+  if(error)throw error;
+
+  recoveryMode=false;
+  await db.auth.signOut();
+  currentUser=null;
+
+  history.replaceState(null,'',REDIRECT_URL);
+  $('password').value='';
+  $('nuovaPassword').value='';
+  $('confermaPassword').value='';
+
+  mostra('auth');
+  messaggio('Password aggiornata! Ora accedi con la nuova password.');
+ }catch(e){
+  msg.textContent=e.message||'Errore durante il cambio password.';
+  msg.className='error';
+ }finally{
+  btn.disabled=false;
+ }
+}
+
 async function esci(){
  if(db)await db.auth.signOut();
  currentUser=null;
+ recoveryMode=false;
  mostra('auth');
  torna();
 }
 
-function mostra(id){
- ['auth','pending','app'].forEach(x=>
-  $(x).classList.toggle('hidden',x!==id)
- );
-}
-
 async function controllaSessione(){
+ if(recoveryMode){
+  mostra('resetPassword');
+  return;
+ }
+
  if(!db){
   mostra('auth');
   messaggio('Impossibile caricare Supabase.',true);
   return;
  }
+
  const {data,error}=await db.auth.getUser();
  if(error||!data.user){
   currentUser=null;
   mostra('auth');
   return;
  }
+
  currentUser=data.user;
 
- // Se la verifica delle autorizzazioni fallisce,
- // il contenuto riservato rimane bloccato.
  try{
   const role=await db.from('user_roles')
    .select('role').eq('user_id',currentUser.id);
@@ -317,6 +417,7 @@ async function controllaSessione(){
   $('adminMsg').textContent=isAdmin?
    'Accesso amministratore riconosciuto (pannello admin in preparazione).':
    'Accesso cliente approvato.';
+
   mostra('app');
 
  }catch(e){
@@ -329,8 +430,10 @@ async function controllaSessione(){
 
 function apri(nome){
  if(!currentUser||$('app').classList.contains('hidden'))return;
+
  const s=sezioni[nome];
  if(!s)return;
+
  sezioneAttuale=nome;
  $('titolo').textContent=s.titolo;
  $('descrizione').textContent=s.testo;
@@ -343,11 +446,13 @@ function apri(nome){
   $('areaGrafici').classList.remove('hidden');
   aggiornaAcqua();
  }
+
  if(nome==='peso'){
   $('areaPeso').classList.remove('hidden');
   $('areaGrafici').classList.remove('hidden');
   aggiornaPeso();
  }
+
  if(nome==='premium')
   $('areaPremium').classList.remove('hidden');
 
@@ -363,8 +468,7 @@ function torna(){
  scrollTo(0,0);
 }
 
-// Salvataggio demo locale separato per utente.
-// I dati non sono ancora sincronizzati con Supabase.
+// Dati demo locali, non ancora sincronizzati con Supabase.
 
 function chiave(tipo){
  return 'forge_demo_'+tipo+'_'+(currentUser?.id||'anon');
@@ -399,6 +503,7 @@ function salvaAcqua(){
  const ml=Number($('quantitaAcqua').value);
  if(!Number.isFinite(ml)||ml<=0||ml>10000)
   return alert('Inserisci una quantità valida in ml.');
+
  const dati=leggi('acqua');
  dati.push({data:dataLocale(),ml});
  if(scrivi('acqua',dati))aggiornaAcqua();
@@ -408,11 +513,14 @@ function salvaPeso(){
  const kg=Number($('valorePeso').value);
  if(!Number.isFinite(kg)||kg<1||kg>500)
   return alert('Inserisci un peso valido in kg.');
+
  const dati=leggi('peso');
  const oggi=dataLocale();
  const indice=dati.findIndex(x=>x.data===oggi);
+
  if(indice>=0)dati[indice].kg=kg;
  else dati.push({data:oggi,kg});
+
  if(scrivi('peso',dati))aggiornaPeso();
 }
 
@@ -420,6 +528,7 @@ function aggiornaAcqua(){
  const ml=leggi('acqua')
   .filter(x=>x.data===dataLocale())
   .reduce((s,x)=>s+Number(x.ml),0);
+
  $('totaleAcqua').textContent=(ml/1000).toFixed(2)+' L';
  aggiornaGrafici();
 }
@@ -427,24 +536,31 @@ function aggiornaAcqua(){
 function aggiornaPeso(){
  const dati=leggi('peso')
   .sort((a,b)=>a.data.localeCompare(b.data));
+
  const ultimo=dati.at(-1);
  const precedente=dati.at(-2);
+
  $('ultimoPeso').textContent=ultimo?
   Number(ultimo.kg).toFixed(1)+' kg':'—';
+
  $('variazionePeso').textContent=ultimo&&precedente?
   'Variazione dalla pesata precedente: '+
   ((ultimo.kg-precedente.kg)>0?'+':'')+
   (ultimo.kg-precedente.kg).toFixed(1)+' kg':'';
+
  aggiornaGrafici();
 }
 
 function chiavePeriodo(data,periodo){
  const d=new Date(data+'T12:00:00');
+
  if(periodo==='mesi')return data.slice(0,7);
+
  if(periodo==='settimane'){
   d.setDate(d.getDate()-(d.getDay()+6)%7);
   return dataLocale(d);
  }
+
  return data;
 }
 
@@ -453,8 +569,10 @@ function periodi(periodo){
  const risultato=[];
  const quantita=periodo==='mesi'?12:
   periodo==='settimane'?8:7;
+
  for(let i=quantita-1;i>=0;i--){
   const d=new Date(oggi);
+
   if(periodo==='mesi'){
    d.setDate(1);
    d.setMonth(d.getMonth()-i);
@@ -462,13 +580,16 @@ function periodi(periodo){
    d.setDate(d.getDate()-
     (periodo==='settimane'?i*7:i));
   }
+
   risultato.push(chiavePeriodo(dataLocale(d),periodo));
  }
+
  return risultato;
 }
 
 function aggiornaGrafici(){
  if(!['acqua','peso'].includes(sezioneAttuale))return;
+
  const acqua=sezioneAttuale==='acqua';
  const periodo=$('periodo').value;
  const dati=leggi(acqua?'acqua':'peso');
@@ -477,7 +598,9 @@ function aggiornaGrafici(){
  const valori=chiavi.map(k=>{
   const righe=dati.filter(x=>
    chiavePeriodo(x.data,periodo)===k);
+
   if(!righe.length)return null;
+
   return acqua?
    righe.reduce((s,x)=>s+Number(x.ml),0)/1000:
    righe.reduce((s,x)=>s+Number(x.kg),0)/righe.length;
@@ -487,18 +610,22 @@ function aggiornaGrafici(){
 
  const storico=$('storico');
  storico.replaceChildren();
+
  const titolo=document.createElement('h3');
  titolo.textContent='Storico';
  storico.appendChild(titolo);
+
  let presenti=0;
 
  chiavi.forEach((k,i)=>{
   if(valori[i]===null)return;
   presenti++;
+
   const r=document.createElement('div');
   r.className='entry';
   r.textContent=k+' — '+valori[i].toFixed(2)+
    ' '+(acqua?'L':'kg');
+
   storico.appendChild(r);
  });
 
@@ -513,12 +640,15 @@ function aggiornaGrafici(){
 function disegnaGrafico(etichette,valori,unita){
  const svg=$('grafico');
  svg.replaceChildren();
+
  const ns='http://www.w3.org/2000/svg';
 
  const crea=(tag,attrs,testo)=>{
   const el=document.createElementNS(ns,tag);
+
   Object.entries(attrs).forEach(([k,v])=>
    el.setAttribute(k,v));
+
   if(testo!==undefined)el.textContent=testo;
   svg.appendChild(el);
  };
@@ -536,9 +666,11 @@ function disegnaGrafico(etichette,valori,unita){
 
  let min=Math.min(...presenti);
  let max=Math.max(...presenti);
+
  const margine=Math.max(
   (max-min)*.2,unita==='kg'?.5:.2
  );
+
  min=Math.max(0,min-margine);
  max+=margine;
 
@@ -552,6 +684,7 @@ function disegnaGrafico(etichette,valori,unita){
   });
 
  let segmento=[];
+
  function traccia(){
   if(segmento.length>1)
    crea('polyline',{
@@ -565,9 +698,13 @@ function disegnaGrafico(etichette,valori,unita){
  }
 
  valori.forEach((v,i)=>{
-  if(v===null){traccia();return;}
+  if(v===null){
+   traccia();
+   return;
+  }
   segmento.push(x(i)+','+y(v));
  });
+
  traccia();
 
  valori.forEach((v,i)=>{
@@ -592,17 +729,28 @@ function disegnaGrafico(etichette,valori,unita){
 }
 
 if(db){
- db.auth.onAuthStateChange(()=>{
+ db.auth.onAuthStateChange(event=>{
+  if(event==='PASSWORD_RECOVERY'){
+   recoveryMode=true;
+   mostra('resetPassword');
+   return;
+  }
+
+  if(recoveryMode){
+   mostra('resetPassword');
+   return;
+  }
+
   setTimeout(controllaSessione,0);
  });
+
  controllaSessione();
 }else{
- messaggio('Libreria Supabase non disponibile. Controlla la connessione.',true);
+ messaggio(
+  'Libreria Supabase non disponibile. Controlla la connessione.',
+  true
+ );
 }
 </script>
 </body>
 </html>
-
-
- 
-
