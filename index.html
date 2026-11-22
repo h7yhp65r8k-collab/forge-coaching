@@ -10,17 +10,17 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b0b0d;color:#f5f5f5;font-family:Arial,sans-serif}
-header{text-align:center;padding:28px 20px;border-bottom:1px solid #a98538}
+header{text-align:center;padding:26px 16px;border-bottom:1px solid #a98538}
 h1{color:#d4af60;margin:0 0 8px}
 .subtitle,.small{color:#aaa}
 .small{font-size:13px}
-main{padding:20px;max-width:650px;margin:auto}
-.card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:22px;margin-bottom:16px}
+main{padding:20px;max-width:760px;margin:auto}
+.card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:20px;margin-bottom:16px}
 .card h2{color:#d4af60;margin-top:0}
-button{background:#d4af60;color:#111;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:9px}
+button{background:#d4af60;color:#111;border:0;padding:12px 14px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:9px}
 button.secondary{background:#29292e;color:#d4af60;border:1px solid #78612e}
 button:disabled{opacity:.5;cursor:not-allowed}
-input{width:100%;padding:13px;margin:8px 0;background:#101014;border:1px solid #66542d;border-radius:8px;color:#fff;font-size:16px}
+input,select{width:100%;padding:12px;margin:8px 0;background:#101014;border:1px solid #66542d;border-radius:8px;color:#fff;font-size:16px}
 label{display:block;margin-top:10px;color:#ddd}
 .hidden{display:none!important}
 .status{padding:12px;border-radius:8px;background:#25252b;margin:12px 0;white-space:pre-wrap}
@@ -30,6 +30,22 @@ nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 nav button{margin:0;min-height:65px}
 a{color:#d4af60}
 footer{text-align:center;color:#777;font-size:12px;padding:25px}
+.filters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.filters button{font-size:13px}
+.filters button.active{background:#d4af60;color:#111}
+.filters button:not(.active){background:#29292e;color:#d4af60;border:1px solid #78612e}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:14px 0}
+.stat{background:#101014;border:1px solid #514329;border-radius:9px;padding:12px}
+.stat span{display:block;color:#aaa;font-size:12px}
+.stat strong{display:block;color:#d4af60;font-size:19px;margin-top:5px}
+.chart{width:100%;height:235px;display:block;background:#111115;border-radius:10px;margin-top:12px}
+.chart text{fill:#aaa;font-size:11px}
+.muted{color:#aaa;font-size:13px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:430px){
+.card{padding:15px}
+.row{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
@@ -37,7 +53,6 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 <h1>FORGE COACHING</h1>
 <div class="subtitle">Allenamento • Nutrizione • Evoluzione</div>
 </header>
-
 <main>
 <section id="loading" class="card">
 <h2>Caricamento...</h2>
@@ -58,7 +73,7 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 
 <section id="forgot" class="card hidden">
 <h2>Recupera password</h2>
-<p>Inserisci la tua email. Riceverai un link per impostare una nuova password.</p>
+<p>Riceverai un link per impostare una nuova password.</p>
 <input id="recoveryEmail" type="email" autocomplete="email" placeholder="La tua email">
 <button id="sendRecoveryBtn">Invia email di recupero</button>
 <button class="secondary" id="backLoginBtn">Torna all'accesso</button>
@@ -67,7 +82,7 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 
 <section id="reset" class="card hidden">
 <h2>Imposta nuova password</h2>
-<p>Inserisci e conferma la nuova password del tuo account Forge Coaching.</p>
+<p>Inserisci e conferma la nuova password.</p>
 <label>Nuova password</label>
 <input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Almeno 8 caratteri">
 <label>Conferma nuova password</label>
@@ -78,7 +93,7 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 
 <section id="pending" class="card hidden">
 <h2>Account in attesa</h2>
-<p>Il tuo account è stato creato, ma deve essere approvato dall'amministratore.</p>
+<p>Il tuo account deve essere approvato dall'amministratore.</p>
 <button id="pendingLogoutBtn" class="secondary">Esci</button>
 </section>
 
@@ -107,7 +122,8 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 </div>
 <div id="sectionCard" class="card hidden">
 <h2 id="sectionTitle"></h2>
-<p id="sectionText"></p>
+<p id="sectionText" class="muted"></p>
+<div id="sectionContent"></div>
 <button id="closeSectionBtn" class="secondary">Chiudi sezione</button>
 </div>
 </section>
@@ -117,193 +133,550 @@ footer{text-align:center;color:#777;font-size:12px;padding:25px}
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const SUPABASE_URL="https://ctcbhysolhcjdsekoxkg.supabase.co";
-const SUPABASE_KEY="sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F";
-const SITE_URL="https://h7yhp65r8k-collab.github.io/forge-coaching/";
+'use strict';
+
+const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
+const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
+const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
+const $=id=>document.getElementById(id);
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
 auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
 });
 
-const $=id=>document.getElementById(id);
-let resetting=false;
-let recoveryRequested=false;
-let resetCompleted=false;
 let currentUser=null;
+let resetting=false;
+let resetReady=false;
+let activeSection='';
+let activePeriod='day';
+let loadSerial=0;
+
+const sections=['loading','auth','forgot','reset','pending','app'];
 
 function show(id){
-["loading","auth","forgot","reset","pending","app"].forEach(x=>$(x).classList.add("hidden"));
-$(id).classList.remove("hidden");
+sections.forEach(x=>$(x).classList.toggle('hidden',x!==id));
 }
+
 function status(id,msg,error=false){
-const el=$(id);el.textContent=msg;el.className="status "+(error?"error":"success");
+const el=$(id);
+el.textContent=msg;
+el.className='status '+(error?'error':'success');
 }
-function friendly(error){
-const msg=error?.message||String(error);
-if(/rate limit|too many requests|over_email_send_rate_limit/i.test(msg))
-return "Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.";
-return msg;
+
+function friendly(e){
+const msg=e?.message||String(e);
+return /rate limit|too many requests|over_email_send_rate_limit/i.test(msg)
+?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.'
+:msg;
 }
-function resetLinkPresent(){
-const query=new URLSearchParams(location.search);
-const hash=new URLSearchParams(location.hash.substring(1));
-return query.get("type")==="recovery"||
-hash.get("type")==="recovery"||
-query.has("token_hash")&&query.get("type")==="recovery"||
-query.has("code")&&sessionStorage.getItem("forge_recovery_pending")==="1";
-}
+
 function cleanUrl(){
 history.replaceState({},document.title,location.pathname);
 }
+
+function recoveryUrl(){
+const q=new URLSearchParams(location.search);
+const h=new URLSearchParams(location.hash.slice(1));
+return q.get('type')==='recovery'||h.get('type')==='recovery';
+}
+
+const initialRecovery=recoveryUrl();
+
+function recoveryErrorInUrl(){
+const q=new URLSearchParams(location.search);
+const h=new URLSearchParams(location.hash.slice(1));
+return q.get('error_description')||h.get('error_description')||null;
+}
+
 async function userState(){
-if(resetting||resetLinkPresent()){
-resetting=true;show("reset");return;
-}
+if(resetting)return;
 const {data:{session},error}=await db.auth.getSession();
-if(error||!session){show("auth");return;}
+if(error||!session){
+currentUser=null;
+show('auth');
+return;
+}
 currentUser=session.user;
-let role="client",access="pending";
 const [roles,accessResult]=await Promise.all([
-db.from("user_roles").select("role").eq("user_id",currentUser.id),
-db.from("account_access").select("status").eq("user_id",currentUser.id)
+db.from('user_roles').select('role').eq('user_id',currentUser.id),
+db.from('account_access').select('status').eq('user_id',currentUser.id)
 ]);
-if(!roles.error&&roles.data?.length){
-if(roles.data.some(r=>r.role==="admin"))role="admin";
-else if(roles.data.some(r=>r.role==="trainer"))role="trainer";
-else if(roles.data.some(r=>r.role==="premium"))role="premium";
+if(roles.error||accessResult.error){
+show('pending');
+return;
 }
-if(!accessResult.error&&accessResult.data?.length){
-access=accessResult.data[0].status;
+let role='client';
+if(roles.data?.some(r=>r.role==='admin'))role='admin';
+else if(roles.data?.some(r=>r.role==='trainer'))role='trainer';
+else if(roles.data?.some(r=>r.role==='premium'))role='premium';
+const access=accessResult.data?.[0]?.status||'pending';
+if(access!=='approved'){
+show('pending');
+return;
 }
-if(access!=="approved"){show("pending");return;}
-$("welcome").textContent=role==="admin"?"Amministratore riconosciuto":"Benvenuto in Forge Coaching";
-$("roleInfo").textContent="Account: "+currentUser.email+" • Ruolo: "+role;
-show("app");
+$('welcome').textContent=role==='admin'?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
+$('roleInfo').textContent='Account: '+currentUser.email+' • Ruolo: '+role;
+show('app');
 }
 
-$("loginBtn").onclick=async()=>{
-const email=$("email").value.trim();
-const password=$("password").value;
-if(!email||!password)return status("authStatus","Inserisci email e password.",true);
-$("loginBtn").disabled=true;
+$('loginBtn').onclick=async()=>{
+const email=$('email').value.trim();
+const password=$('password').value;
+if(!email||!password)return status('authStatus','Inserisci email e password.',true);
+$('loginBtn').disabled=true;
+try{
 const {error}=await db.auth.signInWithPassword({email,password});
-$("loginBtn").disabled=false;
-if(error)return status("authStatus",friendly(error),true);
+if(error)throw error;
 await userState();
-};
-
-$("signupBtn").onclick=async()=>{
-const email=$("email").value.trim();
-const password=$("password").value;
-if(!email||password.length<8)return status("authStatus","Inserisci email e password di almeno 8 caratteri.",true);
-$("signupBtn").disabled=true;
-const {error}=await db.auth.signUp({email,password,options:{emailRedirectTo:SITE_URL}});
-$("signupBtn").disabled=false;
-if(error)return status("authStatus",friendly(error),true);
-status("authStatus","Registrazione inviata. Controlla la tua email, se richiesta, e attendi l'approvazione.");
-};
-
-$("forgotBtn").onclick=()=>{
-$("recoveryEmail").value=$("email").value;
-show("forgot");
-};
-$("backLoginBtn").onclick=()=>show("auth");
-
-$("sendRecoveryBtn").onclick=async()=>{
-const email=$("recoveryEmail").value.trim();
-if(!email)return status("forgotStatus","Inserisci la tua email.",true);
-$("sendRecoveryBtn").disabled=true;
-const {error}=await db.auth.resetPasswordForEmail(email,{
-redirectTo:SITE_URL
-});
-$("sendRecoveryBtn").disabled=false;
-if(error)return status("forgotStatus",friendly(error),true);
-sessionStorage.setItem("forge_recovery_pending","1");
-status("forgotStatus","Se l'indirizzo è registrato, riceverai un'email con il link per reimpostare la password.");
-};
-
-$("savePasswordBtn").onclick=async()=>{
-const p=$("newPassword").value;
-const c=$("confirmPassword").value;
-if(p.length<8)return status("resetStatus","La password deve contenere almeno 8 caratteri.",true);
-if(p!==c)return status("resetStatus","Le password non coincidono.",true);
-$("savePasswordBtn").disabled=true;
-const {data:{session}}=await db.auth.getSession();
-if(!session){
-$("savePasswordBtn").disabled=false;
-return status("resetStatus","Link non valido o scaduto. Richiedi un nuovo recupero password.",true);
+}catch(e){
+status('authStatus',friendly(e),true);
+}finally{
+$('loginBtn').disabled=false;
 }
+};
+
+$('signupBtn').onclick=async()=>{
+const email=$('email').value.trim();
+const password=$('password').value;
+if(!email||password.length<8)return status('authStatus','Inserisci email e password di almeno 8 caratteri.',true);
+$('signupBtn').disabled=true;
+try{
+const {error}=await db.auth.signUp({email,password,options:{emailRedirectTo:SITE_URL}});
+if(error)throw error;
+status('authStatus','Registrazione inviata. Controlla la tua email e attendi l’approvazione.');
+}catch(e){
+status('authStatus',friendly(e),true);
+}finally{
+$('signupBtn').disabled=false;
+}
+};
+
+$('forgotBtn').onclick=()=>{
+$('recoveryEmail').value=$('email').value;
+show('forgot');
+};
+
+$('backLoginBtn').onclick=()=>show('auth');
+
+$('sendRecoveryBtn').onclick=async()=>{
+const email=$('recoveryEmail').value.trim();
+if(!email)return status('forgotStatus','Inserisci la tua email.',true);
+$('sendRecoveryBtn').disabled=true;
+try{
+const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:SITE_URL});
+if(error)throw error;
+status('forgotStatus','Se l’indirizzo è registrato, riceverai un’email con il link per reimpostare la password.');
+}catch(e){
+status('forgotStatus',friendly(e),true);
+}finally{
+$('sendRecoveryBtn').disabled=false;
+}
+};
+
+$('savePasswordBtn').onclick=async()=>{
+const p=$('newPassword').value;
+const c=$('confirmPassword').value;
+if(!resetting||!resetReady)return status('resetStatus','Link di recupero non verificato. Richiedi un nuovo link.',true);
+if(p.length<8)return status('resetStatus','La password deve contenere almeno 8 caratteri.',true);
+if(p!==c)return status('resetStatus','Le password non coincidono.',true);
+$('savePasswordBtn').disabled=true;
+try{
+const {data:{session}}=await db.auth.getSession();
+if(!session)throw new Error('Sessione scaduta. Richiedi un nuovo link.');
 const {error}=await db.auth.updateUser({password:p});
-$("savePasswordBtn").disabled=false;
-if(error)return status("resetStatus",friendly(error),true);
-resetCompleted=true;
-resetting=false;
-sessionStorage.removeItem("forge_recovery_pending");
-status("resetStatus","Password modificata correttamente! Ora puoi accedere con la nuova password.");
+if(error)throw error;
+status('resetStatus','Password aggiornata. Torna all’accesso con la nuova password.');
 await db.auth.signOut();
+resetting=false;
+resetReady=false;
 cleanUrl();
-setTimeout(()=>{show("auth");},1800);
+$('newPassword').value='';
+$('confirmPassword').value='';
+show('auth');
+status('authStatus','Password modificata. Accedi con la nuova password.');
+}catch(e){
+status('resetStatus',friendly(e),true);
+}finally{
+$('savePasswordBtn').disabled=false;
+}
 };
 
 async function logout(){
+loadSerial++;
 await db.auth.signOut();
 currentUser=null;
 resetting=false;
-sessionStorage.removeItem("forge_recovery_pending");
+resetReady=false;
 cleanUrl();
-show("auth");
+show('auth');
 }
-$("logoutBtn").onclick=logout;
-$("pendingLogoutBtn").onclick=logout;
+
+$('logoutBtn').onclick=logout;
+$('pendingLogoutBtn').onclick=logout;
 
 const descriptions={
-"Allenamento":"Qui saranno disponibili i programmi assegnati dal coach, gli esercizi, le serie, le ripetizioni e i registri degli allenamenti.",
-"Forge Nutrition":"Diario alimentare, calorie, macronutrienti e grafici dell'andamento giornaliero, settimanale e mensile.",
-"Forge Hydration":"Registrazione dell'acqua assunta e grafici interattivi per giorni, settimane e mesi.",
-"Forge Weight":"Registrazione del peso corporeo e grafici storici per monitorare aumenti e diminuzioni.",
-"Progress Evolution":"Archivio fotografico, misure corporee e confronti dei progressi nel tempo.",
-"Prenotazioni":"Calendario delle disponibilità del coach e richieste di prenotazione.",
-"Video esercizi":"Libreria video degli esercizi suddivisi per categoria.",
-"Forge Premium":"Contenuti esclusivi e gestione degli abbonamenti premium.",
-"Forge Studio":"Personalizzazione dell'esperienza e del profilo.",
-"Feedback":"Diario delle sensazioni e feedback sulle sessioni.",
-"Pacchetti lezioni":"Riepilogo delle lezioni acquistate, utilizzate e rimanenti.",
-"Profilo":"Informazioni del tuo account e dati personali."
+'Allenamento':'Programmi assegnati dal coach, esercizi e registri degli allenamenti.',
+'Progress Evolution':'Archivio fotografico, misure corporee e confronti dei progressi nel tempo.',
+'Prenotazioni':'Calendario delle disponibilità del coach e richieste di prenotazione.',
+'Video esercizi':'Libreria video degli esercizi suddivisi per categoria.',
+'Forge Premium':'Contenuti esclusivi e gestione degli abbonamenti premium.',
+'Forge Studio':'Personalizzazione dell’esperienza e del profilo.',
+'Feedback':'Diario delle sensazioni e feedback sulle sessioni.',
+'Pacchetti lezioni':'Riepilogo delle lezioni acquistate, utilizzate e rimanenti.',
+'Profilo':'Informazioni del tuo account e dati personali.'
 };
-document.querySelectorAll("[data-section]").forEach(btn=>{
-btn.onclick=()=>{
-const name=btn.dataset.section;
-$("sectionTitle").textContent=name;
-$("sectionText").textContent=descriptions[name]||"Sezione in preparazione.";
-$("sectionCard").classList.remove("hidden");
-$("sectionCard").scrollIntoView({behavior:"smooth"});
-};
-});
-$("closeSectionBtn").onclick=()=>$("sectionCard").classList.add("hidden");
 
-db.auth.onAuthStateChange((event,session)=>{
-if(event==="PASSWORD_RECOVERY"){
-resetting=true;
-sessionStorage.setItem("forge_recovery_pending","1");
-show("reset");
+const config={
+'Forge Hydration':{
+table:'forge_water_entries',
+field:'amount_ml',
+time:'recorded_at',
+label:'Acqua',
+unit:'ml',
+daily:'forge_hydration_daily_chart',
+period:'forge_hydration_period_chart',
+dayValue:'total_ml',
+periodValue:'total_ml'
+},
+'Forge Weight':{
+table:'forge_weight_entries',
+field:'weight_kg',
+time:'recorded_at',
+label:'Peso',
+unit:'kg',
+daily:'forge_weight_daily_chart',
+period:'forge_weight_period_chart',
+dayValue:'weight_kg',
+periodValue:'average_weight_kg'
+},
+'Forge Nutrition':{
+daily:'forge_nutrition_daily_chart',
+period:'forge_nutrition_period_chart',
+label:'Calorie',
+unit:'kcal',
+dayValue:'total_calories',
+periodValue:'total_calories'
+}
+};
+
+function escapeHTML(v){
+return String(v).replace(/[&<>"']/g,c=>({
+'&':'&amp;',
+'<':'&lt;',
+'>':'&gt;',
+'"':'&quot;',
+"'":'&#39;'
+}[c]));
+}
+
+function formatNum(n,dec=0){
+return Number(n).toLocaleString('it-IT',{maximumFractionDigits:dec});
+}
+
+function localDate(d=new Date()){
+const p=new Intl.DateTimeFormat('en-CA',{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}).formatToParts(d);
+const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
+return `${m.year}-${m.month}-${m.day}`;
+}
+
+function showSection(name){
+activeSection=name;
+activePeriod='day';
+$('sectionTitle').textContent=name;
+$('sectionText').textContent=descriptions[name]||'Dati collegati al tuo account.';
+$('sectionContent').replaceChildren();
+$('sectionCard').classList.remove('hidden');
+if(config[name])renderDashboard(name);
+$('sectionCard').scrollIntoView({behavior:'smooth'});
+}
+
+document.querySelectorAll('[data-section]').forEach(b=>{
+b.onclick=()=>showSection(b.dataset.section);
+});
+
+$('closeSectionBtn').onclick=()=>{
+loadSerial++;
+$('sectionCard').classList.add('hidden');
+};
+
+function renderDashboard(name){
+const root=$('sectionContent');
+root.replaceChildren();
+const cfg=config[name];
+
+if(cfg.table){
+const label=document.createElement('label');
+label.textContent=name==='Forge Hydration'?'Aggiungi acqua (ml)':'Registra peso (kg)';
+const input=document.createElement('input');
+input.id='metricInput';
+input.type='number';
+input.min='1';
+input.max=name==='Forge Hydration'?'10000':'500';
+input.step=name==='Forge Hydration'?'1':'0.1';
+input.placeholder=name==='Forge Hydration'?'Es. 250':'Es. 82.5';
+
+const save=document.createElement('button');
+save.textContent='Salva registrazione';
+
+save.onclick=async()=>{
+const n=Number(input.value);
+if(!Number.isFinite(n)||n<=0||
+(name==='Forge Hydration'&&(n>10000||!Number.isInteger(n)))||
+(name==='Forge Weight'&&n>500)){
+return status('metricStatus','Inserisci un valore valido.',true);
+}
+save.disabled=true;
+try{
+const {error}=await db.from(cfg.table).insert({
+user_id:currentUser.id,
+[cfg.field]:n,
+[cfg.time]:new Date().toISOString()
+});
+if(error)throw error;
+input.value='';
+status('metricStatus','Registrazione salvata.');
+await loadChart(name);
+}catch(e){
+status('metricStatus',friendly(e),true);
+}finally{
+save.disabled=false;
+}
+};
+
+const msg=document.createElement('div');
+msg.id='metricStatus';
+msg.className='status hidden';
+root.append(label,input,save,msg);
+}
+
+if(name==='Forge Nutrition'){
+const note=document.createElement('p');
+note.className='muted';
+note.textContent='Il grafico legge le calorie e i macronutrienti dal diario alimentare già presente su Supabase. L’inserimento dei pasti sarà aggiunto nella prossima fase.';
+root.append(note);
+}
+
+const filters=document.createElement('div');
+filters.className='filters';
+
+for(const [key,label] of [
+['day','Giorni'],
+['week','Settimane'],
+['month','Mesi']
+]){
+const b=document.createElement('button');
+b.textContent=label;
+b.dataset.period=key;
+b.className=key===activePeriod?'active':'';
+b.onclick=()=>{
+activePeriod=key;
+filters.querySelectorAll('button').forEach(x=>
+x.classList.toggle('active',x.dataset.period===key)
+);
+loadChart(name);
+};
+filters.append(b);
+}
+
+const stats=document.createElement('div');
+stats.id='metricStats';
+stats.className='stats';
+
+const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+svg.id='metricChart';
+svg.classList.add('chart');
+svg.setAttribute('viewBox','0 0 600 235');
+svg.setAttribute('role','img');
+svg.setAttribute('aria-label','Grafico andamento');
+
+const message=document.createElement('p');
+message.id='chartMessage';
+message.className='muted';
+
+root.append(filters,stats,svg,message);
+loadChart(name);
+}
+
+function svgEl(tag,attrs,text){
+const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);
+if(text!==undefined)e.textContent=text;
+return e;
+}
+
+function drawChart(rows,unit){
+const svg=$('metricChart');
+svg.replaceChildren();
+if(!rows.length)return;
+
+const values=rows.map(r=>Number(r.value));
+const min=Math.min(...values);
+const max=Math.max(...values);
+const spread=max-min||1;
+const x=i=>rows.length===1?300:46+i*510/(rows.length-1);
+const y=v=>184-(v-min)/spread*135;
+
+for(let j=0;j<4;j++){
+svg.append(svgEl('line',{
+x1:40,y1:30+j*52,x2:570,y2:30+j*52,
+stroke:'#45403a','stroke-dasharray':'4 5'
+}));
+}
+
+const points=rows.map((r,i)=>`${x(i)},${y(values[i])}`).join(' ');
+svg.append(svgEl('polyline',{
+points,
+fill:'none',
+stroke:'#d4af60',
+'stroke-width':3,
+'stroke-linecap':'round',
+'stroke-linejoin':'round'
+}));
+
+rows.forEach((r,i)=>{
+svg.append(svgEl('circle',{
+cx:x(i),cy:y(values[i]),r:3.8,fill:'#d4af60'
+}));
+if(i===0||i===rows.length-1||rows.length<=7||
+i%Math.ceil(rows.length/6)===0){
+svg.append(svgEl('text',{
+x:x(i),y:219,'text-anchor':'middle'
+},r.label));
+}
+});
+
+svg.append(svgEl('text',{x:46,y:17},`${formatNum(max,2)} ${unit}`));
+svg.append(svgEl('text',{x:46,y:199},`${formatNum(min,2)} ${unit}`));
+}
+
+async function loadChart(name){
+const serial=++loadSerial;
+const cfg=config[name];
+const period=activePeriod;
+const msg=$('chartMessage');
+msg.textContent='Caricamento dati...';
+$('metricStats').replaceChildren();
+$('metricChart').replaceChildren();
+
+try{
+if(!currentUser)throw new Error('Accedi per visualizzare i dati.');
+let query;
+
+if(period==='day'){
+query=db.from(cfg.daily)
+.select('*')
+.eq('user_id',currentUser.id)
+.order('day',{ascending:false})
+.limit(30);
+}else{
+query=db.from(cfg.period)
+.select('*')
+.eq('user_id',currentUser.id)
+.eq('period_type',period)
+.order('period_start',{ascending:false})
+.limit(12);
+}
+
+const {data,error}=await query;
+if(serial!==loadSerial||activeSection!==name)return;
+if(error)throw error;
+
+const rows=(data||[]).slice().reverse().map(r=>({
+value:r[period==='day'?cfg.dayValue:cfg.periodValue],
+label:(r[period==='day'?'day':'period_start']||'').slice(5)
+}));
+
+if(!rows.length){
+msg.textContent='Nessun dato registrato per questo intervallo. Il grafico apparirà dopo le prime registrazioni.';
 return;
 }
-if(resetting||resetLinkPresent())return;
-if(event==="SIGNED_OUT")show("auth");
+
+drawChart(rows,cfg.unit);
+
+const last=Number(rows[rows.length-1].value);
+const first=Number(rows[0].value);
+const stats=$('metricStats');
+
+const cards=[
+[period==='day'?'Ultimo valore':'Ultimo periodo',`${formatNum(last,2)} ${cfg.unit}`],
+['Variazione',`${last-first>0?'+':''}${formatNum(last-first,2)} ${cfg.unit}`]
+];
+
+if(name==='Forge Nutrition'&&data?.length){
+const latest=data[0];
+cards.push(
+['Proteine',`${formatNum(latest.total_protein||0,1)} g`],
+['Carboidrati',`${formatNum(latest.total_carbohydrates||0,1)} g`],
+['Grassi',`${formatNum(latest.total_fat||0,1)} g`]
+);
+}
+
+for(const [label,value] of cards){
+const card=document.createElement('div');
+card.className='stat';
+const s=document.createElement('span');
+const strong=document.createElement('strong');
+s.textContent=label;
+strong.textContent=value;
+card.append(s,strong);
+stats.append(card);
+}
+
+msg.textContent=`${rows.length} punti visualizzati • ${
+period==='day'?'Ultimi 30 giorni registrati':
+period==='week'?'Ultime 12 settimane registrate':
+'Ultimi 12 mesi registrati'
+}. I periodi senza registrazioni non sono rappresentati.`;
+
+}catch(e){
+if(serial===loadSerial)
+msg.textContent='Impossibile leggere il grafico: '+friendly(e);
+}
+}
+
+db.auth.onAuthStateChange((event)=>{
+if(event==='PASSWORD_RECOVERY'){
+resetting=true;
+resetReady=true;
+show('reset');
+return;
+}
+if(resetting)return;
+if(event==='SIGNED_OUT'){
+currentUser=null;
+show('auth');
+}
 });
 
 (async()=>{
 try{
-if(resetLinkPresent()){
+if(initialRecovery){
 resetting=true;
-show("reset");
-await db.auth.getSession();
+show('loading');
+const err=recoveryErrorInUrl();
+if(err){
+show('reset');
+status('resetStatus',decodeURIComponent(err),true);
+return;
+}
+const {data:{session},error}=await db.auth.getSession();
+if(error||!session){
+show('reset');
+status('resetStatus','Link non valido o scaduto. Richiedi un nuovo recupero password.',true);
+return;
+}
+resetReady=true;
+show('reset');
 return;
 }
 await userState();
 }catch(e){
-console.error(e);
-show("auth");
-status("authStatus","Errore di connessione. Riprova.",true);
+show('auth');
+status('authStatus',friendly(e),true);
 }
 })();
 </script>
