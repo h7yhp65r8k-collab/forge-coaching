@@ -10,976 +10,302 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#0b0b0d;color:#f5f5f5;font-family:Arial,sans-serif}
-header{text-align:center;padding:30px 20px;border-bottom:1px solid #a98538}
+header{text-align:center;padding:28px 20px;border-bottom:1px solid #a98538}
 h1{color:#d4af60;margin:0 0 8px}
 .subtitle,.small{color:#aaa}
 .small{font-size:13px}
-main{padding:22px;max-width:650px;margin:auto}
+main{padding:20px;max-width:650px;margin:auto}
 .card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:22px;margin-bottom:16px}
 .card h2{color:#d4af60;margin-top:0}
-button{background:#d4af60;color:#111;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:8px}
-button:disabled{opacity:.5;cursor:wait}
-.secondary{background:transparent;color:#d4af60;border:1px solid #a98538}
+button{background:#d4af60;color:#111;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:9px}
+button.secondary{background:#29292e;color:#d4af60;border:1px solid #78612e}
+button:disabled{opacity:.5;cursor:not-allowed}
+input{width:100%;padding:13px;margin:8px 0;background:#101014;border:1px solid #66542d;border-radius:8px;color:#fff;font-size:16px}
+label{display:block;margin-top:10px;color:#ddd}
 .hidden{display:none!important}
-.info{color:#bbb;line-height:1.6}
-input,select{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #66542d;border-radius:8px;background:#111;color:#fff;font-size:16px}
-label{color:#ddd}
-.value{color:#d4af60;font-size:28px;font-weight:bold}
-.chart{width:100%;height:230px;margin-top:15px}
-.entry{border-bottom:1px solid #444;padding:9px 0;color:#ddd}
-footer{text-align:center;padding:25px;color:#888;font-size:12px}
-.error{color:#ffb0a5;overflow-wrap:anywhere}
-.success{color:#a8e5b0;overflow-wrap:anywhere}
-.topline{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.topline button{width:auto}
-.topline span{overflow-wrap:anywhere;font-size:13px}
-#authMsg,#resetMsg{min-height:20px;line-height:1.5}
+.status{padding:12px;border-radius:8px;background:#25252b;margin:12px 0;white-space:pre-wrap}
+.error{color:#ff9999}
+.success{color:#9de2ad}
+nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+nav button{margin:0;min-height:65px}
+a{color:#d4af60}
+footer{text-align:center;color:#777;font-size:12px;padding:25px}
 </style>
 </head>
 <body>
-
 <header>
 <h1>FORGE COACHING</h1>
-<div class="subtitle">Train. Evolve. Become.</div>
+<div class="subtitle">Allenamento • Nutrizione • Evoluzione</div>
 </header>
 
 <main>
-<section id="auth" class="card">
-<h2>Accedi a Forge Coaching</h2>
-<label for="email">Email</label>
-<input id="email" type="email" autocomplete="email" placeholder="La tua email">
-<label for="password">Password</label>
-<input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
-<button id="loginBtn" onclick="accedi()">Accedi</button>
-<button id="forgotBtn" class="secondary" onclick="recuperaPassword()">Password dimenticata?</button>
-<button id="signupBtn" class="secondary" onclick="registrati()">Crea un account</button>
-<p class="small">I nuovi account richiedono l'approvazione del coach.</p>
-<p id="authMsg" role="status" aria-live="polite"></p>
+<section id="loading" class="card">
+<h2>Caricamento...</h2>
+<p>Connessione a Forge Coaching.</p>
 </section>
 
-<section id="resetPassword" class="card hidden">
-<h2>Reimposta la password</h2>
-<p class="info">Scegli una nuova password per il tuo account esistente.</p>
-<label for="nuovaPassword">Nuova password</label>
-<input id="nuovaPassword" type="password" autocomplete="new-password" minlength="8">
-<label for="confermaPassword">Conferma nuova password</label>
-<input id="confermaPassword" type="password" autocomplete="new-password" minlength="8">
-<button id="savePasswordBtn" onclick="salvaNuovaPassword()" disabled>Salva nuova password</button>
-<p id="resetMsg" role="status" aria-live="polite"></p>
-<button class="secondary" onclick="annullaRecupero()">Torna all'accesso</button>
+<section id="auth" class="card hidden">
+<h2>Accedi a Forge Coaching</h2>
+<label>Email</label>
+<input id="email" type="email" autocomplete="email" placeholder="La tua email">
+<label>Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
+<button id="loginBtn">Accedi</button>
+<button class="secondary" id="signupBtn">Crea nuovo account</button>
+<button class="secondary" id="forgotBtn">Password dimenticata?</button>
+<div id="authStatus" class="status hidden"></div>
+</section>
+
+<section id="forgot" class="card hidden">
+<h2>Recupera password</h2>
+<p>Inserisci la tua email. Riceverai un link per impostare una nuova password.</p>
+<input id="recoveryEmail" type="email" autocomplete="email" placeholder="La tua email">
+<button id="sendRecoveryBtn">Invia email di recupero</button>
+<button class="secondary" id="backLoginBtn">Torna all'accesso</button>
+<div id="forgotStatus" class="status hidden"></div>
+</section>
+
+<section id="reset" class="card hidden">
+<h2>Imposta nuova password</h2>
+<p>Inserisci e conferma la nuova password del tuo account Forge Coaching.</p>
+<label>Nuova password</label>
+<input id="newPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Almeno 8 caratteri">
+<label>Conferma nuova password</label>
+<input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" placeholder="Ripeti la nuova password">
+<button id="savePasswordBtn">Salva nuova password</button>
+<div id="resetStatus" class="status hidden"></div>
 </section>
 
 <section id="pending" class="card hidden">
-<h2>Accesso non disponibile</h2>
-<p id="pendingMsg" class="info"></p>
-<button onclick="esci()">Esci</button>
+<h2>Account in attesa</h2>
+<p>Il tuo account è stato creato, ma deve essere approvato dall'amministratore.</p>
+<button id="pendingLogoutBtn" class="secondary">Esci</button>
 </section>
 
 <section id="app" class="hidden">
-<div class="topline">
-<span id="utenteEmail"></span>
-<button onclick="esci()">Esci</button>
-</div>
-<p id="adminMsg" class="small"></p>
-
-<section id="home">
 <div class="card">
-<h2>Allenamento</h2>
-<p>Programmi ed esercizi personalizzati.</p>
-<button onclick="apri('allenamento')">Apri Allenamento</button>
+<h2 id="welcome">Benvenuto</h2>
+<p id="roleInfo" class="small"></p>
+<button id="logoutBtn" class="secondary">Esci dall'account</button>
 </div>
 <div class="card">
-<h2>Forge Nutrition</h2>
-<p>Alimentazione e monitoraggio nutrizionale.</p>
-<button onclick="apri('nutrizione')">Apri Alimentazione</button>
+<h2>Le tue sezioni</h2>
+<nav>
+<button data-section="Allenamento">Allenamento</button>
+<button data-section="Forge Nutrition">Forge Nutrition</button>
+<button data-section="Forge Hydration">Forge Hydration</button>
+<button data-section="Forge Weight">Forge Weight</button>
+<button data-section="Progress Evolution">Progress Evolution</button>
+<button data-section="Prenotazioni">Prenotazioni</button>
+<button data-section="Video esercizi">Video esercizi</button>
+<button data-section="Forge Premium">Forge Premium</button>
+<button data-section="Forge Studio">Forge Studio</button>
+<button data-section="Feedback">Feedback</button>
+<button data-section="Pacchetti lezioni">Pacchetti lezioni</button>
+<button data-section="Profilo">Profilo</button>
+</nav>
 </div>
-<div class="card">
-<h2>Progress Evolution</h2>
-<p>Misure, fotografie e progressi.</p>
-<button onclick="apri('progressi')">Apri Progressi</button>
+<div id="sectionCard" class="card hidden">
+<h2 id="sectionTitle"></h2>
+<p id="sectionText"></p>
+<button id="closeSectionBtn" class="secondary">Chiudi sezione</button>
 </div>
-<div class="card">
-<h2>Forge Hydration</h2>
-<p>Registra l'acqua bevuta e controlla i progressi.</p>
-<button onclick="apri('acqua')">Apri Monitoraggio Acqua</button>
-</div>
-<div class="card">
-<h2>Forge Weight</h2>
-<p>Registra il peso e visualizza l'andamento.</p>
-<button onclick="apri('peso')">Apri Monitoraggio Peso</button>
-</div>
-<div class="card">
-<h2>Prenotazioni</h2>
-<p>Gestione delle sessioni di allenamento.</p>
-<button onclick="apri('prenotazioni')">Apri Prenotazioni</button>
-</div>
-<div class="card">
-<h2>Pacchetti Lezioni</h2>
-<p>Lezioni acquistate, utilizzate e rimanenti.</p>
-<button onclick="apri('pacchetti')">Apri Pacchetti</button>
-</div>
-<div class="card">
-<h2>👑 Forge Premium</h2>
-<p>Contenuti esclusivi riservati agli abbonati.</p>
-<button onclick="apri('premium')">Apri Forge Premium</button>
-</div>
-</section>
-
-<section id="dettaglio" class="hidden">
-<button onclick="torna()">← Torna alla Home</button>
-<div class="card">
-<h2 id="titolo"></h2>
-<p id="descrizione" class="info"></p>
-
-<div id="areaAcqua" class="hidden">
-<label for="quantitaAcqua">Acqua bevuta (ml)</label>
-<input type="number" id="quantitaAcqua" min="1" step="50" value="250">
-<button onclick="salvaAcqua()">Aggiungi acqua</button>
-<p>Totale oggi:</p>
-<div id="totaleAcqua" class="value">0 L</div>
-<p class="small">Puoi registrare più bicchieri durante la giornata.</p>
-</div>
-
-<div id="areaPeso" class="hidden">
-<label for="valorePeso">Peso corporeo (kg)</label>
-<input type="number" id="valorePeso" min="1" max="500" step="0.1" placeholder="Es. 82.5">
-<button onclick="salvaPeso()">Salva pesata di oggi</button>
-<p>Ultima pesata:</p>
-<div id="ultimoPeso" class="value">—</div>
-<p id="variazionePeso" class="small"></p>
-</div>
-
-<div id="areaGrafici" class="hidden">
-<label for="periodo">Visualizza andamento</label>
-<select id="periodo" onchange="aggiornaGrafici()">
-<option value="giorni">Giorni (ultimi 7)</option>
-<option value="settimane">Settimane (ultime 8)</option>
-<option value="mesi">Mesi (ultimi 12)</option>
-</select>
-<svg id="grafico" class="chart" viewBox="0 0 340 230" role="img" aria-label="Grafico andamento"></svg>
-<div id="storico"></div>
-</div>
-
-<div id="areaPremium" class="hidden">
-<p>👑 Area riservata agli abbonati Forge Premium.</p>
-<p class="info">Video, guide e programmi esclusivi saranno disponibili dopo l'attivazione dell'abbonamento.</p>
-<p><strong>Prezzo mensile:</strong> da configurare.</p>
-<p class="small">Pagamenti e rinnovi automatici non ancora attivi.</p>
-<button disabled>Abbonamento non ancora disponibile</button>
-</div>
-</div>
-</section>
 </section>
 </main>
 
-<footer>Forge Coaching © 2026</footer>
+<footer>Forge Coaching • La tua evoluzione</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-'use strict';
+const SUPABASE_URL="https://ctcbhysolhcjdsekoxkg.supabase.co";
+const SUPABASE_KEY="sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F";
+const SITE_URL="https://h7yhp65r8k-collab.github.io/forge-coaching/";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+});
 
-const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
-const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
-const BASE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
-const RECOVERY_URL=BASE_URL+'?recovery=1';
 const $=id=>document.getElementById(id);
-
-let db=null;
+let resetting=false;
+let recoveryRequested=false;
+let resetCompleted=false;
 let currentUser=null;
-let recoveryMode=false;
-let recoveryVerified=false;
-let sezioneAttuale='';
-let datiOnline={acqua:[],peso:[]};
-let caricamentoDati=0;
-let authVersion=0;
-let resetBusy=false;
 
+function show(id){
+["loading","auth","forgot","reset","pending","app"].forEach(x=>$(x).classList.add("hidden"));
+$(id).classList.remove("hidden");
+}
+function status(id,msg,error=false){
+const el=$(id);el.textContent=msg;el.className="status "+(error?"error":"success");
+}
+function friendly(error){
+const msg=error?.message||String(error);
+if(/rate limit|too many requests|over_email_send_rate_limit/i.test(msg))
+return "Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.";
+return msg;
+}
+function resetLinkPresent(){
 const query=new URLSearchParams(location.search);
-const hash=new URLSearchParams(location.hash.slice(1));
+const hash=new URLSearchParams(location.hash.substring(1));
+return query.get("type")==="recovery"||
+hash.get("type")==="recovery"||
+query.has("token_hash")&&query.get("type")==="recovery"||
+query.has("code")&&sessionStorage.getItem("forge_recovery_pending")==="1";
+}
+function cleanUrl(){
+history.replaceState({},document.title,location.pathname);
+}
+async function userState(){
+if(resetting||resetLinkPresent()){
+resetting=true;show("reset");return;
+}
+const {data:{session},error}=await db.auth.getSession();
+if(error||!session){show("auth");return;}
+currentUser=session.user;
+let role="client",access="pending";
+const [roles,accessResult]=await Promise.all([
+db.from("user_roles").select("role").eq("user_id",currentUser.id),
+db.from("account_access").select("status").eq("user_id",currentUser.id)
+]);
+if(!roles.error&&roles.data?.length){
+if(roles.data.some(r=>r.role==="admin"))role="admin";
+else if(roles.data.some(r=>r.role==="trainer"))role="trainer";
+else if(roles.data.some(r=>r.role==="premium"))role="premium";
+}
+if(!accessResult.error&&accessResult.data?.length){
+access=accessResult.data[0].status;
+}
+if(access!=="approved"){show("pending");return;}
+$("welcome").textContent=role==="admin"?"Amministratore riconosciuto":"Benvenuto in Forge Coaching";
+$("roleInfo").textContent="Account: "+currentUser.email+" • Ruolo: "+role;
+show("app");
+}
 
-const recoveryFromURL=
- query.get('recovery')==='1'||
- query.get('type')==='recovery'||
- hash.get('type')==='recovery';
-
-const hasRecoveryCredential=!!(
- query.get('token_hash')||
- query.get('code')||
- hash.get('access_token')
-);
-
-const recoveryErrorCode=
- query.get('error_description')||
- hash.get('error_description')||
- query.get('error_code')||
- hash.get('error_code');
-
-const sezioni={
- allenamento:{titolo:'Allenamento',testo:'Qui saranno disponibili i programmi assegnati dal coach, con esercizi, serie, ripetizioni e risultati.'},
- nutrizione:{titolo:'Forge Nutrition',testo:'Qui saranno disponibili i piani alimentari, il diario dei pasti, le calorie e i macronutrienti.'},
- progressi:{titolo:'Progress Evolution',testo:'Qui potrai registrare misure corporee, fotografie e confronti prima e dopo.'},
- acqua:{titolo:'Forge Hydration',testo:"Registra l'acqua bevuta ogni giorno e controlla il tuo andamento."},
- peso:{titolo:'Forge Weight',testo:'Registra il tuo peso corporeo e osserva le variazioni nel tempo.'},
- prenotazioni:{titolo:'Prenotazioni',testo:'Qui sarà disponibile il calendario delle sessioni con richieste e conferme del coach.'},
- pacchetti:{titolo:'Pacchetti Lezioni',testo:'Qui saranno visualizzate le lezioni acquistate, svolte e rimanenti.'},
- premium:{titolo:'Forge Premium',testo:'Contenuti esclusivi con abbonamento mensile a rinnovo automatico.'}
+$("loginBtn").onclick=async()=>{
+const email=$("email").value.trim();
+const password=$("password").value;
+if(!email||!password)return status("authStatus","Inserisci email e password.",true);
+$("loginBtn").disabled=true;
+const {error}=await db.auth.signInWithPassword({email,password});
+$("loginBtn").disabled=false;
+if(error)return status("authStatus",friendly(error),true);
+await userState();
 };
 
-function mostra(id){
- ['auth','resetPassword','pending','app']
- .forEach(x=>$(x).classList.toggle('hidden',x!==id));
+$("signupBtn").onclick=async()=>{
+const email=$("email").value.trim();
+const password=$("password").value;
+if(!email||password.length<8)return status("authStatus","Inserisci email e password di almeno 8 caratteri.",true);
+$("signupBtn").disabled=true;
+const {error}=await db.auth.signUp({email,password,options:{emailRedirectTo:SITE_URL}});
+$("signupBtn").disabled=false;
+if(error)return status("authStatus",friendly(error),true);
+status("authStatus","Registrazione inviata. Controlla la tua email, se richiesta, e attendi l'approvazione.");
+};
+
+$("forgotBtn").onclick=()=>{
+$("recoveryEmail").value=$("email").value;
+show("forgot");
+};
+$("backLoginBtn").onclick=()=>show("auth");
+
+$("sendRecoveryBtn").onclick=async()=>{
+const email=$("recoveryEmail").value.trim();
+if(!email)return status("forgotStatus","Inserisci la tua email.",true);
+$("sendRecoveryBtn").disabled=true;
+const {error}=await db.auth.resetPasswordForEmail(email,{
+redirectTo:SITE_URL
+});
+$("sendRecoveryBtn").disabled=false;
+if(error)return status("forgotStatus",friendly(error),true);
+sessionStorage.setItem("forge_recovery_pending","1");
+status("forgotStatus","Se l'indirizzo è registrato, riceverai un'email con il link per reimpostare la password.");
+};
+
+$("savePasswordBtn").onclick=async()=>{
+const p=$("newPassword").value;
+const c=$("confirmPassword").value;
+if(p.length<8)return status("resetStatus","La password deve contenere almeno 8 caratteri.",true);
+if(p!==c)return status("resetStatus","Le password non coincidono.",true);
+$("savePasswordBtn").disabled=true;
+const {data:{session}}=await db.auth.getSession();
+if(!session){
+$("savePasswordBtn").disabled=false;
+return status("resetStatus","Link non valido o scaduto. Richiedi un nuovo recupero password.",true);
 }
+const {error}=await db.auth.updateUser({password:p});
+$("savePasswordBtn").disabled=false;
+if(error)return status("resetStatus",friendly(error),true);
+resetCompleted=true;
+resetting=false;
+sessionStorage.removeItem("forge_recovery_pending");
+status("resetStatus","Password modificata correttamente! Ora puoi accedere con la nuova password.");
+await db.auth.signOut();
+cleanUrl();
+setTimeout(()=>{show("auth");},1800);
+};
 
-function messaggio(t,errore=false){
- $('authMsg').textContent=t;
- $('authMsg').className=errore?'error':'success';
+async function logout(){
+await db.auth.signOut();
+currentUser=null;
+resetting=false;
+sessionStorage.removeItem("forge_recovery_pending");
+cleanUrl();
+show("auth");
 }
+$("logoutBtn").onclick=logout;
+$("pendingLogoutBtn").onclick=logout;
 
-function resetMessaggio(t,errore=false){
- $('resetMsg').textContent=t;
- $('resetMsg').className=errore?'error':'success';
+const descriptions={
+"Allenamento":"Qui saranno disponibili i programmi assegnati dal coach, gli esercizi, le serie, le ripetizioni e i registri degli allenamenti.",
+"Forge Nutrition":"Diario alimentare, calorie, macronutrienti e grafici dell'andamento giornaliero, settimanale e mensile.",
+"Forge Hydration":"Registrazione dell'acqua assunta e grafici interattivi per giorni, settimane e mesi.",
+"Forge Weight":"Registrazione del peso corporeo e grafici storici per monitorare aumenti e diminuzioni.",
+"Progress Evolution":"Archivio fotografico, misure corporee e confronti dei progressi nel tempo.",
+"Prenotazioni":"Calendario delle disponibilità del coach e richieste di prenotazione.",
+"Video esercizi":"Libreria video degli esercizi suddivisi per categoria.",
+"Forge Premium":"Contenuti esclusivi e gestione degli abbonamenti premium.",
+"Forge Studio":"Personalizzazione dell'esperienza e del profilo.",
+"Feedback":"Diario delle sensazioni e feedback sulle sessioni.",
+"Pacchetti lezioni":"Riepilogo delle lezioni acquistate, utilizzate e rimanenti.",
+"Profilo":"Informazioni del tuo account e dati personali."
+};
+document.querySelectorAll("[data-section]").forEach(btn=>{
+btn.onclick=()=>{
+const name=btn.dataset.section;
+$("sectionTitle").textContent=name;
+$("sectionText").textContent=descriptions[name]||"Sezione in preparazione.";
+$("sectionCard").classList.remove("hidden");
+$("sectionCard").scrollIntoView({behavior:"smooth"});
+};
+});
+$("closeSectionBtn").onclick=()=>$("sectionCard").classList.add("hidden");
+
+db.auth.onAuthStateChange((event,session)=>{
+if(event==="PASSWORD_RECOVERY"){
+resetting=true;
+sessionStorage.setItem("forge_recovery_pending","1");
+show("reset");
+return;
 }
+if(resetting||resetLinkPresent())return;
+if(event==="SIGNED_OUT")show("auth");
+});
 
-function busy(v){
- ['loginBtn','forgotBtn','signupBtn']
- .forEach(id=>$(id).disabled=v);
+(async()=>{
+try{
+if(resetLinkPresent()){
+resetting=true;
+show("reset");
+await db.auth.getSession();
+return;
 }
-
-function erroreTesto(e){
- const m=e?.message||String(e||'Errore sconosciuto');
- if(/rate limit|too many requests|over_email_send_rate_limit/i.test(m))
-  return 'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare. Dettaglio: '+m;
- if(/failed to fetch|network|load failed/i.test(m))
-  return 'Problema di connessione con Supabase. Controlla Internet.';
- return m;
+await userState();
+}catch(e){
+console.error(e);
+show("auth");
+status("authStatus","Errore di connessione. Riprova.",true);
 }
-
-function pulisciURL(){
- history.replaceState(null,'',BASE_URL);
-}
-
-function entraRecupero(){
- recoveryMode=true;
- recoveryVerified=false;
- currentUser=null;
- authVersion++;
- $('savePasswordBtn').disabled=true;
- mostra('resetPassword');
- resetMessaggio('Verifica del link di recupero in corso...');
-}
-
-async function accedi(){
- if(recoveryMode)return;
- if(!db)return messaggio('Supabase non disponibile.',true);
-
- const email=$('email').value.trim();
- const password=$('password').value;
-
- if(!email||!password)
-  return messaggio('Inserisci email e password.',true);
-
- busy(true);
- messaggio('Accesso in corso...');
-
- try{
-  const {error}=await db.auth.signInWithPassword({email,password});
-  if(error)throw error;
-  await controllaSessione();
- }catch(e){
-  messaggio('Accesso non riuscito: '+erroreTesto(e),true);
- }finally{
-  busy(false);
- }
-}
-
-async function registrati(){
- if(recoveryMode)return;
- if(!db)return messaggio('Supabase non disponibile.',true);
-
- const email=$('email').value.trim();
- const password=$('password').value;
-
- if(!email||password.length<8)
-  return messaggio('Inserisci email e password di almeno 8 caratteri.',true);
-
- busy(true);
- messaggio('Registrazione in corso...');
-
- try{
-  const {data,error}=await db.auth.signUp({
-   email,password,
-   options:{emailRedirectTo:BASE_URL}
-  });
-  if(error)throw error;
-
-  messaggio(data.session?
-   'Registrazione completata. Attendi approvazione.':
-   'Controlla la tua email per confermare la registrazione.');
-
-  if(data.session)await controllaSessione();
- }catch(e){
-  messaggio('Registrazione non riuscita: '+erroreTesto(e),true);
- }finally{
-  busy(false);
- }
-}
-
-async function recuperaPassword(){
- if(!db)
-  return messaggio('Supabase non disponibile. Ricarica la pagina.',true);
-
- const email=$('email').value.trim();
-
- if(!email)
-  return messaggio('Inserisci prima la tua email.',true);
-
- busy(true);
- messaggio('Invio email di recupero in corso...');
-
- try{
-  const {error}=await db.auth.resetPasswordForEmail(email,{
-   redirectTo:RECOVERY_URL
-  });
-
-  if(error)throw error;
-
-  messaggio('Richiesta inviata. Se l’indirizzo è registrato, riceverai un’email per reimpostare la password. Controlla anche Spam.');
- }catch(e){
-  messaggio('Errore recupero password: '+erroreTesto(e),true);
- }finally{
-  busy(false);
- }
-}
-
-async function verificaRecupero(){
- if(!db)return;
-
- try{
-  if(recoveryErrorCode)
-   throw new Error('Il link è scaduto o non è valido: '+recoveryErrorCode);
-
-  if(!hasRecoveryCredential)
-   throw new Error('Il link non contiene una credenziale di recupero. Richiedi una nuova email.');
-
-  if(query.get('token_hash')){
-   if(query.get('type')!=='recovery')
-    throw new Error('Tipo di link non valido.');
-
-   const {error}=await db.auth.verifyOtp({
-    token_hash:query.get('token_hash'),
-    type:'recovery'
-   });
-   if(error)throw error;
-
-  }else if(query.get('code')){
-   const {error}=await db.auth.exchangeCodeForSession(query.get('code'));
-   if(error)throw error;
-
-  }else if(hash.get('access_token')){
-   const {error}=await db.auth.setSession({
-    access_token:hash.get('access_token'),
-    refresh_token:hash.get('refresh_token')||''
-   });
-   if(error)throw error;
-  }
-
-  const {data,error}=await db.auth.getUser();
-
-  if(error||!data.user)
-   throw error||new Error('Account non verificato.');
-
-  recoveryVerified=true;
-  $('savePasswordBtn').disabled=false;
-
-  resetMessaggio('Link verificato. Inserisci la nuova password e premi Salva nuova password.');
-  pulisciURL();
-
- }catch(e){
-  recoveryVerified=false;
-  $('savePasswordBtn').disabled=true;
-  resetMessaggio('Verifica non riuscita: '+erroreTesto(e),true);
- }
-}
-
-async function salvaNuovaPassword(){
- if(resetBusy)return;
-
- if(!db||!recoveryMode||!recoveryVerified)
-  return resetMessaggio('Link di recupero non verificato.',true);
-
- const password=$('nuovaPassword').value;
- const conferma=$('confermaPassword').value;
-
- if(password.length<8)
-  return resetMessaggio('Usa almeno 8 caratteri.',true);
-
- if(password!==conferma)
-  return resetMessaggio('Le password non coincidono.',true);
-
- resetBusy=true;
- $('savePasswordBtn').disabled=true;
- resetMessaggio('Salvataggio nuova password...');
-
- try{
-  const {data,error:userError}=await db.auth.getUser();
-
-  if(userError||!data.user)
-   throw userError||new Error('Sessione scaduta. Richiedi un nuovo link.');
-
-  const {error}=await db.auth.updateUser({password});
-  if(error)throw error;
-
-  recoveryVerified=false;
-  await db.auth.signOut();
-
-  recoveryMode=false;
-  currentUser=null;
-  authVersion++;
-
-  pulisciURL();
-
-  $('password').value='';
-  $('nuovaPassword').value='';
-  $('confermaPassword').value='';
-
-  mostra('auth');
-  messaggio('Password aggiornata! Ora accedi con la nuova password.');
-
- }catch(e){
-  resetMessaggio('Errore salvataggio: '+erroreTesto(e),true);
- }finally{
-  resetBusy=false;
-  $('savePasswordBtn').disabled=!recoveryVerified;
- }
-}
-
-async function annullaRecupero(){
- recoveryMode=false;
- recoveryVerified=false;
- currentUser=null;
- authVersion++;
-
- try{
-  if(db)await db.auth.signOut();
- }catch(e){
-  console.warn(e);
- }
-
- pulisciURL();
- mostra('auth');
- messaggio('Puoi richiedere un nuovo link di recupero.');
-}
-
-async function esci(){
- caricamentoDati++;
- datiOnline={acqua:[],peso:[]};
- recoveryMode=false;
- recoveryVerified=false;
- currentUser=null;
- authVersion++;
-
- try{
-  if(db)await db.auth.signOut();
- }catch(e){
-  console.warn(e);
- }
-
- pulisciURL();
- torna();
- mostra('auth');
- messaggio('Disconnessione effettuata.');
-}
-
-async function controllaSessione(){
- if(recoveryMode||!db)return;
-
- const version=++authVersion;
-
- try{
-  const {data,error}=await db.auth.getUser();
-
-  if(recoveryMode||version!==authVersion)return;
-
-  if(error||!data.user){
-   currentUser=null;
-   mostra('auth');
-   return;
-  }
-
-  const user=data.user;
-
-  const role=await db.from('user_roles')
-   .select('role').eq('user_id',user.id);
-
-  if(role.error)throw role.error;
-
-  const access=await db.from('account_access')
-   .select('status').eq('user_id',user.id);
-
-  if(access.error)throw access.error;
-
-  if(recoveryMode||version!==authVersion)return;
-
-  const isAdmin=(role.data||[])
-   .some(r=>r.role==='admin');
-
-  const approved=(access.data||[])
-   .some(r=>r.status==='approved');
-
-  if(!approved){
-   currentUser=null;
-   $('pendingMsg').textContent=
-    'Il tuo account non è approvato oppure è sospeso.';
-   mostra('pending');
-   return;
-  }
-
-  if(!currentUser||currentUser.id!==user.id)
-   datiOnline={acqua:[],peso:[]};
-
-  currentUser=user;
-  $('utenteEmail').textContent=user.email||'';
-
-  $('adminMsg').textContent=isAdmin?
-   '👑 Amministratore Forge Coaching riconosciuto. Pannello admin in preparazione.':
-   'Account cliente approvato.';
-
-  mostra('app');
-
- }catch(e){
-  if(recoveryMode||version!==authVersion)return;
-
-  currentUser=null;
-  $('pendingMsg').textContent=
-   'Impossibile verificare le autorizzazioni: '+erroreTesto(e);
-  mostra('pending');
- }
-}
-
-function apri(nome){
- if(!currentUser||$('app').classList.contains('hidden'))return;
-
- const s=sezioni[nome];
- if(!s)return;
-
- sezioneAttuale=nome;
- $('titolo').textContent=s.titolo;
- $('descrizione').textContent=s.testo;
-
- ['areaAcqua','areaPeso','areaGrafici','areaPremium']
- .forEach(id=>$(id).classList.add('hidden'));
-
- if(nome==='acqua'){
-  $('areaAcqua').classList.remove('hidden');
-  $('areaGrafici').classList.remove('hidden');
- }
-
- if(nome==='peso'){
-  $('areaPeso').classList.remove('hidden');
-  $('areaGrafici').classList.remove('hidden');
- }
-
- if(nome==='premium')
-  $('areaPremium').classList.remove('hidden');
-
- $('home').classList.add('hidden');
- $('dettaglio').classList.remove('hidden');
- window.scrollTo(0,0);
-
- if(nome==='acqua'||nome==='peso')
-  caricaMonitoraggio(nome);
-}
-
-function torna(){
- $('dettaglio').classList.add('hidden');
- $('home').classList.remove('hidden');
- sezioneAttuale='';
- window.scrollTo(0,0);
-}
-
-// MONITORAGGIO ONLINE SUPABASE
-
-function dataLocale(d=new Date()){
- return d.getFullYear()+'-'+
-  String(d.getMonth()+1).padStart(2,'0')+'-'+
-  String(d.getDate()).padStart(2,'0');
-}
-
-function tabella(tipo){
- return tipo==='acqua'?
-  'forge_water_entries':'forge_weight_entries';
-}
-
-function righe(tipo){
- return datiOnline[tipo]||[];
-}
-
-function giornoRegistrazione(iso){
- return dataLocale(new Date(iso));
-}
-
-async function caricaMonitoraggio(tipo){
- if(!db||!currentUser)return;
-
- const versione=++caricamentoDati;
- const nomeUtente=currentUser.id;
- const storico=$('storico');
-
- storico.textContent='Caricamento dati da Supabase...';
-
- const {data,error}=await db.from(tabella(tipo))
-  .select(tipo==='acqua'?
-   'id,amount_ml,recorded_at':
-   'id,weight_kg,recorded_at')
-  .eq('user_id',nomeUtente)
-  .order('recorded_at',{ascending:true})
-  .limit(5000);
-
- if(versione!==caricamentoDati||
-    !currentUser||
-    currentUser.id!==nomeUtente||
-    sezioneAttuale!==tipo)return;
-
- if(error){
-  storico.textContent='Errore lettura dati: '+
-   erroreTesto(error);
-  return;
- }
-
- datiOnline[tipo]=(data||[]).map(x=>({
-  data:giornoRegistrazione(x.recorded_at),
-  timestamp:x.recorded_at,
-  ...(tipo==='acqua'?
-   {ml:Number(x.amount_ml)}:
-   {kg:Number(x.weight_kg)})
- }));
-
- if(tipo==='acqua')aggiornaAcqua();
- else aggiornaPeso();
-}
-
-async function salvaAcqua(){
- if(!db||!currentUser)
-  return alert('Accedi per registrare acqua.');
-
- const ml=Number($('quantitaAcqua').value);
-
- if(!Number.isInteger(ml)||ml<1||ml>10000)
-  return alert('Inserisci una quantità valida in ml.');
-
- const {error}=await db.from('forge_water_entries')
-  .insert({
-   user_id:currentUser.id,
-   amount_ml:ml
-  });
-
- if(error)
-  return alert('Salvataggio non riuscito: '+
-   erroreTesto(error));
-
- await caricaMonitoraggio('acqua');
-}
-
-async function salvaPeso(){
- if(!db||!currentUser)
-  return alert('Accedi per registrare il peso.');
-
- const kg=Number($('valorePeso').value);
-
- if(!Number.isFinite(kg)||kg<1||kg>500)
-  return alert('Inserisci un peso valido in kg.');
-
- const {error}=await db.from('forge_weight_entries')
-  .insert({
-   user_id:currentUser.id,
-   weight_kg:kg
-  });
-
- if(error)
-  return alert('Salvataggio non riuscito: '+
-   erroreTesto(error));
-
- await caricaMonitoraggio('peso');
-}
-
-function aggiornaAcqua(){
- const ml=righe('acqua')
-  .filter(x=>x.data===dataLocale())
-  .reduce((s,x)=>s+x.ml,0);
-
- $('totaleAcqua').textContent=
-  (ml/1000).toFixed(2)+' L';
-
- aggiornaGrafici();
-}
-
-function aggiornaPeso(){
- const dati=[...righe('peso')]
-  .sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
-
- const ultimo=dati.at(-1);
- const precedente=dati.at(-2);
-
- $('ultimoPeso').textContent=ultimo?
-  ultimo.kg.toFixed(1)+' kg':'—';
-
- $('variazionePeso').textContent=ultimo&&precedente?
-  'Variazione dalla pesata precedente: '+
-  (ultimo.kg-precedente.kg>0?'+':'')+
-  (ultimo.kg-precedente.kg).toFixed(1)+' kg':'';
-
- aggiornaGrafici();
-}
-
-function chiavePeriodo(data,periodo){
- const d=new Date(data+'T12:00:00');
-
- if(periodo==='mesi')return data.slice(0,7);
-
- if(periodo==='settimane'){
-  d.setDate(d.getDate()-(d.getDay()+6)%7);
-  return dataLocale(d);
- }
-
- return data;
-}
-
-function periodi(periodo){
- const oggi=new Date();
- const risultato=[];
- const quantita=periodo==='mesi'?12:
-  periodo==='settimane'?8:7;
-
- for(let i=quantita-1;i>=0;i--){
-  const d=new Date(oggi);
-
-  if(periodo==='mesi'){
-   d.setDate(1);
-   d.setMonth(d.getMonth()-i);
-  }else{
-   d.setDate(d.getDate()-
-    (periodo==='settimane'?i*7:i));
-  }
-
-  risultato.push(chiavePeriodo(dataLocale(d),periodo));
- }
-
- return risultato;
-}
-
-function aggiornaGrafici(){
- if(!['acqua','peso'].includes(sezioneAttuale))return;
-
- const acqua=sezioneAttuale==='acqua';
- const periodo=$('periodo').value;
- const dati=righe(acqua?'acqua':'peso');
- const chiavi=periodi(periodo);
-
- const valori=chiavi.map(k=>{
-  const righePeriodo=dati.filter(x=>
-   chiavePeriodo(x.data,periodo)===k
-  );
-
-  if(!righePeriodo.length)return null;
-
-  return acqua?
-   righePeriodo.reduce((s,x)=>s+Number(x.ml),0)/1000:
-   righePeriodo.reduce((s,x)=>s+Number(x.kg),0)/
-   righePeriodo.length;
- });
-
- disegnaGrafico(chiavi,valori,acqua?'L':'kg');
-
- const storico=$('storico');
- storico.replaceChildren();
-
- const titolo=document.createElement('h3');
- titolo.textContent='Storico';
- storico.appendChild(titolo);
-
- let presenti=0;
-
- chiavi.forEach((k,i)=>{
-  if(valori[i]===null)return;
-  presenti++;
-
-  const r=document.createElement('div');
-  r.className='entry';
-  r.textContent=k+' — '+valori[i].toFixed(2)+
-   ' '+(acqua?'L':'kg');
-
-  storico.appendChild(r);
- });
-
- if(!presenti){
-  const p=document.createElement('p');
-  p.className='small';
-  p.textContent='Nessuna registrazione nel periodo selezionato.';
-  storico.appendChild(p);
- }
-}
-
-function disegnaGrafico(etichette,valori,unita){
- const svg=$('grafico');
- svg.replaceChildren();
-
- const ns='http://www.w3.org/2000/svg';
-
- const crea=(tag,attrs,testo)=>{
-  const el=document.createElementNS(ns,tag);
-
-  Object.entries(attrs).forEach(([k,v])=>
-   el.setAttribute(k,v)
-  );
-
-  if(testo!==undefined)el.textContent=testo;
-  svg.appendChild(el);
- };
-
- const presenti=valori.filter(v=>
-  v!==null&&Number.isFinite(v)
- );
-
- if(!presenti.length){
-  crea('text',{
-   x:170,y:110,fill:'#aaa',
-   'text-anchor':'middle','font-size':13
-  },'Nessun dato da mostrare');
-  return;
- }
-
- let min=Math.min(...presenti);
- let max=Math.max(...presenti);
-
- const margine=Math.max(
-  (max-min)*.2,
-  unita==='kg'?.5:.2
- );
-
- min=Math.max(0,min-margine);
- max+=margine;
-
- const x=i=>35+i*(285/Math.max(1,valori.length-1));
- const y=v=>190-(v-min)/(max-min)*150;
-
- for(let i=0;i<4;i++){
-  crea('line',{
-   x1:35,y1:40+i*50,
-   x2:325,y2:40+i*50,
-   stroke:'#444'
-  });
- }
-
- let segmento=[];
-
- function traccia(){
-  if(segmento.length>1){
-   crea('polyline',{
-    points:segmento.join(' '),
-    fill:'none',
-    stroke:'#d4af60',
-    'stroke-width':3,
-    'stroke-linecap':'round',
-    'stroke-linejoin':'round'
-   });
-  }
-  segmento=[];
- }
-
- valori.forEach((v,i)=>{
-  if(v===null){
-   traccia();
-   return;
-  }
-  segmento.push(x(i)+','+y(v));
- });
-
- traccia();
-
- valori.forEach((v,i)=>{
-  if(v!==null){
-   crea('circle',{
-    cx:x(i),
-    cy:y(v),
-    r:4,
-    fill:'#d4af60'
-   });
-  }
- });
-
- crea('text',{
-  x:35,y:20,fill:'#d4af60','font-size':12
- },max.toFixed(1)+' '+unita);
-
- crea('text',{
-  x:35,y:212,fill:'#aaa','font-size':12
- },min.toFixed(1)+' '+unita);
-
- crea('text',{
-  x:170,y:227,fill:'#aaa',
-  'font-size':11,'text-anchor':'middle'
- },'Andamento nel periodo selezionato');
-}
-
-async function avvio(){
- if(recoveryFromURL)entraRecupero();
-
- try{
-  if(!window.supabase?.createClient)
-   throw new Error('Impossibile caricare la libreria Supabase. Controlla Internet e ricarica.');
-
-  db=window.supabase.createClient(
-   SUPABASE_URL,
-   SUPABASE_KEY,
-   {
-    auth:{
-     persistSession:true,
-     autoRefreshToken:true,
-     detectSessionInUrl:false,
-     flowType:'implicit'
-    }
-   }
-  );
-
-  db.auth.onAuthStateChange(event=>{
-   if(event==='PASSWORD_RECOVERY'&&!recoveryMode){
-    entraRecupero();
-    resetMessaggio('Link riconosciuto. Verifica in corso...');
-    return;
-   }
-
-   if(recoveryMode)return;
-
-   if(event==='SIGNED_OUT'){
-    currentUser=null;
-    authVersion++;
-    mostra('auth');
-    return;
-   }
-
-   if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){
-    setTimeout(()=>{
-     if(!recoveryMode)controllaSessione();
-    },0);
-   }
-  });
-
-  if(recoveryMode)
-   await verificaRecupero();
-  else
-   await controllaSessione();
-
- }catch(e){
-  if(recoveryMode){
-   resetMessaggio(erroreTesto(e),true);
-  }else{
-   mostra('auth');
-   messaggio(erroreTesto(e),true);
-  }
- }
-}
-
-avvio();
+})();
 </script>
 </body>
 </html>
