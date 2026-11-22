@@ -3,100 +3,68 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Forge Coaching</title>
 <style>
-* { box-sizing: border-box; }
-body {
-  margin: 0;
-  background: #0b0b0d;
-  color: #f5f5f5;
-  font-family: Arial, sans-serif;
-}
-header {
-  padding: 30px 20px;
-  text-align: center;
-  border-bottom: 1px solid #a98538;
-}
-h1 { color: #d4af60; margin: 0 0 8px; }
-.subtitle { color: #aaa; }
-main {
-  padding: 22px;
-  max-width: 650px;
-  margin: auto;
-}
-.card {
-  background: #19191d;
-  border: 1px solid #514329;
-  border-radius: 14px;
-  padding: 22px;
-  margin-bottom: 16px;
-}
-.card h2 {
-  color: #d4af60;
-  margin-top: 0;
-}
-button {
-  background: #d4af60;
-  color: #111;
-  border: none;
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-weight: bold;
-  cursor: pointer;
-  width: 100%;
-  font-size: 15px;
-}
-button:active { opacity: 0.8; }
-.back { margin-bottom: 20px; }
-.hidden { display: none; }
-.info { color: #bbb; line-height: 1.6; }
-input, select {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0 14px;
-  border: 1px solid #66542d;
-  border-radius: 8px;
-  background: #111;
-  color: white;
-  font-size: 16px;
-}
-label { color: #ddd; }
-.small { color: #aaa; font-size: 13px; }
-.value {
-  color: #d4af60;
-  font-size: 28px;
-  font-weight: bold;
-}
-.chart {
-  width: 100%;
-  height: 230px;
-  margin-top: 15px;
-}
-.entry {
-  border-bottom: 1px solid #444;
-  padding: 9px 0;
-  color: #ddd;
-}
-footer {
-  text-align: center;
-  padding: 25px;
-  color: #888;
-  font-size: 12px;
-}
+*{box-sizing:border-box}
+body{margin:0;background:#0b0b0d;color:#f5f5f5;font-family:Arial,sans-serif}
+header{text-align:center;padding:30px 20px;border-bottom:1px solid #a98538}
+h1{color:#d4af60;margin:0 0 8px}
+.subtitle,.small{color:#aaa}
+.small{font-size:13px}
+main{padding:22px;max-width:650px;margin:auto}
+.card{background:#19191d;border:1px solid #514329;border-radius:14px;padding:22px;margin-bottom:16px}
+.card h2{color:#d4af60;margin-top:0}
+button{background:#d4af60;color:#111;border:0;padding:12px 18px;border-radius:8px;font-weight:bold;cursor:pointer;width:100%;font-size:15px;margin-top:8px}
+button:disabled{opacity:.5}
+.back{margin-bottom:20px}
+.hidden{display:none!important}
+.info{color:#bbb;line-height:1.6}
+input,select{width:100%;padding:12px;margin:8px 0 14px;border:1px solid #66542d;border-radius:8px;background:#111;color:#fff;font-size:16px}
+label{color:#ddd}
+.value{color:#d4af60;font-size:28px;font-weight:bold}
+.chart{width:100%;height:230px;margin-top:15px}
+.entry{border-bottom:1px solid #444;padding:9px 0;color:#ddd}
+footer{text-align:center;padding:25px;color:#888;font-size:12px}
+.error{color:#ffb0a5}
+.success{color:#a8e5b0}
+.topline{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.topline button{width:auto}
+.topline span{overflow-wrap:anywhere;font-size:13px}
 </style>
 </head>
 <body>
-
 <header>
 <h1>FORGE COACHING</h1>
 <div class="subtitle">Train. Evolve. Become.</div>
 </header>
-
 <main>
+<section id="auth" class="card">
+<h2>Accedi a Forge Coaching</h2>
+<label for="email">Email</label>
+<input id="email" type="email" autocomplete="email" placeholder="La tua email">
+<label for="password">Password</label>
+<input id="password" type="password" autocomplete="current-password" placeholder="Almeno 6 caratteri">
+<button id="loginBtn" onclick="accedi()">Accedi</button>
+<button id="signupBtn" onclick="registrati()">Crea un account</button>
+<p class="small">I nuovi account richiedono l'approvazione del coach. Dopo la registrazione potrebbe essere necessario confermare l'email.</p>
+<p id="authMsg" role="status"></p>
+</section>
+
+<section id="pending" class="card hidden">
+<h2>Accesso in attesa</h2>
+<p id="pendingMsg" class="info">Il tuo account deve essere approvato dal coach.</p>
+<button onclick="esci()">Esci</button>
+</section>
+
+<section id="app" class="hidden">
+<div class="topline">
+<span id="utenteEmail"></span>
+<button onclick="esci()">Esci</button>
+</div>
+<p id="adminMsg" class="small"></p>
 
 <section id="home">
-
 <div class="card">
 <h2>Allenamento</h2>
 <p>Programmi ed esercizi personalizzati.</p>
@@ -144,12 +112,10 @@ footer {
 <p>Contenuti esclusivi riservati agli abbonati.</p>
 <button onclick="apri('premium')">Apri Forge Premium</button>
 </div>
-
 </section>
 
 <section id="dettaglio" class="hidden">
 <button class="back" onclick="torna()">← Torna alla Home</button>
-
 <div class="card">
 <h2 id="titolo"></h2>
 <p id="descrizione" class="info"></p>
@@ -187,297 +153,456 @@ footer {
 <p>👑 Area riservata agli abbonati Forge Premium.</p>
 <p class="info">Video, guide e programmi esclusivi saranno disponibili dopo l'attivazione dell'abbonamento.</p>
 <p><strong>Prezzo mensile:</strong> da configurare.</p>
-<p class="small">I pagamenti e i rinnovi automatici non sono ancora attivi. Il prezzo sarà modificabile dal futuro pannello amministratore.</p>
-<button disabled style="opacity:.5">Abbonamento non ancora disponibile</button>
+<p class="small">Pagamenti e rinnovi automatici non ancora attivi.</p>
+<button disabled>Abbonamento non ancora disponibile</button>
 </div>
-
 </div>
 </section>
-
+</section>
 </main>
 
 <footer>Forge Coaching © 2026</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
-const sezioni = {
- allenamento: {
-  titolo:"Allenamento",
-  testo:"Qui saranno disponibili i programmi assegnati dal coach, con esercizi, serie, ripetizioni e risultati."
+'use strict';
+
+const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
+const db=window.supabase?.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+
+let currentUser=null;
+let sezioneAttuale='';
+
+const sezioni={
+ allenamento:{
+  titolo:'Allenamento',
+  testo:'Qui saranno disponibili i programmi assegnati dal coach, con esercizi, serie, ripetizioni e risultati.'
  },
- nutrizione: {
-  titolo:"Forge Nutrition",
-  testo:"Qui saranno disponibili i piani alimentari, il diario dei pasti, le calorie e i macronutrienti."
+ nutrizione:{
+  titolo:'Forge Nutrition',
+  testo:'Qui saranno disponibili i piani alimentari, il diario dei pasti, le calorie e i macronutrienti.'
  },
- progressi: {
-  titolo:"Progress Evolution",
-  testo:"Qui potrai registrare misure corporee, fotografie e confronti prima e dopo."
+ progressi:{
+  titolo:'Progress Evolution',
+  testo:'Qui potrai registrare misure corporee, fotografie e confronti prima e dopo.'
  },
- acqua: {
-  titolo:"Forge Hydration",
+ acqua:{
+  titolo:'Forge Hydration',
   testo:"Registra l'acqua bevuta ogni giorno e controlla il tuo andamento."
  },
- peso: {
-  titolo:"Forge Weight",
-  testo:"Registra il tuo peso corporeo e osserva le variazioni nel tempo."
+ peso:{
+  titolo:'Forge Weight',
+  testo:'Registra il tuo peso corporeo e osserva le variazioni nel tempo.'
  },
- prenotazioni: {
-  titolo:"Prenotazioni",
-  testo:"Qui sarà disponibile il calendario delle sessioni con richieste e conferme del coach."
+ prenotazioni:{
+  titolo:'Prenotazioni',
+  testo:'Qui sarà disponibile il calendario delle sessioni con richieste e conferme del coach.'
  },
- pacchetti: {
-  titolo:"Pacchetti Lezioni",
-  testo:"Qui saranno visualizzate le lezioni acquistate, svolte e rimanenti."
+ pacchetti:{
+  titolo:'Pacchetti Lezioni',
+  testo:'Qui saranno visualizzate le lezioni acquistate, svolte e rimanenti.'
  },
- premium: {
-  titolo:"Forge Premium",
-  testo:"Contenuti esclusivi con abbonamento mensile a rinnovo automatico."
+ premium:{
+  titolo:'Forge Premium',
+  testo:'Contenuti esclusivi con abbonamento mensile a rinnovo automatico.'
  }
 };
 
-let sezioneAttuale = "";
+function messaggio(t,errore=false){
+ $('authMsg').textContent=t;
+ $('authMsg').className=errore?'error':'success';
+}
 
-function leggi(chiave) {
- try {
-  return JSON.parse(localStorage.getItem(chiave)) || [];
- } catch(e) {
+function busy(v){
+ $('loginBtn').disabled=v;
+ $('signupBtn').disabled=v;
+}
+
+async function accedi(){
+ if(!db)return messaggio('Libreria Supabase non caricata. Riprova con connessione internet.',true);
+ const email=$('email').value.trim();
+ const password=$('password').value;
+ if(!email||!password)return messaggio('Inserisci email e password.',true);
+ busy(true);
+ try{
+  const {error}=await db.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  messaggio('Accesso riuscito.');
+  await controllaSessione();
+ }catch(e){
+  messaggio(e.message||'Errore di accesso.',true);
+ }finally{
+  busy(false);
+ }
+}
+
+async function registrati(){
+ if(!db)return messaggio('Supabase non disponibile.',true);
+ const email=$('email').value.trim();
+ const password=$('password').value;
+ if(!email||password.length<6)
+  return messaggio('Inserisci una email valida e una password di almeno 6 caratteri.',true);
+ busy(true);
+ try{
+  const {data,error}=await db.auth.signUp({
+   email,
+   password,
+   options:{emailRedirectTo:location.origin+location.pathname}
+  });
+  if(error)throw error;
+  messaggio(data.session?
+   'Registrazione completata. Attendi approvazione.':
+   'Controlla la tua email per confermare la registrazione.');
+  await controllaSessione();
+ }catch(e){
+  messaggio(e.message||'Registrazione non riuscita.',true);
+ }finally{
+  busy(false);
+ }
+}
+
+async function esci(){
+ if(db)await db.auth.signOut();
+ currentUser=null;
+ mostra('auth');
+ torna();
+}
+
+function mostra(id){
+ ['auth','pending','app'].forEach(x=>
+  $(x).classList.toggle('hidden',x!==id)
+ );
+}
+
+async function controllaSessione(){
+ if(!db){
+  mostra('auth');
+  messaggio('Impossibile caricare Supabase.',true);
+  return;
+ }
+ const {data,error}=await db.auth.getUser();
+ if(error||!data.user){
+  currentUser=null;
+  mostra('auth');
+  return;
+ }
+ currentUser=data.user;
+
+ // Se la verifica delle autorizzazioni fallisce,
+ // il contenuto riservato rimane bloccato.
+ try{
+  const role=await db.from('user_roles')
+   .select('role').eq('user_id',currentUser.id);
+  if(role.error)throw role.error;
+
+  const isAdmin=(role.data||[])
+   .some(r=>r.role==='admin');
+
+  const access=await db.from('account_access')
+   .select('*').eq('user_id',currentUser.id);
+  if(access.error)throw access.error;
+
+  const approved=(access.data||[])
+   .some(r=>r.status==='approved');
+
+  if(!approved){
+   $('pendingMsg').textContent=
+    'Il tuo account è in attesa di approvazione da parte del coach.';
+   mostra('pending');
+   return;
+  }
+
+  $('utenteEmail').textContent=currentUser.email||'';
+  $('adminMsg').textContent=isAdmin?
+   'Accesso amministratore riconosciuto (pannello admin in preparazione).':
+   'Accesso cliente approvato.';
+  mostra('app');
+
+ }catch(e){
+  $('pendingMsg').textContent=
+   'Impossibile verificare le autorizzazioni. L’accesso rimane bloccato per sicurezza. Dettaglio: '+
+   (e.message||'errore');
+  mostra('pending');
+ }
+}
+
+function apri(nome){
+ if(!currentUser||$('app').classList.contains('hidden'))return;
+ const s=sezioni[nome];
+ if(!s)return;
+ sezioneAttuale=nome;
+ $('titolo').textContent=s.titolo;
+ $('descrizione').textContent=s.testo;
+
+ ['areaAcqua','areaPeso','areaGrafici','areaPremium']
+  .forEach(id=>$(id).classList.add('hidden'));
+
+ if(nome==='acqua'){
+  $('areaAcqua').classList.remove('hidden');
+  $('areaGrafici').classList.remove('hidden');
+  aggiornaAcqua();
+ }
+ if(nome==='peso'){
+  $('areaPeso').classList.remove('hidden');
+  $('areaGrafici').classList.remove('hidden');
+  aggiornaPeso();
+ }
+ if(nome==='premium')
+  $('areaPremium').classList.remove('hidden');
+
+ $('home').classList.add('hidden');
+ $('dettaglio').classList.remove('hidden');
+ scrollTo(0,0);
+}
+
+function torna(){
+ $('dettaglio').classList.add('hidden');
+ $('home').classList.remove('hidden');
+ sezioneAttuale='';
+ scrollTo(0,0);
+}
+
+// Salvataggio demo locale separato per utente.
+// I dati non sono ancora sincronizzati con Supabase.
+
+function chiave(tipo){
+ return 'forge_demo_'+tipo+'_'+(currentUser?.id||'anon');
+}
+
+function leggi(tipo){
+ try{
+  const x=JSON.parse(localStorage.getItem(chiave(tipo)));
+  return Array.isArray(x)?x:[];
+ }catch{
   return [];
  }
 }
 
-function scrivi(chiave, dati) {
- try {
-  localStorage.setItem(chiave, JSON.stringify(dati));
+function scrivi(tipo,dati){
+ try{
+  localStorage.setItem(chiave(tipo),JSON.stringify(dati));
   return true;
- } catch(e) {
-  alert("Impossibile salvare i dati sul dispositivo.");
+ }catch{
+  alert('Impossibile salvare sul dispositivo.');
   return false;
  }
 }
 
-function dataLocale(d = new Date()) {
- const y = d.getFullYear();
- const m = String(d.getMonth()+1).padStart(2,"0");
- const g = String(d.getDate()).padStart(2,"0");
- return y+"-"+m+"-"+g;
+function dataLocale(d=new Date()){
+ return d.getFullYear()+'-'+
+  String(d.getMonth()+1).padStart(2,'0')+'-'+
+  String(d.getDate()).padStart(2,'0');
 }
 
-function apri(nome) {
- const s = sezioni[nome];
- if (!s) return;
- sezioneAttuale = nome;
-
- document.getElementById("titolo").textContent = s.titolo;
- document.getElementById("descrizione").textContent = s.testo;
-
- ["areaAcqua","areaPeso","areaGrafici","areaPremium"].forEach(id=>{
-  document.getElementById(id).classList.add("hidden");
- });
-
- if(nome==="acqua") {
-  document.getElementById("areaAcqua").classList.remove("hidden");
-  document.getElementById("areaGrafici").classList.remove("hidden");
-  aggiornaAcqua();
- }
- if(nome==="peso") {
-  document.getElementById("areaPeso").classList.remove("hidden");
-  document.getElementById("areaGrafici").classList.remove("hidden");
-  aggiornaPeso();
- }
- if(nome==="premium") {
-  document.getElementById("areaPremium").classList.remove("hidden");
- }
-
- document.getElementById("home").classList.add("hidden");
- document.getElementById("dettaglio").classList.remove("hidden");
- window.scrollTo(0,0);
+function salvaAcqua(){
+ const ml=Number($('quantitaAcqua').value);
+ if(!Number.isFinite(ml)||ml<=0||ml>10000)
+  return alert('Inserisci una quantità valida in ml.');
+ const dati=leggi('acqua');
+ dati.push({data:dataLocale(),ml});
+ if(scrivi('acqua',dati))aggiornaAcqua();
 }
 
-function torna() {
- document.getElementById("dettaglio").classList.add("hidden");
- document.getElementById("home").classList.remove("hidden");
- sezioneAttuale = "";
- window.scrollTo(0,0);
-}
-
-function salvaAcqua() {
- const ml = Number(document.getElementById("quantitaAcqua").value);
- if(!Number.isFinite(ml) || ml<=0 || ml>10000) {
-  alert("Inserisci una quantità valida in ml.");
-  return;
- }
- const dati = leggi("forge_demo_acqua");
- dati.push({data:dataLocale(),ml:ml});
- if(scrivi("forge_demo_acqua",dati)) aggiornaAcqua();
-}
-
-function salvaPeso() {
- const kg = Number(document.getElementById("valorePeso").value);
- if(!Number.isFinite(kg) || kg<1 || kg>500) {
-  alert("Inserisci un peso valido in kg.");
-  return;
- }
- const dati = leggi("forge_demo_peso");
- const oggi = dataLocale();
- const indice = dati.findIndex(x=>x.data===oggi);
- if(indice>=0) dati[indice].kg=kg;
- else dati.push({data:oggi,kg:kg});
- if(scrivi("forge_demo_peso",dati)) aggiornaPeso();
-}
-
-function aggiornaAcqua() {
- const dati=leggi("forge_demo_acqua");
+function salvaPeso(){
+ const kg=Number($('valorePeso').value);
+ if(!Number.isFinite(kg)||kg<1||kg>500)
+  return alert('Inserisci un peso valido in kg.');
+ const dati=leggi('peso');
  const oggi=dataLocale();
- const ml=dati.filter(x=>x.data===oggi)
+ const indice=dati.findIndex(x=>x.data===oggi);
+ if(indice>=0)dati[indice].kg=kg;
+ else dati.push({data:oggi,kg});
+ if(scrivi('peso',dati))aggiornaPeso();
+}
+
+function aggiornaAcqua(){
+ const ml=leggi('acqua')
+  .filter(x=>x.data===dataLocale())
   .reduce((s,x)=>s+Number(x.ml),0);
- document.getElementById("totaleAcqua").textContent=
-  (ml/1000).toFixed(2)+" L";
+ $('totaleAcqua').textContent=(ml/1000).toFixed(2)+' L';
  aggiornaGrafici();
 }
 
-function aggiornaPeso() {
- const dati=leggi("forge_demo_peso")
+function aggiornaPeso(){
+ const dati=leggi('peso')
   .sort((a,b)=>a.data.localeCompare(b.data));
- const ultimo=dati[dati.length-1];
- document.getElementById("ultimoPeso").textContent=
-  ultimo ? Number(ultimo.kg).toFixed(1)+" kg" : "—";
-
- const precedente=dati[dati.length-2];
- const testo=document.getElementById("variazionePeso");
- if(ultimo && precedente) {
-  const diff=Number(ultimo.kg)-Number(precedente.kg);
-  testo.textContent="Variazione dalla pesata precedente: "+
-   (diff>0?"+":"")+diff.toFixed(1)+" kg";
- } else testo.textContent="";
-
+ const ultimo=dati.at(-1);
+ const precedente=dati.at(-2);
+ $('ultimoPeso').textContent=ultimo?
+  Number(ultimo.kg).toFixed(1)+' kg':'—';
+ $('variazionePeso').textContent=ultimo&&precedente?
+  'Variazione dalla pesata precedente: '+
+  ((ultimo.kg-precedente.kg)>0?'+':'')+
+  (ultimo.kg-precedente.kg).toFixed(1)+' kg':'';
  aggiornaGrafici();
 }
 
-function chiavePeriodo(data,periodo) {
- const d=new Date(data+"T12:00:00");
- if(periodo==="mesi") return data.slice(0,7);
- if(periodo==="settimane") {
-  const giorno=(d.getDay()+6)%7;
-  d.setDate(d.getDate()-giorno);
+function chiavePeriodo(data,periodo){
+ const d=new Date(data+'T12:00:00');
+ if(periodo==='mesi')return data.slice(0,7);
+ if(periodo==='settimane'){
+  d.setDate(d.getDate()-(d.getDay()+6)%7);
   return dataLocale(d);
  }
  return data;
 }
 
-function periodi(periodo) {
+function periodi(periodo){
  const oggi=new Date();
  const risultato=[];
- const quantita=periodo==="mesi"?12:periodo==="settimane"?8:7;
- for(let i=quantita-1;i>=0;i--) {
+ const quantita=periodo==='mesi'?12:
+  periodo==='settimane'?8:7;
+ for(let i=quantita-1;i>=0;i--){
   const d=new Date(oggi);
-  if(periodo==="mesi") {
+  if(periodo==='mesi'){
    d.setDate(1);
    d.setMonth(d.getMonth()-i);
-  } else if(periodo==="settimane") {
-   d.setDate(d.getDate()-i*7);
-  } else d.setDate(d.getDate()-i);
+  }else{
+   d.setDate(d.getDate()-
+    (periodo==='settimane'?i*7:i));
+  }
   risultato.push(chiavePeriodo(dataLocale(d),periodo));
  }
  return risultato;
 }
 
-function aggiornaGrafici() {
- if(!["acqua","peso"].includes(sezioneAttuale)) return;
-
- const acqua=sezioneAttuale==="acqua";
- const periodo=document.getElementById("periodo").value;
- const dati=leggi(acqua?"forge_demo_acqua":"forge_demo_peso");
+function aggiornaGrafici(){
+ if(!['acqua','peso'].includes(sezioneAttuale))return;
+ const acqua=sezioneAttuale==='acqua';
+ const periodo=$('periodo').value;
+ const dati=leggi(acqua?'acqua':'peso');
  const chiavi=periodi(periodo);
- const valori=chiavi.map(chiave=>{
-  const righe=dati.filter(x=>chiavePeriodo(x.data,periodo)===chiave);
-  if(!righe.length) return null;
-  if(acqua) return righe.reduce((s,x)=>s+Number(x.ml),0)/1000;
-  return righe.reduce((s,x)=>s+Number(x.kg),0)/righe.length;
+
+ const valori=chiavi.map(k=>{
+  const righe=dati.filter(x=>
+   chiavePeriodo(x.data,periodo)===k);
+  if(!righe.length)return null;
+  return acqua?
+   righe.reduce((s,x)=>s+Number(x.ml),0)/1000:
+   righe.reduce((s,x)=>s+Number(x.kg),0)/righe.length;
  });
 
- disegnaGrafico(chiavi,valori,acqua?"L":"kg");
+ disegnaGrafico(chiavi,valori,acqua?'L':'kg');
 
- const storico=document.getElementById("storico");
+ const storico=$('storico');
  storico.replaceChildren();
- const titolo=document.createElement("h3");
- titolo.textContent="Storico";
+ const titolo=document.createElement('h3');
+ titolo.textContent='Storico';
  storico.appendChild(titolo);
-
  let presenti=0;
- chiavi.forEach((chiave,i)=>{
-  if(valori[i]===null) return;
+
+ chiavi.forEach((k,i)=>{
+  if(valori[i]===null)return;
   presenti++;
-  const r=document.createElement("div");
-  r.className="entry";
-  r.textContent=chiave+" — "+valori[i].toFixed(2)+" "+(acqua?"L":"kg");
+  const r=document.createElement('div');
+  r.className='entry';
+  r.textContent=k+' — '+valori[i].toFixed(2)+
+   ' '+(acqua?'L':'kg');
   storico.appendChild(r);
  });
- if(!presenti) {
-  const p=document.createElement("p");
-  p.className="small";
-  p.textContent="Nessuna registrazione nel periodo selezionato.";
+
+ if(!presenti){
+  const p=document.createElement('p');
+  p.className='small';
+  p.textContent='Nessuna registrazione nel periodo selezionato.';
   storico.appendChild(p);
  }
 }
 
-function disegnaGrafico(etichette,valori,unita) {
- const svg=document.getElementById("grafico");
+function disegnaGrafico(etichette,valori,unita){
+ const svg=$('grafico');
  svg.replaceChildren();
- const ns="http://www.w3.org/2000/svg";
+ const ns='http://www.w3.org/2000/svg';
+
  const crea=(tag,attrs,testo)=>{
   const el=document.createElementNS(ns,tag);
-  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
-  if(testo!==undefined) el.textContent=testo;
+  Object.entries(attrs).forEach(([k,v])=>
+   el.setAttribute(k,v));
+  if(testo!==undefined)el.textContent=testo;
   svg.appendChild(el);
-  return el;
  };
 
- const presenti=valori.filter(v=>v!==null && Number.isFinite(v));
- if(!presenti.length) {
-  crea("text",{x:170,y:110,fill:"#aaa","text-anchor":"middle",
-   "font-size":13},"Nessun dato da mostrare");
+ const presenti=valori.filter(v=>
+  v!==null&&Number.isFinite(v));
+
+ if(!presenti.length){
+  crea('text',{
+   x:170,y:110,fill:'#aaa',
+   'text-anchor':'middle','font-size':13
+  },'Nessun dato da mostrare');
   return;
  }
 
- let min=Math.min(...presenti),max=Math.max(...presenti);
- const margine=Math.max((max-min)*0.2,unita==="kg"?0.5:0.2);
+ let min=Math.min(...presenti);
+ let max=Math.max(...presenti);
+ const margine=Math.max(
+  (max-min)*.2,unita==='kg'?.5:.2
+ );
  min=Math.max(0,min-margine);
  max+=margine;
+
  const x=i=>35+i*(285/Math.max(1,valori.length-1));
  const y=v=>190-(v-min)/(max-min)*150;
 
- for(let i=0;i<4;i++) {
-  const yy=40+i*50;
-  crea("line",{x1:35,y1:yy,x2:325,y2:yy,stroke:"#444"});
- }
+ for(let i=0;i<4;i++)
+  crea('line',{
+   x1:35,y1:40+i*50,x2:325,
+   y2:40+i*50,stroke:'#444'
+  });
 
  let segmento=[];
- function traccia() {
+ function traccia(){
   if(segmento.length>1)
-   crea("polyline",{points:segmento.join(" "),fill:"none",
-    stroke:"#d4af60","stroke-width":3,
-    "stroke-linecap":"round","stroke-linejoin":"round"});
+   crea('polyline',{
+    points:segmento.join(' '),
+    fill:'none',stroke:'#d4af60',
+    'stroke-width':3,
+    'stroke-linecap':'round',
+    'stroke-linejoin':'round'
+   });
   segmento=[];
  }
+
  valori.forEach((v,i)=>{
-  if(v===null) {traccia();return;}
-  segmento.push(x(i)+","+y(v));
+  if(v===null){traccia();return;}
+  segmento.push(x(i)+','+y(v));
  });
  traccia();
 
  valori.forEach((v,i)=>{
-  if(v===null)return;
-  crea("circle",{cx:x(i),cy:y(v),r:4,fill:"#d4af60"});
+  if(v!==null)
+   crea('circle',{
+    cx:x(i),cy:y(v),r:4,fill:'#d4af60'
+   });
  });
 
- crea("text",{x:35,y:20,fill:"#d4af60","font-size":12},
-  max.toFixed(1)+" "+unita);
- crea("text",{x:35,y:212,fill:"#aaa","font-size":12},
-  min.toFixed(1)+" "+unita);
- crea("text",{x:170,y:227,fill:"#aaa","font-size":11,
-  "text-anchor":"middle"},"Andamento nel periodo selezionato");
+ crea('text',{
+  x:35,y:20,fill:'#d4af60','font-size':12
+ },max.toFixed(1)+' '+unita);
+
+ crea('text',{
+  x:35,y:212,fill:'#aaa','font-size':12
+ },min.toFixed(1)+' '+unita);
+
+ crea('text',{
+  x:170,y:227,fill:'#aaa',
+  'font-size':11,'text-anchor':'middle'
+ },'Andamento nel periodo selezionato');
+}
+
+if(db){
+ db.auth.onAuthStateChange(()=>{
+  setTimeout(controllaSessione,0);
+ });
+ controllaSessione();
+}else{
+ messaggio('Libreria Supabase non disponibile. Controlla la connessione.',true);
 }
 </script>
-
 </body>
 </html>
 
+
+ 
