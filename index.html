@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -173,6 +174,7 @@ footer{text-align:center;padding:25px;color:#888;font-size:12px}
 
 <footer>Forge Coaching © 2026</footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 'use strict';
 
@@ -188,21 +190,27 @@ let recoveryMode=false;
 let recoveryVerified=false;
 let sezioneAttuale='';
 let authVersion=0;
-let recoveryError='';
+let resetBusy=false;
 
-const urlParams=new URLSearchParams(location.search);
-const hashParams=new URLSearchParams(location.hash.slice(1));
+const query=new URLSearchParams(location.search);
+const hash=new URLSearchParams(location.hash.slice(1));
 
 const recoveryFromURL=
- urlParams.get('recovery')==='1'||
- urlParams.get('type')==='recovery'||
- hashParams.get('type')==='recovery';
+ query.get('recovery')==='1'||
+ query.get('type')==='recovery'||
+ hash.get('type')==='recovery';
 
-const recoveryTokenHash=urlParams.get('token_hash');
-const recoveryCode=urlParams.get('code');
+const hasRecoveryCredential=!!(
+ query.get('token_hash')||
+ query.get('code')||
+ hash.get('access_token')
+);
+
 const recoveryErrorCode=
- urlParams.get('error_code')||
- hashParams.get('error_code');
+ query.get('error_description')||
+ hash.get('error_description')||
+ query.get('error_code')||
+ hash.get('error_code');
 
 const sezioni={
  allenamento:{titolo:'Allenamento',testo:'Qui saranno disponibili i programmi assegnati dal coach, con esercizi, serie, ripetizioni e risultati.'},
@@ -238,7 +246,7 @@ function busy(v){
 function erroreTesto(e){
  const m=e?.message||String(e||'Errore sconosciuto');
  if(/rate limit|too many requests|over_email_send_rate_limit/i.test(m))
-  return 'Troppe richieste di email. Attendi qualche minuto. Dettaglio: '+m;
+  return 'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare. Dettaglio: '+m;
  if(/failed to fetch|network|load failed/i.test(m))
   return 'Problema di connessione con Supabase. Controlla Internet.';
  return m;
@@ -248,44 +256,14 @@ function pulisciURL(){
  history.replaceState(null,'',BASE_URL);
 }
 
-function caricaScript(src){
- return new Promise((resolve,reject)=>{
-  const s=document.createElement('script');
-  s.src=src;
-  s.onload=resolve;
-  s.onerror=()=>reject(new Error('Caricamento fallito: '+src));
-  document.head.appendChild(s);
- });
-}
-
-async function inizializzaSupabase(){
- const fonti=[
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
-  'https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'
- ];
-
- for(const fonte of fonti){
-  try{
-   await caricaScript(fonte);
-   if(window.supabase?.createClient)break;
-  }catch(e){console.warn(e)}
- }
-
- if(!window.supabase?.createClient)
-  throw new Error('Impossibile caricare la libreria Supabase.');
-
- db=window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-   auth:{
-    persistSession:true,
-    autoRefreshToken:true,
-    detectSessionInUrl:true,
-    flowType:'implicit'
-   }
-  }
- );
+function entraRecupero(){
+ recoveryMode=true;
+ recoveryVerified=false;
+ currentUser=null;
+ authVersion++;
+ $('savePasswordBtn').disabled=true;
+ mostra('resetPassword');
+ resetMessaggio('Verifica del link di recupero in corso...');
 }
 
 async function accedi(){
@@ -307,7 +285,9 @@ async function accedi(){
   await controllaSessione();
  }catch(e){
   messaggio('Accesso non riuscito: '+erroreTesto(e),true);
- }finally{busy(false)}
+ }finally{
+  busy(false);
+ }
 }
 
 async function registrati(){
@@ -337,21 +317,19 @@ async function registrati(){
   if(data.session)await controllaSessione();
  }catch(e){
   messaggio('Registrazione non riuscita: '+erroreTesto(e),true);
- }finally{busy(false)}
+ }finally{
+  busy(false);
+ }
 }
 
 async function recuperaPassword(){
+ if(!db)
+  return messaggio('Supabase non disponibile. Ricarica la pagina.',true);
+
  const email=$('email').value.trim();
 
- if(!email){
-  messaggio('Inserisci prima la tua email.',true);
-  return;
- }
-
- if(!db){
-  messaggio('Supabase non disponibile. Ricarica la pagina.',true);
-  return;
- }
+ if(!email)
+  return messaggio('Inserisci prima la tua email.',true);
 
  busy(true);
  messaggio('Invio email di recupero in corso...');
@@ -363,22 +341,12 @@ async function recuperaPassword(){
 
   if(error)throw error;
 
-  messaggio(
-   'Richiesta inviata. Se l’indirizzo è registrato, riceverai un’email per reimpostare la password. Controlla anche Spam.'
-  );
+  messaggio('Richiesta inviata. Se l’indirizzo è registrato, riceverai un’email per reimpostare la password. Controlla anche Spam.');
  }catch(e){
   messaggio('Errore recupero password: '+erroreTesto(e),true);
- }finally{busy(false)}
-}
-
-function entraRecupero(){
- recoveryMode=true;
- recoveryVerified=false;
- currentUser=null;
- authVersion++;
- $('savePasswordBtn').disabled=true;
- mostra('resetPassword');
- resetMessaggio('Verifica del link di recupero in corso...');
+ }finally{
+  busy(false);
+ }
 }
 
 async function verificaRecupero(){
@@ -388,39 +356,41 @@ async function verificaRecupero(){
   if(recoveryErrorCode)
    throw new Error('Il link è scaduto o non è valido: '+recoveryErrorCode);
 
-  if(recoveryTokenHash&&urlParams.get('type')==='recovery'){
+  if(!hasRecoveryCredential)
+   throw new Error('Il link non contiene una credenziale di recupero. Richiedi una nuova email.');
+
+  if(query.get('token_hash')){
+   if(query.get('type')!=='recovery')
+    throw new Error('Tipo di link non valido.');
+
    const {error}=await db.auth.verifyOtp({
-    token_hash:recoveryTokenHash,
+    token_hash:query.get('token_hash'),
     type:'recovery'
+   });
+   if(error)throw error;
+
+  }else if(query.get('code')){
+   const {error}=await db.auth.exchangeCodeForSession(query.get('code'));
+   if(error)throw error;
+
+  }else if(hash.get('access_token')){
+   const {error}=await db.auth.setSession({
+    access_token:hash.get('access_token'),
+    refresh_token:hash.get('refresh_token')||''
    });
    if(error)throw error;
   }
 
-  if(recoveryCode){
-   const {data:sessionCheck}=await db.auth.getSession();
-   if(!sessionCheck.session){
-    const {error}=await db.auth.exchangeCodeForSession(recoveryCode);
-    if(error)throw error;
-   }
-  }
+  const {data,error}=await db.auth.getUser();
 
-  const {data,error}=await db.auth.getSession();
-  if(error)throw error;
-
-  if(!data.session)
-   throw new Error('Nessuna sessione valida. Richiedi un nuovo link.');
-
-  const {data:userData,error:userError}=await db.auth.getUser();
-
-  if(userError||!userData.user)
-   throw new Error('Impossibile verificare il tuo account.');
+  if(error||!data.user)
+   throw error||new Error('Account non verificato.');
 
   recoveryVerified=true;
   $('savePasswordBtn').disabled=false;
 
-  resetMessaggio(
-   'Link verificato. Inserisci la nuova password e premi Salva nuova password.'
-  );
+  resetMessaggio('Link verificato. Inserisci la nuova password e premi Salva nuova password.');
+  pulisciURL();
 
  }catch(e){
   recoveryVerified=false;
@@ -430,6 +400,8 @@ async function verificaRecupero(){
 }
 
 async function salvaNuovaPassword(){
+ if(resetBusy)return;
+
  if(!db||!recoveryMode||!recoveryVerified)
   return resetMessaggio('Link di recupero non verificato.',true);
 
@@ -442,24 +414,25 @@ async function salvaNuovaPassword(){
  if(password!==conferma)
   return resetMessaggio('Le password non coincidono.',true);
 
- const btn=$('savePasswordBtn');
- btn.disabled=true;
+ resetBusy=true;
+ $('savePasswordBtn').disabled=true;
  resetMessaggio('Salvataggio nuova password...');
 
  try{
   const {data,error:userError}=await db.auth.getUser();
+
   if(userError||!data.user)
-   throw new Error('Sessione scaduta. Richiedi un nuovo link.');
+   throw userError||new Error('Sessione scaduta. Richiedi un nuovo link.');
 
   const {error}=await db.auth.updateUser({password});
   if(error)throw error;
 
-  recoveryMode=false;
   recoveryVerified=false;
+  await db.auth.signOut();
+
+  recoveryMode=false;
   currentUser=null;
   authVersion++;
-
-  await db.auth.signOut();
 
   pulisciURL();
 
@@ -469,9 +442,13 @@ async function salvaNuovaPassword(){
 
   mostra('auth');
   messaggio('Password aggiornata! Ora accedi con la nuova password.');
+
  }catch(e){
   resetMessaggio('Errore salvataggio: '+erroreTesto(e),true);
- }finally{btn.disabled=false}
+ }finally{
+  resetBusy=false;
+  $('savePasswordBtn').disabled=!recoveryVerified;
+ }
 }
 
 async function annullaRecupero(){
@@ -480,7 +457,11 @@ async function annullaRecupero(){
  currentUser=null;
  authVersion++;
 
- if(db)await db.auth.signOut();
+ try{
+  if(db)await db.auth.signOut();
+ }catch(e){
+  console.warn(e);
+ }
 
  pulisciURL();
  mostra('auth');
@@ -493,7 +474,11 @@ async function esci(){
  currentUser=null;
  authVersion++;
 
- if(db)await db.auth.signOut();
+ try{
+  if(db)await db.auth.signOut();
+ }catch(e){
+  console.warn(e);
+ }
 
  pulisciURL();
  torna();
@@ -524,15 +509,15 @@ async function controllaSessione(){
 
   if(role.error)throw role.error;
 
-  const isAdmin=(role.data||[])
-   .some(r=>r.role==='admin');
-
   const access=await db.from('account_access')
    .select('status').eq('user_id',user.id);
 
   if(access.error)throw access.error;
 
   if(recoveryMode||version!==authVersion)return;
+
+  const isAdmin=(role.data||[])
+   .some(r=>r.role==='admin');
 
   const approved=(access.data||[])
    .some(r=>r.status==='approved');
@@ -553,6 +538,7 @@ async function controllaSessione(){
    'Account cliente approvato.';
 
   mostra('app');
+
  }catch(e){
   if(recoveryMode||version!==authVersion)return;
 
@@ -603,7 +589,7 @@ function torna(){
  window.scrollTo(0,0);
 }
 
-// Registrazioni dimostrative locali, non sincronizzate con Supabase.
+// Dati dimostrativi locali: non sincronizzati con Supabase.
 function chiave(tipo){
  return 'forge_demo_'+tipo+'_'+(currentUser?.id||'anon');
 }
@@ -612,7 +598,9 @@ function leggi(tipo){
  try{
   const x=JSON.parse(localStorage.getItem(chiave(tipo)));
   return Array.isArray(x)?x:[];
- }catch(e){return []}
+ }catch(e){
+  return [];
+ }
 }
 
 function scrivi(tipo,dati){
@@ -633,16 +621,19 @@ function dataLocale(d=new Date()){
 
 function salvaAcqua(){
  const ml=Number($('quantitaAcqua').value);
+
  if(!Number.isFinite(ml)||ml<=0||ml>10000)
   return alert('Inserisci una quantità valida in ml.');
 
  const dati=leggi('acqua');
  dati.push({data:dataLocale(),ml});
+
  if(scrivi('acqua',dati))aggiornaAcqua();
 }
 
 function salvaPeso(){
  const kg=Number($('valorePeso').value);
+
  if(!Number.isFinite(kg)||kg<1||kg>500)
   return alert('Inserisci un peso valido in kg.');
 
@@ -866,7 +857,50 @@ async function avvio(){
  if(recoveryFromURL)entraRecupero();
 
  try{
-  await inizializzaSupabase();
+  if(!window.supabase?.createClient)
+   throw new Error('Impossibile caricare la libreria Supabase. Controlla Internet e ricarica.');
+
+  db=window.supabase.createClient(
+   SUPABASE_URL,
+   SUPABASE_KEY,
+   {
+    auth:{
+     persistSession:true,
+     autoRefreshToken:true,
+     detectSessionInUrl:false,
+     flowType:'implicit'
+    }
+   }
+  );
+
+  db.auth.onAuthStateChange(event=>{
+   if(event==='PASSWORD_RECOVERY'&&!recoveryMode){
+    entraRecupero();
+    resetMessaggio('Link riconosciuto. Verifica in corso...');
+    return;
+   }
+
+   if(recoveryMode)return;
+
+   if(event==='SIGNED_OUT'){
+    currentUser=null;
+    authVersion++;
+    mostra('auth');
+    return;
+   }
+
+   if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){
+    setTimeout(()=>{
+     if(!recoveryMode)controllaSessione();
+    },0);
+   }
+  });
+
+  if(recoveryMode)
+   await verificaRecupero();
+  else
+   await controllaSessione();
+
  }catch(e){
   if(recoveryMode){
    resetMessaggio(erroreTesto(e),true);
@@ -874,48 +908,10 @@ async function avvio(){
    mostra('auth');
    messaggio(erroreTesto(e),true);
   }
-  return;
- }
-
- db.auth.onAuthStateChange((event)=>{
-  if(event==='PASSWORD_RECOVERY'){
-   if(!recoveryMode)entraRecupero();
-   recoveryVerified=true;
-   $('savePasswordBtn').disabled=false;
-   mostra('resetPassword');
-   resetMessaggio('Link riconosciuto. Inserisci la nuova password.');
-   return;
-  }
-
-  if(recoveryMode)return;
-
-  if(event==='SIGNED_OUT'){
-   currentUser=null;
-   authVersion++;
-   mostra('auth');
-   return;
-  }
-
-  if(event==='SIGNED_IN'||event==='INITIAL_SESSION'){
-   setTimeout(controllaSessione,0);
-  }
- });
-
- if(recoveryMode){
-  await verificaRecupero();
- }else{
-  await controllaSessione();
  }
 }
 
-avvio().catch(e=>{
- if(recoveryMode){
-  resetMessaggio('Errore: '+erroreTesto(e),true);
- }else{
-  mostra('auth');
-  messaggio('Errore: '+erroreTesto(e),true);
- }
-});
+avvio();
 </script>
 </body>
 </html>
