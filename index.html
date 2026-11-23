@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -1297,13 +1298,13 @@ el('strong',start+' – '+end),
 el('p',label,'small')
 );
 
-if(status==='available'&&role!=='admin'){
+if(status==='available'){
 const book=button('Richiedi '+start,async()=>{
 if(!confirm(
 'Richiedere una lezione il '+
 dateLabel(day)+' alle '+start+'?'
 ))return;
-if(status==='available'){
+
 book.disabled=true;
 
 try{
