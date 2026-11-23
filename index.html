@@ -7,72 +7,384 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#08090b">
 <title>Forge Coaching Premium</title>
+
 <style>
 :root{
---bg:#08090b;--panel:#191a1f;--gold:#e9c675;
---muted:#a4a5ab;--line:#59492f;
---green:#75d69a;--red:#f18b8b;--yellow:#f0cd76
+--bg:#08090b;
+--panel:#191a1f;
+--gold:#e9c675;
+--muted:#a4a5ab;
+--line:#59492f;
+--green:#75d69a;
+--red:#f18b8b;
+--yellow:#f0cd76
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
-header{text-align:center;padding:25px 12px;background:radial-gradient(ellipse at top,#392b19,#08090b 75%);border-bottom:1px solid var(--line)}
-header h1{color:var(--gold);letter-spacing:6px;font-size:31px;margin:0}
-.subtitle{color:#c4a15d;font-size:11px;letter-spacing:5px;margin-top:5px}
-main{max-width:850px;margin:auto;padding:14px}
-.card{background:linear-gradient(145deg,#1b1b20,#111216);border:1px solid var(--line);border-radius:19px;padding:18px;margin-bottom:15px}
-h2,h3{color:var(--gold);margin:4px 0 14px}
+body{
+margin:0;
+background:var(--bg);
+color:#f5f5f5;
+font-family:-apple-system,BlinkMacSystemFont,
+"Segoe UI",Arial,sans-serif
+}
+header{
+text-align:center;
+padding:25px 12px;
+background:radial-gradient(
+ellipse at top,#392b19,#08090b 75%
+);
+border-bottom:1px solid var(--line)
+}
+header h1{
+color:var(--gold);
+letter-spacing:6px;
+font-size:31px;
+margin:0
+}
+.subtitle{
+color:#c4a15d;
+font-size:11px;
+letter-spacing:5px;
+margin-top:5px
+}
+main{
+max-width:850px;
+margin:auto;
+padding:14px
+}
+.card{
+background:linear-gradient(145deg,#1b1b20,#111216);
+border:1px solid var(--line);
+border-radius:19px;
+padding:18px;
+margin-bottom:15px
+}
+h2,h3{
+color:var(--gold);
+margin:4px 0 14px
+}
 p{line-height:1.5}
-.small,.muted{color:var(--muted);font-size:13px}
-button{width:100%;padding:13px;margin:7px 0;border:0;border-radius:11px;background:linear-gradient(120deg,#f4dc95,#c49a48);color:#17130d;font-weight:750;font-size:14px;cursor:pointer}
-button.secondary{background:#292a2e;color:var(--gold);border:1px solid #756039}
-button:disabled{opacity:.5;cursor:not-allowed}
-input,select,textarea{width:100%;padding:12px;margin:7px 0;background:#101115;border:1px solid #766039;border-radius:10px;color:white;font-size:16px}
-label{display:block;margin-top:10px;font-size:14px}
+.small,.muted{
+color:var(--muted);
+font-size:13px
+}
+button{
+width:100%;
+padding:13px;
+margin:7px 0;
+border:0;
+border-radius:11px;
+background:linear-gradient(120deg,#f4dc95,#c49a48);
+color:#17130d;
+font-weight:750;
+font-size:14px;
+cursor:pointer
+}
+button.secondary{
+background:#292a2e;
+color:var(--gold);
+border:1px solid #756039
+}
+button:disabled{
+opacity:.5;
+cursor:not-allowed
+}
+input,select,textarea{
+width:100%;
+padding:12px;
+margin:7px 0;
+background:#101115;
+border:1px solid #766039;
+border-radius:10px;
+color:white;
+font-size:16px
+}
+label{
+display:block;
+margin-top:10px;
+font-size:14px
+}
 .hidden{display:none!important}
-.status{padding:12px;border-radius:10px;background:#292a30;margin:10px 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.status{
+padding:12px;
+border-radius:10px;
+background:#292a30;
+margin:10px 0;
+white-space:pre-wrap;
+overflow-wrap:anywhere
+}
 .error{color:#ff9999}
 .success{color:#9ce5ae}
-nav{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-nav button{margin:0;min-height:62px}
-nav button.active{outline:2px solid var(--gold)}
-.item{background:#15161a;border:1px solid #645133;border-radius:14px;padding:15px;margin:12px 0}
-.price{font-size:26px;font-weight:800;color:var(--gold)}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
-.stat{background:#15161a;border:1px solid #5d4a30;border-radius:13px;padding:13px}
-.stat span{display:block;color:#aaa;font-size:12px}
-.stat strong{display:block;color:var(--gold);font-size:21px;margin-top:5px}
-.chart{width:100%;height:auto;background:#141519;border:1px solid #51442e;border-radius:12px;margin-top:12px}
-.filters{display:flex;gap:6px;margin:12px 0}
-.filters button{flex:1;padding:10px 3px;font-size:12px;background:#292a2e;color:var(--gold)}
-.filters button.active{background:var(--gold);color:#111}
-.calendar-head{display:flex;gap:8px;align-items:center}
-.calendar-head button{width:auto;flex:1}
-.calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:12px 0}
-.day{padding:9px 2px;border:1px solid #58492e;border-radius:9px;text-align:center;font-size:12px;background:#202126;color:#eee}
-.day.selected{background:var(--gold);color:#111}
-.day small{display:block;font-size:10px;margin-bottom:5px}
-.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:12px 0}
-.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+nav{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:9px
+}
+nav button{
+margin:0;
+min-height:62px
+}
+nav button.active{
+outline:2px solid var(--gold)
+}
+.item{
+background:#15161a;
+border:1px solid #645133;
+border-radius:14px;
+padding:15px;
+margin:12px 0
+}
+.price{
+font-size:26px;
+font-weight:800;
+color:var(--gold)
+}
+.stats{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin:12px 0
+}
+.stat{
+background:#15161a;
+border:1px solid #5d4a30;
+border-radius:13px;
+padding:13px
+}
+.stat span{
+display:block;
+color:#aaa;
+font-size:12px
+}
+.stat strong{
+display:block;
+color:var(--gold);
+font-size:21px;
+margin-top:5px
+}
+.chart{
+width:100%;
+height:auto;
+background:#141519;
+border:1px solid #51442e;
+border-radius:12px;
+margin-top:12px
+}
+.filters{
+display:flex;
+gap:6px;
+margin:12px 0
+}
+.filters button{
+flex:1;
+padding:10px 3px;
+font-size:12px;
+background:#292a2e;
+color:var(--gold)
+}
+.filters button.active{
+background:var(--gold);
+color:#111
+}
+.calendar-head{
+display:flex;
+gap:8px;
+align-items:center
+}
+.calendar-head button{
+width:auto;
+flex:1
+}
+.calendar-grid{
+display:grid;
+grid-template-columns:repeat(7,minmax(0,1fr));
+gap:4px;
+margin:12px 0
+}
+.day{
+padding:9px 2px;
+border:1px solid #58492e;
+border-radius:9px;
+text-align:center;
+font-size:12px;
+background:#202126;
+color:#eee
+}
+.day.selected{
+background:var(--gold);
+color:#111
+}
+.day small{
+display:block;
+font-size:10px;
+margin-bottom:5px
+}
+.legend{
+display:flex;
+gap:12px;
+flex-wrap:wrap;
+font-size:12px;
+margin:12px 0
+}
+.dot{
+display:inline-block;
+width:10px;
+height:10px;
+border-radius:50%;
+margin-right:5px
+}
 .green{background:var(--green)}
 .red{background:var(--red)}
 .yellow{background:var(--yellow)}
-.slot{border:1px solid #554830;border-radius:10px;padding:12px;margin:7px 0}
-.slot.available{border-color:#43845a;background:#14251b}
-.slot.pending{border-color:#aa8c36;background:#302718}
-.slot.confirmed,.slot.occupied,.slot.blocked{border-color:#984c4c;background:#2b191b}
-.slot.closed{opacity:.6;background:#1b1c20}
+.slot{
+border:1px solid #554830;
+border-radius:10px;
+padding:12px;
+margin:7px 0
+}
+.slot.available{
+border-color:#43845a;
+background:#14251b
+}
+.slot.pending{
+border-color:#aa8c36;
+background:#302718
+}
+.slot.confirmed,
+.slot.occupied,
+.slot.blocked{
+border-color:#984c4c;
+background:#2b191b
+}
+.slot.closed{
+opacity:.6;
+background:#1b1c20
+}
 .slot button{margin-bottom:0}
-.history-item{display:flex;justify-content:space-between;gap:12px;padding:11px;border-bottom:1px solid #39332a;font-size:13px}
-footer{text-align:center;color:#777;padding:24px;font-size:12px}
+.history-item{
+display:flex;
+justify-content:space-between;
+gap:12px;
+padding:11px;
+border-bottom:1px solid #39332a;
+font-size:13px
+}
+footer{
+text-align:center;
+color:#777;
+padding:24px;
+font-size:12px
+}
 #sectionCard{scroll-margin-top:12px}
+
+/* FORGE CALENDAR - NUOVI STILI */
+
+.calendar-admin{
+border:1px solid #9b793d;
+background:linear-gradient(145deg,#282116,#151518);
+border-radius:16px;
+padding:16px;
+margin:15px 0
+}
+.calendar-admin h3{
+margin-bottom:10px
+}
+.calendar-admin-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px
+}
+.calendar-admin-grid label{
+margin-top:5px
+}
+.weekday-grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:8px;
+margin:12px 0
+}
+.weekday-choice{
+display:flex;
+align-items:center;
+gap:9px;
+padding:11px;
+background:#15161a;
+border:1px solid #665331;
+border-radius:10px;
+font-size:13px
+}
+.weekday-choice input{
+width:18px;
+height:18px;
+margin:0;
+accent-color:#e9c675
+}
+.calendar-actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px
+}
+.calendar-actions button{
+margin:4px 0
+}
+.block-item{
+border:1px solid #874d4d;
+background:#27191b;
+border-radius:12px;
+padding:13px;
+margin:8px 0
+}
+.block-item strong{
+color:#f0c1c1
+}
+.block-item button{
+margin-top:8px
+}
+.calendar-section-title{
+margin-top:20px
+}
+.calendar-message{
+margin:12px 0
+}
+.calendar-warning{
+border-left:3px solid var(--yellow);
+padding:10px 12px;
+background:#292419;
+font-size:13px
+}
+.calendar-available{
+color:var(--green)
+}
+.calendar-blocked{
+color:var(--red)
+}
+.calendar-pending{
+color:var(--yellow)
+}
+.calendar-loading{
+opacity:.6;
+pointer-events:none
+}
+@media(max-width:480px){
+.calendar-admin-grid{
+grid-template-columns:1fr
+}
+.calendar-actions{
+grid-template-columns:1fr
+}
+}
 </style>
 </head>
+
 <body>
+
 <header>
 <h1>FORGE</h1>
 <div class="subtitle">C O A C H I N G</div>
 </header>
+
 <main>
+
 <section id="loading" class="card">
 <h2>Caricamento...</h2>
 </section>
@@ -82,10 +394,15 @@ footer{text-align:center;color:#777;padding:24px;font-size:12px}
 <label>Email</label>
 <input id="email" type="email" autocomplete="email">
 <label>Password</label>
-<input id="password" type="password" autocomplete="current-password">
+<input id="password" type="password"
+autocomplete="current-password">
 <button id="loginBtn">Accedi</button>
-<button id="signupBtn" class="secondary">Crea account</button>
-<button id="forgotBtn" class="secondary">Password dimenticata?</button>
+<button id="signupBtn" class="secondary">
+Crea account
+</button>
+<button id="forgotBtn" class="secondary">
+Password dimenticata?
+</button>
 <div id="authStatus" class="status hidden"></div>
 </section>
 
@@ -93,14 +410,18 @@ footer{text-align:center;color:#777;padding:24px;font-size:12px}
 <h2>Recupera password</h2>
 <input id="recoveryEmail" type="email" placeholder="Email">
 <button id="sendRecoveryBtn">Invia email</button>
-<button id="backLoginBtn" class="secondary">Indietro</button>
+<button id="backLoginBtn" class="secondary">
+Indietro
+</button>
 <div id="forgotStatus" class="status hidden"></div>
 </section>
 
 <section id="reset" class="card hidden">
 <h2>Imposta nuova password</h2>
-<input id="newPassword" type="password" placeholder="Nuova password">
-<input id="confirmPassword" type="password" placeholder="Conferma password">
+<input id="newPassword" type="password"
+placeholder="Nuova password">
+<input id="confirmPassword" type="password"
+placeholder="Conferma password">
 <button id="savePasswordBtn">Salva password</button>
 <div id="resetStatus" class="status hidden"></div>
 </section>
@@ -112,13 +433,16 @@ footer{text-align:center;color:#777;padding:24px;font-size:12px}
 </section>
 
 <section id="app" class="hidden">
+
 <div class="card">
 <h2 id="welcome">Benvenuto</h2>
 <p id="roleInfo" class="small"></p>
 <button id="logoutBtn" class="secondary">Esci</button>
 </div>
+
 <div class="card">
 <h2>Le tue sezioni</h2>
+
 <nav id="mainNav">
 <button data-section="Allenamento">Allenamento</button>
 <button data-section="Forge Nutrition">Forge Nutrition</button>
@@ -134,32 +458,61 @@ footer{text-align:center;color:#777;padding:24px;font-size:12px}
 <button data-section="Forge Shop">Forge Shop</button>
 <button data-section="Profilo">Profilo</button>
 </nav>
+
 </div>
+
 <div id="sectionCard" class="card hidden">
 <h2 id="sectionTitle"></h2>
 <p id="sectionText" class="muted"></p>
 <div id="sectionContent"></div>
-<button id="closeSectionBtn" class="secondary">Chiudi sezione</button>
+<button id="closeSectionBtn" class="secondary">
+Chiudi sezione
+</button>
 </div>
+
 </section>
+
 </main>
+
 <footer>FORGE COACHING • LA TUA EVOLUZIONE</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+
 <script>
 'use strict';
 
-const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
-const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
-const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
+const SUPABASE_URL=
+'https://ctcbhysolhcjdsekoxkg.supabase.co';
+
+const SUPABASE_KEY=
+'sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
+
+const SITE_URL=
+'https://h7yhp65r8k-collab.github.io/forge-coaching/';
+
 const $=id=>document.getElementById(id);
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-let user=null,role='client',active='',period='day';
-let resetting=false,resetReady=false,serial=0;
-let selectedDay='',calendarWeek='',calendarSerial=0;
+const db=window.supabase.createClient(
+SUPABASE_URL,SUPABASE_KEY
+);
 
-const screens=['loading','auth','forgot','reset','pending','app'];
+let user=null;
+let role='client';
+let active='';
+let period='day';
+
+let resetting=false;
+let resetReady=false;
+let serial=0;
+
+let selectedDay='';
+let calendarWeek='';
+let calendarSerial=0;
+
+const screens=[
+'loading','auth','forgot','reset','pending','app'
+];
+
 const descriptions={
 'Allenamento':'Programmi ed esercizi assegnati dal coach.',
 'Forge Nutrition':'Monitoraggio calorie e macronutrienti.',
@@ -176,210 +529,407 @@ const descriptions={
 'Profilo':'Informazioni account.'
 };
 
+/* FUNZIONI GENERALI */
+
 function show(id){
-screens.forEach(x=>$(x).classList.toggle('hidden',x!==id));
+screens.forEach(x=>
+$(x).classList.toggle('hidden',x!==id)
+);
 }
+
 function msg(id,text,error=false){
-const e=$(id);if(!e)return;
+const e=$(id);
+if(!e)return;
 e.textContent=text;
 e.className='status '+(error?'error':'success');
 }
-function friendly(e){return e?.message||String(e);}
+
+function friendly(e){
+return e?.message||String(e);
+}
+
 function el(tag,text='',cls=''){
 const e=document.createElement(tag);
-e.textContent=text;e.className=cls;return e;
+e.textContent=text;
+e.className=cls;
+return e;
 }
+
 function add(parent,...children){
-children.forEach(x=>parent.append(x));return parent;
+children.forEach(x=>parent.append(x));
+return parent;
 }
+
 function money(n){
 return Number(n).toLocaleString('it-IT',{
-style:'currency',currency:'EUR'
+style:'currency',
+currency:'EUR'
 });
 }
+
 function fmt(n,d=1){
 return Number(n).toLocaleString('it-IT',{
 maximumFractionDigits:d
 });
 }
+
 function iso(d){
 return d.getFullYear()+'-'+
 String(d.getMonth()+1).padStart(2,'0')+'-'+
 String(d.getDate()).padStart(2,'0');
 }
-function parseDay(s){return new Date(s+'T12:00:00');}
-function plusDays(s,n){
-const d=parseDay(s);d.setDate(d.getDate()+n);return iso(d);
+
+function parseDay(s){
+return new Date(s+'T12:00:00');
 }
+
+function plusDays(s,n){
+const d=parseDay(s);
+d.setDate(d.getDate()+n);
+return iso(d);
+}
+
 function monday(s){
 const d=parseDay(s);
 d.setDate(d.getDate()-(d.getDay()+6)%7);
 return iso(d);
 }
-function timeLabel(t){return String(t||'').slice(0,5);}
+
+function timeLabel(t){
+return String(t||'').slice(0,5);
+}
+
 function dateLabel(s){
 return parseDay(s).toLocaleDateString('it-IT',{
-weekday:'short',day:'numeric',month:'short'
+weekday:'short',
+day:'numeric',
+month:'short'
 });
 }
+
 function dt(s){
 return s?new Date(s).toLocaleString('it-IT'):'—';
 }
+
 function input(type='text',placeholder=''){
-const e=el('input');e.type=type;e.placeholder=placeholder;return e;
+const e=el('input');
+e.type=type;
+e.placeholder=placeholder;
+return e;
 }
+
 function button(label,fn,cls=''){
-const b=el('button',label,cls);b.onclick=fn;return b;
+const b=el('button',label,cls);
+b.onclick=fn;
+return b;
 }
+
 function notice(root,text,error=false){
-root.append(el('div',text,'status '+(error?'error':'success')));
+root.append(
+el('div',text,'status '+(error?'error':'success'))
+);
 }
+
 function cleanUrl(){
-history.replaceState({},document.title,location.pathname);
+history.replaceState(
+{},document.title,location.pathname
+);
 }
+
 function recoveryLink(){
 const q=new URLSearchParams(location.search);
 const h=new URLSearchParams(location.hash.slice(1));
-return q.get('type')==='recovery'||h.get('type')==='recovery';
+return q.get('type')==='recovery'||
+h.get('type')==='recovery';
 }
+
 function todayRome(){
-return new Intl.DateTimeFormat('en-CA',{
+const parts=new Intl.DateTimeFormat('en-GB',{
 timeZone:'Europe/Rome',
-year:'numeric',month:'2-digit',day:'2-digit'
-}).format(new Date());
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}).formatToParts(new Date());
+
+const get=t=>parts.find(p=>p.type===t)?.value;
+
+return get('year')+'-'+get('month')+'-'+get('day');
 }
 
 /* AUTENTICAZIONE */
 
 async function userState(){
+
 if(resetting)return;
-const {data:{session},error}=await db.auth.getSession();
+
+const {data:{session},error}=
+await db.auth.getSession();
+
 if(error||!session){
-user=null;role='client';show('auth');return;
+user=null;
+role='client';
+show('auth');
+return;
 }
+
 user=session.user;
+
 const [r,a]=await Promise.all([
-db.from('user_roles').select('role').eq('user_id',user.id),
-db.from('account_access').select('status').eq('user_id',user.id)
+db.from('user_roles')
+.select('role')
+.eq('user_id',user.id),
+
+db.from('account_access')
+.select('status')
+.eq('user_id',user.id)
 ]);
-if(r.error||a.error){show('pending');return;}
-if(a.data?.[0]?.status!=='approved'){
-show('pending');return;
+
+if(r.error||a.error){
+show('pending');
+return;
 }
+
+if(a.data?.[0]?.status!=='approved'){
+show('pending');
+return;
+}
+
 role=r.data?.some(x=>x.role==='admin')?'admin':
 r.data?.some(x=>x.role==='trainer')?'trainer':
-r.data?.some(x=>x.role==='premium')?'premium':'client';
-$('welcome').textContent=role==='admin'?
-'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
+r.data?.some(x=>x.role==='premium')?'premium':
+'client';
+
+$('welcome').textContent=
+role==='admin'?
+'Amministratore riconosciuto':
+'Benvenuto in Forge Coaching';
+
 $('roleInfo').textContent=user.email+' • '+role;
+
 show('app');
 }
+
 async function logout(){
-serial++;calendarSerial++;
+serial++;
+calendarSerial++;
+
 await db.auth.signOut();
-user=null;role='client';active='';
-resetting=false;resetReady=false;
+
+user=null;
+role='client';
+active='';
+resetting=false;
+resetReady=false;
+
 cleanUrl();
+
 $('sectionCard').classList.add('hidden');
+
 show('auth');
 }
+
 $('loginBtn').onclick=async()=>{
-const b=$('loginBtn');b.disabled=true;
+
+const b=$('loginBtn');
+b.disabled=true;
+
 try{
 const {error}=await db.auth.signInWithPassword({
 email:$('email').value.trim(),
 password:$('password').value
 });
+
 if(error)throw error;
+
 await userState();
-}catch(e){msg('authStatus',friendly(e),true);}
-finally{b.disabled=false;}
+
+}catch(e){
+msg('authStatus',friendly(e),true);
+}finally{
+b.disabled=false;
+}
 };
+
 $('signupBtn').onclick=async()=>{
-const b=$('signupBtn');b.disabled=true;
+
+const b=$('signupBtn');
+b.disabled=true;
+
 try{
 const email=$('email').value.trim();
 const password=$('password').value;
-if(!email||password.length<8)
-throw Error('Email e password di almeno 8 caratteri richieste.');
+
+if(!email||password.length<8){
+throw Error(
+'Email e password di almeno 8 caratteri richieste.'
+);
+}
+
 const {error}=await db.auth.signUp({
-email,password,options:{emailRedirectTo:SITE_URL}
+email,
+password,
+options:{emailRedirectTo:SITE_URL}
 });
+
 if(error)throw error;
-msg('authStatus','Registrazione inviata. Attendi approvazione.');
-}catch(e){msg('authStatus',friendly(e),true);}
-finally{b.disabled=false;}
+
+msg(
+'authStatus',
+'Registrazione inviata. Attendi approvazione.'
+);
+
+}catch(e){
+msg('authStatus',friendly(e),true);
+}finally{
+b.disabled=false;
+}
 };
+
 $('forgotBtn').onclick=()=>{
 $('recoveryEmail').value=$('email').value;
 show('forgot');
 };
+
 $('backLoginBtn').onclick=()=>show('auth');
+
 $('sendRecoveryBtn').onclick=async()=>{
-const b=$('sendRecoveryBtn');b.disabled=true;
+
+const b=$('sendRecoveryBtn');
+b.disabled=true;
+
 try{
 const {error}=await db.auth.resetPasswordForEmail(
 $('recoveryEmail').value.trim(),
 {redirectTo:SITE_URL}
 );
+
 if(error)throw error;
-msg('forgotStatus',
-'Se la mail è registrata, riceverai il link di recupero.');
-}catch(e){msg('forgotStatus',friendly(e),true);}
-finally{b.disabled=false;}
+
+msg(
+'forgotStatus',
+'Se la mail è registrata, riceverai il link di recupero.'
+);
+
+}catch(e){
+msg('forgotStatus',friendly(e),true);
+}finally{
+b.disabled=false;
+}
 };
+
 $('savePasswordBtn').onclick=async()=>{
-const b=$('savePasswordBtn');b.disabled=true;
+
+const b=$('savePasswordBtn');
+b.disabled=true;
+
 try{
-if(!resetting||!resetReady)
+if(!resetting||!resetReady){
 throw Error('Link non verificato.');
+}
+
 const p=$('newPassword').value;
-if(p.length<8||p!==$('confirmPassword').value)
+
+if(p.length<8||
+p!==$('confirmPassword').value){
 throw Error('Password non valide o differenti.');
-const {error}=await db.auth.updateUser({password:p});
+}
+
+const {error}=await db.auth.updateUser({
+password:p
+});
+
 if(error)throw error;
+
 await db.auth.signOut();
-resetting=false;resetReady=false;
-cleanUrl();show('auth');
-msg('authStatus','Password aggiornata. Accedi nuovamente.');
-}catch(e){msg('resetStatus',friendly(e),true);}
-finally{b.disabled=false;}
+
+resetting=false;
+resetReady=false;
+
+cleanUrl();
+show('auth');
+
+msg(
+'authStatus',
+'Password aggiornata. Accedi nuovamente.'
+);
+
+}catch(e){
+msg('resetStatus',friendly(e),true);
+}finally{
+b.disabled=false;
+}
 };
+
 $('logoutBtn').onclick=logout;
 $('pendingLogoutBtn').onclick=logout;
 
 /* NAVIGAZIONE */
 
 function section(name){
-serial++;calendarSerial++;active=name;
+
+serial++;
+calendarSerial++;
+active=name;
+
 $('sectionTitle').textContent=name;
-$('sectionText').textContent=descriptions[name]||'';
+$('sectionText').textContent=
+descriptions[name]||'';
+
 const root=$('sectionContent');
 root.replaceChildren();
+
 $('sectionCard').classList.remove('hidden');
-document.querySelectorAll('[data-section]').forEach(b=>
-b.classList.toggle('active',b.dataset.section===name));
-if(name==='Prenotazioni')renderCalendar();
-else if(name==='Forge Shop')renderShop();
-else if(name==='Pacchetti lezioni')renderPackages();
-else if(name==='Forge Weight')renderMetric('weight');
-else if(name==='Forge Hydration')renderMetric('water');
-else if(name==='Forge Nutrition')renderNutrition();
-else if(name==='Profilo')renderProfile();
-else root.append(el('p',
+
+document.querySelectorAll('[data-section]')
+.forEach(b=>
+b.classList.toggle(
+'active',
+b.dataset.section===name
+)
+);
+
+if(name==='Prenotazioni'){
+renderCalendar();
+}else if(name==='Forge Shop'){
+renderShop();
+}else if(name==='Pacchetti lezioni'){
+renderPackages();
+}else if(name==='Forge Weight'){
+renderMetric('weight');
+}else if(name==='Forge Hydration'){
+renderMetric('water');
+}else if(name==='Forge Nutrition'){
+renderNutrition();
+}else if(name==='Profilo'){
+renderProfile();
+}else{
+root.append(el(
+'p',
 'Questa sezione richiede ancora il collegamento operativo a Supabase.',
-'muted'));
+'muted'
+));
+}
+
 $('sectionCard').scrollIntoView({
-behavior:'smooth',block:'start'
+behavior:'smooth',
+block:'start'
 });
 }
-document.querySelectorAll('[data-section]').forEach(b=>
-b.onclick=()=>section(b.dataset.section));
+
+document.querySelectorAll('[data-section]')
+.forEach(b=>
+b.onclick=()=>section(b.dataset.section)
+);
+
 $('closeSectionBtn').onclick=()=>{
-serial++;calendarSerial++;active='';
+serial++;
+calendarSerial++;
+active='';
+
 $('sectionCard').classList.add('hidden');
-document.querySelectorAll('[data-section]').forEach(b=>
-b.classList.remove('active'));
+
+document.querySelectorAll('[data-section]')
+.forEach(b=>b.classList.remove('active'));
 };
 
 /* PESO E IDRATAZIONE */
@@ -387,106 +937,200 @@ b.classList.remove('active'));
 const metrics={
 weight:{
 table:'forge_weight_entries',
-field:'weight_kg',unit:'kg',title:'Peso corporeo'
+field:'weight_kg',
+unit:'kg',
+title:'Peso corporeo'
 },
 water:{
 table:'forge_water_entries',
-field:'amount_ml',unit:'ml',title:'Idratazione'
+field:'amount_ml',
+unit:'ml',
+title:'Idratazione'
 }
 };
+
 function renderMetric(kind){
-const c=metrics[kind],root=$('sectionContent');
+
+const c=metrics[kind];
+const root=$('sectionContent');
+
 period=kind==='weight'?'entry':'day';
+
 root.replaceChildren();
-const value=input('number',
-kind==='weight'?'Es. 82.5':'Es. 250');
+
+const value=input(
+'number',
+kind==='weight'?'Es. 82.5':'Es. 250'
+);
+
 value.step=kind==='weight'?'0.1':'1';
 value.min='1';
 value.max=kind==='weight'?'500':'10000';
+
 const feedback=el('div','','status hidden');
+
 const save=button('Salva registrazione',async()=>{
+
 const n=Number(value.value);
-if(!value.value||!Number.isFinite(n)||n<=0||
+
+if(!value.value||
+!Number.isFinite(n)||
+n<=0||
 n>Number(value.max)||
 (kind==='water'&&!Number.isInteger(n))){
 feedback.textContent='Inserisci un valore valido.';
-feedback.className='status error';return;
+feedback.className='status error';
+return;
 }
+
 save.disabled=true;
+
 try{
 const {error}=await db.from(c.table).insert({
 user_id:user.id,
 [c.field]:n,
 recorded_at:new Date().toISOString()
 });
+
 if(error)throw error;
+
 value.value='';
 feedback.textContent='Registrazione salvata.';
 feedback.className='status success';
+
 await loadMetric(kind);
+
 }catch(e){
 feedback.textContent=friendly(e);
 feedback.className='status error';
-}finally{save.disabled=false;}
+}finally{
+save.disabled=false;
+}
 });
-add(root,el('h3',c.title),value,save,feedback);
+
+add(
+root,
+el('h3',c.title),
+value,
+save,
+feedback
+);
+
 if(kind==='weight'){
+
 const goal=input('number','Obiettivo peso (kg)');
 goal.step='0.1';
-goal.value=localStorage.getItem('forge_goal_'+user.id)||'';
+
+goal.value=
+localStorage.getItem('forge_goal_'+user.id)||'';
+
 root.append(el('label','Obiettivo personale'));
 root.append(goal);
-root.append(button('Salva obiettivo',()=>{
+
+root.append(button(
+'Salva obiettivo',
+()=>{
 const n=Number(goal.value);
-if(!goal.value||n<=0||n>500)
+
+if(!goal.value||n<=0||n>500){
 return alert('Obiettivo non valido.');
-localStorage.setItem('forge_goal_'+user.id,String(n));
-alert('Obiettivo salvato sul dispositivo.');
-},'secondary'));
 }
+
+localStorage.setItem(
+'forge_goal_'+user.id,
+String(n)
+);
+
+alert('Obiettivo salvato sul dispositivo.');
+},
+'secondary'
+));
+}
+
 const filters=el('div','','filters');
+
 for(const [k,t] of [
-['entry','Singole'],['day','Giorni'],
-['week','Settimane'],['month','Mesi']
+['entry','Singole'],
+['day','Giorni'],
+['week','Settimane'],
+['month','Mesi']
 ]){
 const b=button(t,()=>{
-period=k;loadMetric(kind);
+period=k;
+loadMetric(kind);
 });
+
 b.dataset.period=k;
 filters.append(b);
 }
+
 root.append(filters);
+
 const summary=el('div','','stats');
 summary.id='metricSummary';
+
 const svg=document.createElementNS(
-'http://www.w3.org/2000/svg','svg'
+'http://www.w3.org/2000/svg',
+'svg'
 );
+
 svg.setAttribute('viewBox','0 0 600 260');
 svg.classList.add('chart');
 svg.id='forgeMetricSvg';
-const tip=el('p','','small');tip.id='metricTip';
-const history=el('div');history.id='metricHistory';
+
+const tip=el('p','','small');
+tip.id='metricTip';
+
+const history=el('div');
+history.id='metricHistory';
+
 add(root,summary,svg,tip,history);
+
 loadMetric(kind);
 }
+
 function groupMetric(rows,kind,p){
-const c=metrics[kind],sorted=rows.slice().reverse();
-if(p==='entry')
+
+const c=metrics[kind];
+const sorted=rows.slice().reverse();
+
+if(p==='entry'){
 return sorted.slice(-30).map(r=>({
-key:r.recorded_at,value:Number(r[c.field])
+key:r.recorded_at,
+value:Number(r[c.field])
 }));
+}
+
 const groups=new Map();
+
 for(const r of sorted){
+
 const d=new Date(r.recorded_at);
-const day=new Intl.DateTimeFormat('en-CA',{
+
+const parts=new Intl.DateTimeFormat('en-GB',{
 timeZone:'Europe/Rome',
-year:'numeric',month:'2-digit',day:'2-digit'
-}).format(d);
-const key=p==='day'?day:
-p==='week'?monday(day):day.slice(0,7);
-if(!groups.has(key))groups.set(key,[]);
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}).formatToParts(d);
+
+const get=t=>parts.find(x=>x.type===t)?.value;
+
+const day=
+get('year')+'-'+get('month')+'-'+get('day');
+
+const key=
+p==='day'?day:
+p==='week'?monday(day):
+day.slice(0,7);
+
+if(!groups.has(key)){
+groups.set(key,[]);
+}
+
 groups.get(key).push(Number(r[c.field]));
 }
+
 return [...groups]
 .sort((a,b)=>a[0].localeCompare(b[0]))
 .slice(-30)
@@ -497,122 +1141,270 @@ v.reduce((a,b)=>a+b,0):
 v.reduce((a,b)=>a+b,0)/v.length
 }));
 }
+
 function svgNode(tag,attrs={},text){
+
 const n=document.createElementNS(
-'http://www.w3.org/2000/svg',tag
+'http://www.w3.org/2000/svg',
+tag
 );
+
 Object.entries(attrs).forEach(([k,v])=>
-n.setAttribute(k,v));
-if(text!==undefined)n.textContent=text;
+n.setAttribute(k,v)
+);
+
+if(text!==undefined){
+n.textContent=text;
+}
+
 return n;
 }
+
 function drawMetric(points,unit){
-const svg=$('forgeMetricSvg');if(!svg)return;
+
+const svg=$('forgeMetricSvg');
+if(!svg)return;
+
 svg.replaceChildren();
+
 if(!points.length){
 svg.append(svgNode('text',{
-x:300,y:130,fill:'#aaa','text-anchor':'middle'
+x:300,
+y:130,
+fill:'#aaa',
+'text-anchor':'middle'
 },'Nessun dato'));
 return;
 }
+
 const vals=points.map(p=>p.value);
-const lo=Math.min(...vals),hi=Math.max(...vals);
+
+const lo=Math.min(...vals);
+const hi=Math.max(...vals);
+
 const pad=Math.max(
-(hi-lo)*.2,unit==='kg'?.5:hi*.1,1
+(hi-lo)*.2,
+unit==='kg'?.5:hi*.1,
+1
 );
-const min=unit==='kg'?lo-pad:Math.max(0,lo-pad);
+
+const min=
+unit==='kg'?lo-pad:Math.max(0,lo-pad);
+
 const max=hi+pad;
+
 const x=i=>points.length===1?
-300:55+i*500/(points.length-1);
-const y=v=>210-(v-min)/(max-min||1)*170;
+300:
+55+i*500/(points.length-1);
+
+const y=v=>
+210-(v-min)/(max-min||1)*170;
+
 for(let j=0;j<=4;j++){
+
 const yy=40+j*42.5;
+
 svg.append(svgNode('line',{
-x1:55,x2:555,y1:yy,y2:yy,
-stroke:'#48413a','stroke-dasharray':'4 5'
+x1:55,
+x2:555,
+y1:yy,
+y2:yy,
+stroke:'#48413a',
+'stroke-dasharray':'4 5'
 }));
+
 svg.append(svgNode('text',{
-x:48,y:yy+4,fill:'#aaa',
-'text-anchor':'end','font-size':11
-},fmt(max-j*(max-min)/4,unit==='kg'?1:0)));
+x:48,
+y:yy+4,
+fill:'#aaa',
+'text-anchor':'end',
+'font-size':11
+},
+fmt(
+max-j*(max-min)/4,
+unit==='kg'?1:0
+)));
 }
+
 if(points.length>1){
+
 svg.append(svgNode('polyline',{
 points:points.map((p,i)=>
-x(i)+','+y(p.value)).join(' '),
-fill:'none',stroke:'#f0cd76','stroke-width':3
+x(i)+','+y(p.value)
+).join(' '),
+fill:'none',
+stroke:'#f0cd76',
+'stroke-width':3
 }));
 }
+
 points.forEach((p,i)=>{
+
 const dot=svgNode('circle',{
-cx:x(i),cy:y(p.value),r:5,fill:'#f0cd76'
+cx:x(i),
+cy:y(p.value),
+r:5,
+fill:'#f0cd76'
 });
+
 dot.addEventListener('click',()=>{
 $('metricTip').textContent=
 p.key+' • '+fmt(p.value,2)+' '+unit;
 });
+
 svg.append(dot);
 });
-$('metricTip').textContent=points.length===1?
+
+$('metricTip').textContent=
+points.length===1?
 'Una sola registrazione.':
 'Tocca i punti del grafico.';
 }
+
 async function loadMetric(kind){
-const s=serial,c=metrics[kind],p=period;
+
+const s=serial;
+const c=metrics[kind];
+const p=period;
+
 const root=$('metricHistory');
 if(!root)return;
+
 root.textContent='Caricamento...';
+
 try{
+
 const {data,error}=await db.from(c.table)
 .select('*')
 .eq('user_id',user.id)
 .order('recorded_at',{ascending:false})
 .limit(1000);
+
 if(error)throw error;
 if(s!==serial)return;
+
 const rows=data||[];
 const points=groupMetric(rows,kind,p);
-document.querySelectorAll('[data-period]').forEach(b=>
-b.classList.toggle('active',b.dataset.period===p));
+
+document.querySelectorAll('[data-period]')
+.forEach(b=>
+b.classList.toggle(
+'active',
+b.dataset.period===p
+)
+);
+
 drawMetric(points,c.unit);
+
 $('metricSummary').replaceChildren();
-const valid=rows.filter(r=>Number(r[c.field])>0);
-const values=valid.map(r=>Number(r[c.field]));
+
+const valid=rows.filter(r=>
+Number(r[c.field])>0
+);
+
+const values=valid.map(r=>
+Number(r[c.field])
+);
+
 const stats=[];
+
 if(kind==='weight'&&values.length){
-stats.push(['Peso attuale',fmt(values[0],1)+' kg']);
-stats.push(['Peso iniziale',
-fmt(values[values.length-1],1)+' kg']);
-stats.push(['Variazione',
-fmt(values[0]-values[values.length-1],2)+' kg']);
-stats.push(['Media',
-fmt(values.reduce((a,b)=>a+b,0)/values.length,2)+' kg']);
+
+stats.push([
+'Peso attuale',
+fmt(values[0],1)+' kg'
+]);
+
+stats.push([
+'Peso iniziale',
+fmt(values[values.length-1],1)+' kg'
+]);
+
+stats.push([
+'Variazione',
+fmt(values[0]-values[values.length-1],2)+' kg'
+]);
+
+stats.push([
+'Media',
+fmt(
+values.reduce((a,b)=>a+b,0)/values.length,
+2
+)+' kg'
+]);
 }
+
 if(kind==='water'){
+
 const today=todayRome();
-const total=valid.filter(r=>
-new Date(r.recorded_at).toLocaleDateString(
-'en-CA',{timeZone:'Europe/Rome'}
-)===today
-).reduce((a,r)=>a+Number(r.amount_ml),0);
-stats.push(['Acqua oggi',fmt(total,0)+' ml']);
-stats.push(['Registrazioni',String(rows.length)]);
+
+const total=valid.filter(r=>{
+
+const d=new Date(r.recorded_at);
+
+const parts=new Intl.DateTimeFormat('en-GB',{
+timeZone:'Europe/Rome',
+year:'numeric',
+month:'2-digit',
+day:'2-digit'
+}).formatToParts(d);
+
+const get=t=>parts.find(x=>x.type===t)?.value;
+
+return (
+get('year')+'-'+get('month')+'-'+get('day')
+)===today;
+
+}).reduce((a,r)=>
+a+Number(r.amount_ml),0
+);
+
+stats.push([
+'Acqua oggi',
+fmt(total,0)+' ml'
+]);
+
+stats.push([
+'Registrazioni',
+String(rows.length)
+]);
 }
+
 for(const [k,v] of stats){
+
 const box=el('div','','stat');
-add(box,el('span',k),el('strong',v));
+
+add(
+box,
+el('span',k),
+el('strong',v)
+);
+
 $('metricSummary').append(box);
 }
+
 root.replaceChildren(el('h3','Storico'));
-if(!rows.length)
-root.append(el('p','Nessuna registrazione.','muted'));
+
+if(!rows.length){
+root.append(el(
+'p',
+'Nessuna registrazione.',
+'muted'
+));
+}
+
 for(const r of rows.slice(0,20)){
-root.append(el('div',
+
+root.append(el(
+'div',
 dt(r.recorded_at)+' — '+
 fmt(r[c.field],2)+' '+c.unit,
-'history-item'));
+'history-item'
+));
 }
+
 }catch(e){
+
 root.replaceChildren(
 el('div',friendly(e),'status error')
 );
@@ -622,68 +1414,118 @@ el('div',friendly(e),'status error')
 /* NUTRIZIONE */
 
 async function renderNutrition(){
+
 const root=$('sectionContent');
-root.replaceChildren(el('p',
-'Lettura dei dati nutrizionali da Supabase.','muted'));
+
+root.replaceChildren(el(
+'p',
+'Lettura dei dati nutrizionali da Supabase.',
+'muted'
+));
+
 const filters=el('div','','filters');
 const output=el('div');
+
 root.append(filters,output);
+
 let nutritionRequest=0;
+
 async function load(p){
+
 const request=++nutritionRequest;
+
 output.replaceChildren(
 el('p','Caricamento...','muted')
 );
+
 try{
+
 let q;
-if(p==='day')
+
+if(p==='day'){
 q=db.from('forge_nutrition_daily_chart')
-.select('*').eq('user_id',user.id)
-.order('day',{ascending:false}).limit(30);
-else
+.select('*')
+.eq('user_id',user.id)
+.order('day',{ascending:false})
+.limit(30);
+}else{
 q=db.from('forge_nutrition_period_chart')
-.select('*').eq('user_id',user.id)
+.select('*')
+.eq('user_id',user.id)
 .eq('period_type',p)
-.order('period_start',{ascending:false}).limit(12);
+.order('period_start',{ascending:false})
+.limit(12);
+}
+
 const {data,error}=await q;
+
 if(error)throw error;
+
 if(request!==nutritionRequest||
-active!=='Forge Nutrition')return;
-output.replaceChildren();
-if(!data?.length){
-output.append(el('p',
-'Nessun dato nutrizionale disponibile.','muted'));
+active!=='Forge Nutrition'){
 return;
 }
+
+output.replaceChildren();
+
+if(!data?.length){
+output.append(el(
+'p',
+'Nessun dato nutrizionale disponibile.',
+'muted'
+));
+return;
+}
+
 for(const r of data){
+
 const card=el('div','','item');
 const date=r.day||r.period_start;
-add(card,
+
+add(
+card,
 el('h3',String(date).slice(0,10)),
-el('div','Calorie: '+
-fmt(r.total_calories||0,0)+' kcal','price'),
-el('p','Proteine: '+
-fmt(r.total_protein||0)+' g'),
-el('p','Carboidrati: '+
-fmt(r.total_carbohydrates||0)+' g'),
-el('p','Grassi: '+
-fmt(r.total_fat||0)+' g')
+el(
+'div',
+'Calorie: '+fmt(r.total_calories||0,0)+' kcal',
+'price'
+),
+el(
+'p',
+'Proteine: '+fmt(r.total_protein||0)+' g'
+),
+el(
+'p',
+'Carboidrati: '+
+fmt(r.total_carbohydrates||0)+' g'
+),
+el(
+'p',
+'Grassi: '+fmt(r.total_fat||0)+' g'
+)
 );
+
 output.append(card);
 }
+
 }catch(e){
-if(request===nutritionRequest)
+
+if(request===nutritionRequest){
 output.replaceChildren(
 el('div',friendly(e),'status error')
 );
 }
 }
+}
+
 for(const [p,t] of [
-['day','Giorni'],['week','Settimane'],
+['day','Giorni'],
+['week','Settimane'],
 ['month','Mesi']
 ]){
 filters.append(button(t,()=>load(p)));
 }
+
 load('day');
 }
 
@@ -694,233 +1536,444 @@ paypal:'PayPal',
 bank_transfer:'Bonifico',
 cash:'Contanti al coach'
 };
+
 async function renderShop(){
-const s=serial,root=$('sectionContent');
-root.replaceChildren(el('p',
-'Caricamento catalogo...','muted'));
+
+const s=serial;
+const root=$('sectionContent');
+
+root.replaceChildren(
+el('p','Caricamento catalogo...','muted')
+);
+
 try{
+
 const {data,error}=await db
 .from('forge_shop_packages')
-.select('id,title,total_sessions,price_eur,active,created_at')
+.select(
+'id,title,total_sessions,price_eur,active,created_at'
+)
 .order('created_at',{ascending:true});
+
 if(error)throw error;
 if(s!==serial)return;
-root.replaceChildren(el('h3','Catalogo pacchetti'));
+
+root.replaceChildren(
+el('h3','Catalogo pacchetti')
+);
+
 for(const pkg of data||[]){
+
 if(!pkg.active&&role!=='admin')continue;
+
 const card=el('div','','item');
-add(card,
+
+add(
+card,
 el('h3',pkg.title),
 el('div',money(pkg.price_eur),'price'),
 el('p',pkg.total_sessions+' lezioni'),
-el('p',pkg.active?'Disponibile':'Disattivato','small')
+el(
+'p',
+pkg.active?'Disponibile':'Disattivato',
+'small'
+)
 );
+
 if(pkg.active){
+
 const method=el('select');
+
 Object.entries(methods).forEach(([v,t])=>{
-const o=el('option',t);o.value=v;method.append(o);
+const o=el('option',t);
+o.value=v;
+method.append(o);
 });
+
 const feedback=el('div','','status hidden');
+
 const buy=button('Richiedi acquisto',async()=>{
+
 if(!confirm(
 'Richiedere '+pkg.title+' per '+
 money(pkg.price_eur)+'?'
 ))return;
+
 buy.disabled=true;
+
 try{
+
 const {error}=await db.rpc(
 'forge_shop_create_order',{
 p_package_id:pkg.id,
 p_payment_method:method.value
-});
+}
+);
+
 if(error)throw error;
+
 feedback.className='status success';
 feedback.textContent=
 'Ordine registrato. Attendi la conferma del pagamento.';
+
 await loadOrders();
+
 }catch(e){
 feedback.className='status error';
 feedback.textContent=friendly(e);
-}finally{buy.disabled=false;}
+}finally{
+buy.disabled=false;
+}
 });
-add(card,
+
+add(
+card,
 el('label','Metodo di pagamento'),
 method,
-el('p',
+el(
+'p',
 'La richiesta non esegue automaticamente il pagamento.',
-'small'),
-buy,feedback);
+'small'
+),
+buy,
+feedback
+);
 }
+
 if(role==='admin'){
+
 const title=input('text','Nome');
 title.value=pkg.title;
+
 const sessions=input('number','Lezioni');
 sessions.value=pkg.total_sessions;
+
 const price=input('number','Prezzo');
 price.value=pkg.price_eur;
 price.step='.01';
+
 const feedback=el('div','','status hidden');
+
 const save=button('Salva modifiche',async()=>{
+
 const n=Number(price.value);
 const v=Number(sessions.value);
+
 if(!title.value.trim()||
-!Number.isInteger(v)||v<1||
+!Number.isInteger(v)||
+v<1||
 price.value===''||
-!Number.isFinite(n)||n<0)
+!Number.isFinite(n)||
+n<0){
 return alert('Valori non validi.');
+}
+
 save.disabled=true;
+
 try{
+
 const {data,error}=await db
 .from('forge_shop_packages')
 .update({
 title:title.value.trim(),
-total_sessions:v,price_eur:n
+total_sessions:v,
+price_eur:n
 })
-.eq('id',pkg.id).select('id');
+.eq('id',pkg.id)
+.select('id');
+
 if(error)throw error;
-if(!data?.length)
+
+if(!data?.length){
 throw Error('Modifica non autorizzata.');
+}
+
 renderShop();
+
 }catch(e){
 feedback.className='status error';
 feedback.textContent=friendly(e);
-}finally{save.disabled=false;}
+}finally{
+save.disabled=false;
+}
 },'secondary');
+
 const toggle=button(
 pkg.active?'Disattiva':'Attiva',
 async()=>{
+
 try{
+
 const {data,error}=await db
 .from('forge_shop_packages')
 .update({active:!pkg.active})
-.eq('id',pkg.id).select('id');
+.eq('id',pkg.id)
+.select('id');
+
 if(error)throw error;
-if(!data?.length)
+
+if(!data?.length){
 throw Error('Modifica non autorizzata.');
-renderShop();
-}catch(e){alert(friendly(e));}
-},'secondary');
-add(card,
-el('label','Modifica pacchetto'),
-title,sessions,price,
-save,toggle,feedback);
 }
+
+renderShop();
+
+}catch(e){
+alert(friendly(e));
+}
+},
+'secondary'
+);
+
+add(
+card,
+el('label','Modifica pacchetto'),
+title,
+sessions,
+price,
+save,
+toggle,
+feedback
+);
+}
+
 root.append(card);
 }
+
 if(role==='admin'){
+
 const card=el('div','','item');
-const title=input('text','Nome nuovo pacchetto');
-const sessions=input('number','Numero lezioni');
+
+const title=input(
+'text',
+'Nome nuovo pacchetto'
+);
+
+const sessions=input(
+'number',
+'Numero lezioni'
+);
+
 const price=input('number','Prezzo €');
 price.step='.01';
-const create=button('Pubblica nuovo pacchetto',async()=>{
+
+const create=button(
+'Pubblica nuovo pacchetto',
+async()=>{
+
 const n=Number(price.value);
 const v=Number(sessions.value);
+
 if(!title.value.trim()||
-!Number.isInteger(v)||v<1||
+!Number.isInteger(v)||
+v<1||
 price.value===''||
-!Number.isFinite(n)||n<0)
+!Number.isFinite(n)||
+n<0){
 return alert('Dati non validi.');
+}
+
 create.disabled=true;
+
 try{
+
 const {data,error}=await db
 .from('forge_shop_packages')
 .insert({
 title:title.value.trim(),
 total_sessions:v,
-price_eur:n,active:true
-}).select('id');
+price_eur:n,
+active:true
+})
+.select('id');
+
 if(error)throw error;
-if(!data?.length)
+
+if(!data?.length){
 throw Error('Creazione non autorizzata.');
+}
+
 renderShop();
-}catch(e){alert(friendly(e));}
-finally{create.disabled=false;}
+
+}catch(e){
+alert(friendly(e));
+}finally{
+create.disabled=false;
+}
 });
-add(card,
+
+add(
+card,
 el('h3','Nuovo pacchetto'),
-title,sessions,price,create);
+title,
+sessions,
+price,
+create
+);
+
 root.append(card);
 }
+
 const orders=el('div');
 orders.id='ordersRoot';
+
 root.append(orders);
+
 await loadOrders();
+
 }catch(e){
-if(s===serial)
+
+if(s===serial){
 root.replaceChildren(
 el('div',friendly(e),'status error')
 );
 }
 }
+}
+
 async function loadOrders(){
-const root=$('ordersRoot');if(!root)return;
-root.replaceChildren(el('h3',
-role==='admin'?'Ordini e incassi':'I miei ordini'));
+
+const root=$('ordersRoot');
+if(!root)return;
+
+root.replaceChildren(el(
+'h3',
+role==='admin'?
+'Ordini e incassi':
+'I miei ordini'
+));
+
 try{
+
 let q=db.from('forge_shop_orders')
-.select('id,client_id,package_title,total_sessions,price_eur,payment_method,payment_status,created_at,confirmed_at,activated_package_id')
-.order('created_at',{ascending:false}).limit(100);
-if(role!=='admin')q=q.eq('client_id',user.id);
+.select(
+'id,client_id,package_title,total_sessions,price_eur,payment_method,payment_status,created_at,confirmed_at,activated_package_id'
+)
+.order('created_at',{ascending:false})
+.limit(100);
+
+if(role!=='admin'){
+q=q.eq('client_id',user.id);
+}
+
 const {data,error}=await q;
+
 if(error)throw error;
 if(!root.isConnected)return;
+
 const orders=data||[];
+
 if(role==='admin'){
+
 const confirmed=orders.filter(o=>
-o.payment_status==='confirmed');
+o.payment_status==='confirmed'
+);
+
 const pending=orders.filter(o=>
-o.payment_status==='pending');
+o.payment_status==='pending'
+);
+
 const box=el('div','','stats');
+
 for(const [k,v] of [
-['Incassi confermati',
-money(confirmed.reduce((a,o)=>
-a+Number(o.price_eur),0))],
-['Ordini in attesa',String(pending.length)]
+[
+'Incassi confermati',
+money(confirmed.reduce(
+(a,o)=>a+Number(o.price_eur),0
+))
+],
+[
+'Ordini in attesa',
+String(pending.length)
+]
 ]){
+
 const x=el('div','','stat');
-add(x,el('span',k),el('strong',v));
+
+add(
+x,
+el('span',k),
+el('strong',v)
+);
+
 box.append(x);
 }
+
 root.append(box);
 }
-if(!orders.length)
-root.append(el('p','Nessun ordine.','muted'));
+
+if(!orders.length){
+root.append(
+el('p','Nessun ordine.','muted')
+);
+}
+
 for(const o of orders){
+
 const card=el('div','','item');
-add(card,
+
+add(
+card,
 el('h3',o.package_title),
 el('div',money(o.price_eur),'price'),
 el('p',o.total_sessions+' lezioni'),
-el('p','Pagamento: '+
-(methods[o.payment_method]||o.payment_method)),
+el(
+'p',
+'Pagamento: '+
+(methods[o.payment_method]||o.payment_method)
+),
 el('p','Stato: '+o.payment_status),
-el('p','Richiesto: '+dt(o.created_at),'small')
+el(
+'p',
+'Richiesto: '+dt(o.created_at),
+'small'
+)
 );
-if(o.confirmed_at)
-card.append(el('p',
-'Confermato: '+dt(o.confirmed_at),'small'));
+
+if(o.confirmed_at){
+card.append(el(
+'p',
+'Confermato: '+dt(o.confirmed_at),
+'small'
+));
+}
+
 if(role==='admin'){
-card.append(el('p',
-'Cliente: '+o.client_id,'small'));
+
+card.append(el(
+'p',
+'Cliente: '+o.client_id,
+'small'
+));
+
 if(o.payment_status==='pending'&&
 !o.activated_package_id){
+
 const feedback=el('div','','status hidden');
+
 const confirmBtn=button(
-'Conferma incasso e attiva',async()=>{
+'Conferma incasso e attiva',
+async()=>{
+
 if(!confirm(
 'Confermi di aver ricevuto '+
 money(o.price_eur)+'?'
 ))return;
+
 confirmBtn.disabled=true;
 cancelBtn.disabled=true;
+
 try{
+
 const {error}=await db.rpc(
 'forge_shop_confirm_order',
 {p_order_id:o.id}
 );
+
 if(error)throw error;
+
 await loadOrders();
+
 }catch(e){
 feedback.className='status error';
 feedback.textContent=friendly(e);
@@ -929,18 +1982,27 @@ confirmBtn.disabled=false;
 cancelBtn.disabled=false;
 }
 });
+
 const cancelBtn=button(
-'Annulla ordine',async()=>{
+'Annulla ordine',
+async()=>{
+
 if(!confirm('Annullare ordine?'))return;
+
 confirmBtn.disabled=true;
 cancelBtn.disabled=true;
+
 try{
+
 const {error}=await db.rpc(
 'forge_shop_cancel_order',
 {p_order_id:o.id}
 );
+
 if(error)throw error;
+
 await loadOrders();
+
 }catch(e){
 feedback.className='status error';
 feedback.textContent=friendly(e);
@@ -948,161 +2010,383 @@ feedback.textContent=friendly(e);
 confirmBtn.disabled=false;
 cancelBtn.disabled=false;
 }
-},'secondary');
-add(card,confirmBtn,cancelBtn,feedback);
+},
+'secondary'
+);
+
+add(
+card,
+confirmBtn,
+cancelBtn,
+feedback
+);
 }
 }
+
 root.append(card);
 }
+
 }catch(e){
-root.append(el('div',
-friendly(e),'status error'));
+
+root.append(
+el('div',friendly(e),'status error')
+);
 }
 }
 
 /* PACCHETTI LEZIONI */
 
 async function renderPackages(){
+
 const root=$('sectionContent');
-root.replaceChildren(el('p',
-'Caricamento pacchetti...','muted'));
+
+root.replaceChildren(
+el('p','Caricamento pacchetti...','muted')
+);
+
 try{
+
 let q=db.from('forge_lesson_package_summary')
 .select('*');
-if(role!=='admin')
+
+if(role!=='admin'){
 q=q.eq('client_id',user.id);
+}
+
 const {data,error}=await q;
+
 if(error)throw error;
 if(active!=='Pacchetti lezioni')return;
-root.replaceChildren(el('h3','Pacchetti lezioni'));
-if(!data?.length)
-root.append(el('p',
-'Nessun pacchetto assegnato.','muted'));
+
+root.replaceChildren(
+el('h3','Pacchetti lezioni')
+);
+
+if(!data?.length){
+root.append(el(
+'p',
+'Nessun pacchetto assegnato.',
+'muted'
+));
+}
+
 for(const p of data||[]){
+
 const card=el('div','','item');
-add(card,
+
+add(
+card,
 el('h3',p.title||'Pacchetto'),
 el('p','Acquistate: '+p.total_sessions),
 el('p','Utilizzate: '+p.used_sessions),
-el('div',
-p.remaining_sessions+' rimanenti','price'),
+el(
+'div',
+p.remaining_sessions+' rimanenti',
+'price'
+),
 el('p','Stato: '+p.status,'small')
 );
-if(Number(p.remaining_sessions)<=2)
-card.append(el('p',
+
+if(Number(p.remaining_sessions)<=2){
+card.append(el(
+'p',
 'Pacchetto in esaurimento: valuta il rinnovo.',
-'small'));
+'small'
+));
+}
+
 root.append(card);
 }
+
 root.append(button(
 'Acquista o rinnova',
 ()=>section('Forge Shop')
 ));
+
 }catch(e){
-root.replaceChildren(el('div',
-friendly(e),'status error'));
+
+root.replaceChildren(
+el('div',friendly(e),'status error')
+);
 }
 }
 
-/* FORGE CALENDAR */
+/* =====================================================
+   FORGE CALENDAR V3
+   BLOCCO SINGOLO
+   BLOCCO SETTIMANALE
+   SBLOCCO
+   PRENOTAZIONI CLIENTI
+   GESTIONE ADMIN
+===================================================== */
+
+const calendarDaysNames=[
+'Domenica',
+'Lunedì',
+'Martedì',
+'Mercoledì',
+'Giovedì',
+'Venerdì',
+'Sabato'
+];
+
+function calendarDayOfWeek(date){
+return parseDay(date).getDay();
+}
+
+function calendarTimeOptions(){
+
+const result=[];
+
+for(let hour=9;hour<=18;hour++){
+
+for(const minute of [0,15,30,45]){
+
+const value=
+String(hour).padStart(2,'0')+':'+
+String(minute).padStart(2,'0');
+
+result.push(value);
+}
+}
+
+result.push('19:00');
+
+return result;
+}
+
+function calendarTimeSelect(){
+
+const select=el('select');
+
+for(const value of calendarTimeOptions()){
+
+if(value==='19:00')continue;
+
+const option=el('option',value);
+option.value=value;
+
+select.append(option);
+}
+
+return select;
+}
+
+function calendarAdminOnly(){
+return role==='admin';
+}
+
+function calendarValidTime(value){
+
+if(!/^\d{2}:\d{2}$/.test(value)){
+return false;
+}
+
+const [h,m]=value.split(':').map(Number);
+
+return h>=9&&h<=18&&
+[0,15,30,45].includes(m)&&
+(h<18||m===0);
+}
+
+function calendarSlotEnd(start){
+
+const [h,m]=start.split(':').map(Number);
+
+return String(h+1).padStart(2,'0')+':'+
+String(m).padStart(2,'0');
+}
+
+function calendarIsVisible(request,sectionRequest){
+
+return (
+request===calendarSerial&&
+sectionRequest===serial&&
+active==='Prenotazioni'
+);
+}
 
 function renderCalendar(){
+
 const root=$('sectionContent');
+
 root.replaceChildren();
+
 selectedDay=todayRome();
 calendarWeek=monday(selectedDay);
-root.append(el('h3','Forge Calendar'));
-root.append(el('p',
-'Prenotazioni in presenza e online. Durata: 60 minuti.',
-'muted'));
+
+root.append(el(
+'h3',
+'Forge Calendar'
+));
+
+root.append(el(
+'p',
+'Prenotazioni in presenza e online. Ogni lezione dura 60 minuti.',
+'muted'
+));
+
 const legend=el('div','','legend');
+
 for(const [color,label] of [
 ['green','Disponibile'],
 ['yellow','In attesa'],
 ['red','Occupato o bloccato']
 ]){
+
 const item=el('span');
 const dot=el('span','','dot '+color);
-add(item,dot,document.createTextNode(label));
+
+add(
+item,
+dot,
+document.createTextNode(label)
+);
+
 legend.append(item);
 }
+
 root.append(legend);
+
 const controls=el('div','','calendar-head');
-add(controls,
+
+add(
+controls,
+
 button('‹ Settimana',()=>{
+
 calendarWeek=plusDays(calendarWeek,-7);
 selectedDay=calendarWeek;
+
 loadCalendar();
+
 },'secondary'),
+
 button('Oggi',()=>{
+
 selectedDay=todayRome();
 calendarWeek=monday(selectedDay);
+
 loadCalendar();
+
 },'secondary'),
+
 button('Settimana ›',()=>{
+
 calendarWeek=plusDays(calendarWeek,7);
 selectedDay=calendarWeek;
+
 loadCalendar();
+
 },'secondary')
 );
+
 root.append(controls);
+
 const days=el('div','','calendar-grid');
 days.id='calendarDays';
+
 root.append(days);
+
+if(calendarAdminOnly()){
+
+const adminPanel=el('div');
+adminPanel.id='calendarAdminPanel';
+
+root.append(adminPanel);
+}
+
 const details=el('div');
 details.id='calendarDetails';
+
 root.append(details);
+
 loadCalendar();
 }
 
+/* CARICAMENTO CALENDARIO */
+
 async function loadCalendar(){
+
 const request=++calendarSerial;
-const sectionSerial=serial;
+const sectionRequest=serial;
+
 const day=selectedDay;
+
 const days=$('calendarDays');
 const details=$('calendarDetails');
+
 if(!days||!details)return;
 
 days.replaceChildren();
+
 details.replaceChildren(
 el('p','Caricamento calendario...','muted')
 );
 
 for(let i=0;i<7;i++){
+
 const date=plusDays(calendarWeek,i);
+
 const b=button('',()=>{
+
 selectedDay=date;
 loadCalendar();
-},'day'+(selectedDay===date?' selected':''));
-add(b,
-el('small',
+
+},
+'day'+(selectedDay===date?' selected':'')
+);
+
+add(
+b,
+el(
+'small',
 parseDay(date).toLocaleDateString(
-'it-IT',{weekday:'short'}
-)),
+'it-IT',
+{weekday:'short'}
+)
+),
 el('strong',date.slice(-2))
 );
+
 days.append(b);
 }
 
+if(calendarAdminOnly()){
+
+renderCalendarAdminPanel(day);
+}
+
 try{
+
 const bookingsQuery=db.from('bookings')
-.select('id,trainer_id,client_id,booking_date,start_time,end_time,status,session_mode,duration_minutes')
+.select(
+'id,trainer_id,client_id,booking_date,start_time,end_time,status,session_mode,duration_minutes'
+)
 .eq('booking_date',day)
 .order('start_time',{ascending:true});
 
 const results=await Promise.all([
+
 bookingsQuery,
-db.rpc('forge_calendar_slots',{p_date:day})
+
+db.rpc(
+'forge_calendar_slots_v2',
+{p_date:day}
+)
+
 ]);
+
+if(!calendarIsVisible(request,sectionRequest)){
+return;
+}
 
 const bookingResult=results[0];
 const slotResult=results[1];
 
-if(request!==calendarSerial||
-sectionSerial!==serial||
-active!=='Prenotazioni')return;
-
-if(bookingResult.error)throw bookingResult.error;
+if(bookingResult.error){
+throw bookingResult.error;
+}
 
 details.replaceChildren(
 el('h3',dateLabel(day))
@@ -1110,16 +2394,29 @@ el('h3',dateLabel(day))
 
 const bookings=bookingResult.data||[];
 
-if(role==='admin'){
-renderAdminBookings(details,bookings);
+if(calendarAdminOnly()){
+
+renderAdminBookings(
+details,
+bookings
+);
+
 }else{
-renderClientBookings(details,bookings);
+
+renderClientBookings(
+details,
+bookings
+);
 }
 
 if(slotResult.error){
-details.append(el('div',
+
+details.append(el(
+'div',
 'Disponibilità: '+friendly(slotResult.error),
-'status error'));
+'status error'
+));
+
 return;
 }
 
@@ -1127,83 +2424,651 @@ renderCalendarSlots(
 details,
 slotResult.data||[],
 day,
-request
+request,
+bookings
 );
 
 }catch(e){
-if(request===calendarSerial)
+
+if(request===calendarSerial){
+
 details.replaceChildren(
-el('div','Errore calendario: '+
-friendly(e),'status error')
+el(
+'div',
+'Errore calendario: '+friendly(e),
+'status error'
+)
 );
 }
 }
+}
+
+/* PANNELLO AMMINISTRATORE */
+
+function renderCalendarAdminPanel(day){
+
+const root=$('calendarAdminPanel');
+if(!root)return;
+
+root.replaceChildren();
+
+const panel=el('div','','calendar-admin');
+
+panel.append(el(
+'h3',
+'Gestione orari del coach'
+));
+
+panel.append(el(
+'p',
+'Blocca le ore occupate e imposta appuntamenti fissi settimanali.',
+'small'
+));
+
+const form=el('div','','calendar-admin-grid');
+
+const dateBox=el('div');
+dateBox.append(el('label','Data del blocco'));
+
+const dateInput=input('date');
+dateInput.value=day;
+dateInput.min=todayRome();
+
+dateBox.append(dateInput);
+
+const timeBox=el('div');
+timeBox.append(el('label','Ora di inizio'));
+
+const timeSelect=calendarTimeSelect();
+timeSelect.value='10:00';
+
+timeBox.append(timeSelect);
+
+add(form,dateBox,timeBox);
+
+panel.append(form);
+
+const preview=el(
+'p',
+'Durata del blocco: 60 minuti.',
+'small'
+);
+
+panel.append(preview);
+
+function updatePreview(){
+
+preview.textContent=
+'Orario occupato: '+
+timeSelect.value+' – '+
+calendarSlotEnd(timeSelect.value)+
+' (60 minuti)';
+}
+
+timeSelect.onchange=updatePreview;
+updatePreview();
+
+const feedback=el(
+'div',
+'',
+'status hidden'
+);
+
+const blockOnce=button(
+'Blocca 1 ora nella data scelta',
+async()=>{
+
+if(!calendarValidTime(timeSelect.value)){
+alert('Orario non valido.');
+return;
+}
+
+if(dateInput.value<todayRome()){
+alert('Non puoi bloccare una data passata.');
+return;
+}
+
+if(!confirm(
+'Bloccare il '+dateLabel(dateInput.value)+
+' dalle '+timeSelect.value+
+' alle '+calendarSlotEnd(timeSelect.value)+'?'
+))return;
+
+blockOnce.disabled=true;
+
+try{
+
+const {error}=await db.rpc(
+'forge_calendar_block_once',
+{
+p_date:dateInput.value,
+p_start:timeSelect.value,
+p_notes:'Blocco inserito da Forge Calendar'
+}
+);
+
+if(error)throw error;
+
+feedback.className='status success';
+feedback.textContent='Ora bloccata correttamente.';
+
+await loadCalendar();
+
+}catch(e){
+
+feedback.className='status error';
+feedback.textContent=friendly(e);
+
+}finally{
+
+blockOnce.disabled=false;
+}
+});
+
+panel.append(blockOnce);
+
+panel.append(el(
+'h3',
+'Blocchi fissi settimanali'
+));
+
+panel.append(el(
+'p',
+'Seleziona uno o più giorni. L’orario sarà occupato ogni settimana.',
+'small'
+));
+
+const weekdayGrid=el('div','','weekday-grid');
+
+const weekdayChecks=[];
+
+for(const index of [1,2,3,4,5,6,0]){
+
+const label=el('label','','weekday-choice');
+
+const check=input('checkbox');
+check.value=String(index);
+
+check.checked=
+index===calendarDayOfWeek(day);
+
+weekdayChecks.push(check);
+
+add(
+label,
+check,
+document.createTextNode(calendarDaysNames[index])
+);
+
+weekdayGrid.append(label);
+}
+
+panel.append(weekdayGrid);
+
+const blockWeekly=button(
+'Blocca ogni settimana nei giorni selezionati',
+async()=>{
+
+const selected=weekdayChecks
+.filter(x=>x.checked)
+.map(x=>Number(x.value));
+
+if(!selected.length){
+
+alert('Seleziona almeno un giorno.');
+return;
+}
+
+const start=timeSelect.value;
+
+if(!calendarValidTime(start)){
+
+alert('Orario non valido.');
+return;
+}
+
+const names=selected
+.map(x=>calendarDaysNames[x])
+.join(', ');
+
+if(!confirm(
+'Creare blocchi settimanali '+names+
+' dalle '+start+' alle '+
+calendarSlotEnd(start)+'?'
+))return;
+
+blockWeekly.disabled=true;
+
+const errors=[];
+let created=0;
+
+try{
+
+for(const dow of selected){
+
+const {error}=await db.rpc(
+'forge_calendar_block_weekly',
+{
+p_day_of_week:dow,
+p_start:start,
+p_notes:'Impegno fisso settimanale'
+}
+);
+
+if(error){
+
+errors.push(
+calendarDaysNames[dow]+': '+friendly(error)
+);
+
+}else{
+
+created++;
+}
+}
+
+if(errors.length){
+
+feedback.className='status error';
+
+feedback.textContent=
+created+' blocchi creati.\n'+
+errors.join('\n');
+
+}else{
+
+feedback.className='status success';
+
+feedback.textContent=
+'Blocchi settimanali creati: '+created;
+}
+
+await loadCalendar();
+
+}catch(e){
+
+feedback.className='status error';
+feedback.textContent=friendly(e);
+
+}finally{
+
+blockWeekly.disabled=false;
+}
+});
+
+panel.append(blockWeekly);
+panel.append(feedback);
+
+root.append(panel);
+
+const manage=el('div','','calendar-admin');
+
+manage.append(el(
+'h3',
+'Blocchi attivi'
+));
+
+manage.append(el(
+'p',
+'Da qui puoi eliminare un blocco singolo oppure una ripetizione settimanale.',
+'small'
+));
+
+const onceRoot=el('div');
+onceRoot.id='calendarOnceBlocks';
+
+const weeklyRoot=el('div');
+weeklyRoot.id='calendarWeeklyBlocks';
+
+add(
+manage,
+el('h3','Blocchi della data selezionata'),
+onceRoot,
+el('h3','Blocchi settimanali'),
+weeklyRoot
+);
+
+root.append(manage);
+
+loadCalendarBlocks(day);
+}
+
+/* LETTURA BLOCCHI */
+
+async function loadCalendarBlocks(day){
+
+if(!calendarAdminOnly())return;
+
+const onceRoot=$('calendarOnceBlocks');
+const weeklyRoot=$('calendarWeeklyBlocks');
+
+if(!onceRoot||!weeklyRoot)return;
+
+onceRoot.replaceChildren(
+el('p','Caricamento...','muted')
+);
+
+weeklyRoot.replaceChildren(
+el('p','Caricamento...','muted')
+);
+
+const expectedDay=day;
+const expectedSerial=calendarSerial;
+
+try{
+
+const results=await Promise.all([
+
+db.from('forge_calendar_exceptions')
+.select(
+'id,exception_date,start_time,end_time,kind,notes'
+)
+.eq('trainer_id',user.id)
+.eq('exception_date',day)
+.eq('kind','blocked')
+.order('start_time',{ascending:true}),
+
+db.from('forge_calendar_weekly_blocks')
+.select(
+'id,day_of_week,start_time,end_time,notes'
+)
+.eq('trainer_id',user.id)
+.order('day_of_week',{ascending:true})
+.order('start_time',{ascending:true})
+
+]);
+
+if(
+active!=='Prenotazioni'||
+selectedDay!==expectedDay||
+calendarSerial!==expectedSerial
+){
+return;
+}
+
+const onceResult=results[0];
+const weeklyResult=results[1];
+
+if(onceResult.error){
+throw onceResult.error;
+}
+
+if(weeklyResult.error){
+throw weeklyResult.error;
+}
+
+onceRoot.replaceChildren();
+weeklyRoot.replaceChildren();
+
+const once=onceResult.data||[];
+const weekly=weeklyResult.data||[];
+
+if(!once.length){
+
+onceRoot.append(el(
+'p',
+'Nessun blocco singolo in questa data.',
+'muted'
+));
+}
+
+for(const block of once){
+
+const card=el('div','','block-item');
+
+add(
+card,
+el(
+'strong',
+timeLabel(block.start_time)+' – '+
+timeLabel(block.end_time)
+),
+el('p','Blocco singolo','small')
+);
+
+const remove=button(
+'Sblocca questa ora',
+async()=>{
+
+if(!confirm(
+'Liberare l’orario '+
+timeLabel(block.start_time)+' – '+
+timeLabel(block.end_time)+'?'
+))return;
+
+remove.disabled=true;
+
+try{
+
+const {data,error}=await db.rpc(
+'forge_calendar_unblock_once',
+{p_block_id:block.id}
+);
+
+if(error)throw error;
+
+if(data!==true){
+throw Error('Blocco non trovato.');
+}
+
+await loadCalendar();
+
+}catch(e){
+
+alert('Sblocco non riuscito: '+friendly(e));
+remove.disabled=false;
+}
+},
+'secondary'
+);
+
+card.append(remove);
+onceRoot.append(card);
+}
+
+if(!weekly.length){
+
+weeklyRoot.append(el(
+'p',
+'Nessun blocco settimanale.',
+'muted'
+));
+}
+
+for(const block of weekly){
+
+const card=el('div','','block-item');
+
+add(
+card,
+el(
+'strong',
+calendarDaysNames[block.day_of_week]+
+' • '+timeLabel(block.start_time)+
+' – '+timeLabel(block.end_time)
+),
+el(
+'p',
+'Si ripete ogni settimana.',
+'small'
+)
+);
+
+const remove=button(
+'Elimina ripetizione settimanale',
+async()=>{
+
+if(!confirm(
+'Eliminare il blocco fisso del '+
+calendarDaysNames[block.day_of_week]+
+' alle '+timeLabel(block.start_time)+'?'
+))return;
+
+remove.disabled=true;
+
+try{
+
+const {data,error}=await db.rpc(
+'forge_calendar_unblock_weekly',
+{p_block_id:block.id}
+);
+
+if(error)throw error;
+
+if(data!==true){
+throw Error('Blocco non trovato.');
+}
+
+await loadCalendar();
+
+}catch(e){
+
+alert('Sblocco non riuscito: '+friendly(e));
+remove.disabled=false;
+}
+},
+'secondary'
+);
+
+card.append(remove);
+weeklyRoot.append(card);
+}
+
+}catch(e){
+
+onceRoot.replaceChildren(
+el(
+'div',
+'Errore caricamento blocchi: '+friendly(e),
+'status error'
+)
+);
+
+weeklyRoot.replaceChildren();
+}
+}
+
+/* PRENOTAZIONI CLIENTI */
 
 function renderClientBookings(root,bookings){
+
 const mine=bookings.filter(b=>
-b.client_id===user.id);
+b.client_id===user.id
+);
 
 if(!mine.length)return;
 
-root.append(el('h3','Le tue prenotazioni'));
+root.append(el(
+'h3',
+'Le tue prenotazioni'
+));
 
 for(const booking of mine){
-const css=booking.status==='pending'?
-'pending':
+
+const css=
+booking.status==='pending'?'pending':
 ['confirmed','approved'].includes(
 booking.status
 )?'confirmed':'';
+
 const card=el('div','','slot '+css);
-add(card,
-el('strong',
+
+add(
+card,
+el(
+'strong',
 timeLabel(booking.start_time)+' – '+
-timeLabel(booking.end_time)),
-el('p','Stato: '+booking.status,'small'),
-el('p','Modalità: '+
+timeLabel(booking.end_time)
+),
+el(
+'p',
+'Stato: '+booking.status,
+'small'
+),
+el(
+'p',
+'Modalità: '+
 (booking.session_mode==='online'?
-'Online':'In presenza'),'small')
+'Online':'In presenza'),
+'small'
+)
 );
+
 root.append(card);
 }
 }
 
+/* PRENOTAZIONI AMMINISTRATORE */
+
 function renderAdminBookings(root,bookings){
-root.append(el('h3','Gestione prenotazioni'));
+
+root.append(el(
+'h3',
+'Gestione prenotazioni'
+));
 
 if(!bookings.length){
-root.append(el('p',
+
+root.append(el(
+'p',
 'Nessuna prenotazione visibile per questa data.',
-'muted'));
+'muted'
+));
 }
 
 for(const booking of bookings){
-const css=booking.status==='pending'?
-'pending':
+
+const css=
+booking.status==='pending'?'pending':
 ['confirmed','approved'].includes(
 booking.status
 )?'confirmed':'';
 
 const card=el('div','','slot '+css);
 
-add(card,
-el('strong',
+add(
+card,
+el(
+'strong',
 timeLabel(booking.start_time)+' – '+
-timeLabel(booking.end_time)),
-el('p','Stato: '+booking.status,'small'),
-el('p','Modalità: '+
+timeLabel(booking.end_time)
+),
+el(
+'p',
+'Stato: '+booking.status,
+'small'
+),
+el(
+'p',
+'Modalità: '+
 (booking.session_mode==='online'?
-'Online':'In presenza'),'small'),
-el('p','Cliente ID: '+booking.client_id,'small')
+'Online':'In presenza'),
+'small'
+),
+el(
+'p',
+'Cliente ID: '+booking.client_id,
+'small'
+)
 );
 
 if(booking.status==='pending'){
-const feedback=el('div','','status hidden');
+
+const feedback=el(
+'div',
+'',
+'status hidden'
+);
 
 for(const [approve,label] of [
 [true,'Approva'],
 [false,'Rifiuta']
 ]){
-const action=button(label,async()=>{
+
+const action=button(
+label,
+async()=>{
+
 if(!confirm(
 label+' la prenotazione delle '+
 timeLabel(booking.start_time)+'?'
@@ -1212,94 +3077,166 @@ timeLabel(booking.start_time)+'?'
 action.disabled=true;
 
 try{
+
 const {error}=await db.rpc(
-'forge_decide_booking',{
+'forge_decide_booking',
+{
 p_booking_id:booking.id,
 p_approve:approve
-});
+}
+);
+
 if(error)throw error;
+
 await loadCalendar();
+
 }catch(e){
+
 feedback.className='status error';
 feedback.textContent=friendly(e);
+
 action.disabled=false;
 }
-},approve?'':'secondary');
+},
+approve?'':'secondary'
+);
 
 card.append(action);
 }
+
 card.append(feedback);
 }
+
 root.append(card);
 }
 }
 
-function renderCalendarSlots(root,slots,day,request){
-root.append(el('h3',
-role==='admin'?
+/* VISUALIZZAZIONE SLOT */
+
+function renderCalendarSlots(
+root,
+slots,
+day,
+request,
+bookings
+){
+
+root.append(el(
+'h3',
+calendarAdminOnly()?
 'Disponibilità della giornata':
-'Orari prenotabili'
+'Orari prenotabili',
+'calendar-section-title'
 ));
 
 const mode=el('select');
+
 for(const [v,t] of [
 ['in_person','In presenza'],
 ['online','Online']
 ]){
+
 const o=el('option',t);
 o.value=v;
 mode.append(o);
 }
 
-if(role!=='admin'){
-root.append(el('label','Modalità della lezione'));
+if(!calendarAdminOnly()){
+
+root.append(el(
+'label',
+'Modalità della lezione'
+));
+
 root.append(mode);
-root.append(el('p',
+
+root.append(el(
+'p',
 'Scegli un orario verde. La prenotazione richiede approvazione del coach.',
-'muted'));
+'muted'
+));
 }
 
 if(!slots.length){
-root.append(el('p',
+
+root.append(el(
+'p',
 'Nessuno slot visualizzabile per questa data.',
-'muted'));
+'muted'
+));
+
 return;
 }
 
 const available=slots.filter(s=>
-s.slot_status==='available').length;
+s.slot_status==='available'
+).length;
 
-root.append(el('p',
+root.append(el(
+'p',
 available+' orari disponibili su '+
 slots.length+' fasce visualizzate.',
-'small'));
+'small'
+));
 
 for(const slot of slots){
+
 const status=slot.slot_status;
+
 const start=timeLabel(slot.slot_start);
 const end=timeLabel(slot.slot_end);
 
-const css=status==='available'?
-'available':
-status==='occupied'?'occupied':
-status==='blocked'?'blocked':'closed';
+const overlapping=bookings.filter(b=>
+['pending','confirmed','approved'].includes(
+b.status
+)&&
+timeLabel(b.start_time)<end&&
+timeLabel(b.end_time)>start
+);
+
+const hasPending=overlapping.some(b=>
+b.status==='pending'
+);
+
+const displayStatus=
+status==='occupied'&&hasPending?
+'pending':
+status;
+
+const css=
+displayStatus==='available'?'available':
+displayStatus==='pending'?'pending':
+displayStatus==='occupied'?'occupied':
+displayStatus==='blocked'?'blocked':
+'closed';
 
 const card=el('div','','slot '+css);
 
 const label={
 available:'Disponibile',
+pending:'Richiesta in attesa',
 occupied:'Occupato',
 blocked:'Bloccato',
 closed:'Non disponibile'
-}[status]||status;
+}[displayStatus]||displayStatus;
 
-add(card,
+add(
+card,
 el('strong',start+' – '+end),
 el('p',label,'small')
 );
 
-if(status==='available'){
-const book=button('Richiedi '+start,async()=>{
+/* PRENOTAZIONE SOLO CLIENTI */
+
+if(
+status==='available'&&
+!calendarAdminOnly()
+){
+
+const book=button(
+'Richiedi '+start,
+async()=>{
+
 if(!confirm(
 'Richiedere una lezione il '+
 dateLabel(day)+' alle '+start+'?'
@@ -1308,27 +3245,94 @@ dateLabel(day)+' alle '+start+'?'
 book.disabled=true;
 
 try{
+
 const {error}=await db.rpc(
-'forge_request_booking',{
+'forge_request_booking',
+{
 p_date:day,
 p_start:start,
 p_duration:60,
 p_mode:mode.value
-});
+}
+);
+
 if(error)throw error;
+
+alert(
+'Richiesta inviata. Attendi approvazione del coach.'
+);
 
 if(request===calendarSerial){
 await loadCalendar();
 }
+
 }catch(e){
-alert('Prenotazione non riuscita: '+friendly(e));
+
+alert(
+'Prenotazione non riuscita: '+
+friendly(e)
+);
+
 await loadCalendar();
+
 }finally{
+
 book.disabled=false;
 }
-});
+}
+);
+
 card.append(book);
 }
+
+/* BLOCCO RAPIDO SOLO ADMIN */
+
+if(
+calendarAdminOnly()&&
+status==='available'
+){
+
+const quickBlock=button(
+'Blocca questa ora',
+async()=>{
+
+if(!confirm(
+'Bloccare il '+dateLabel(day)+
+' dalle '+start+' alle '+end+'?'
+))return;
+
+quickBlock.disabled=true;
+
+try{
+
+const {error}=await db.rpc(
+'forge_calendar_block_once',
+{
+p_date:day,
+p_start:start,
+p_notes:'Blocco rapido dal calendario'
+}
+);
+
+if(error)throw error;
+
+await loadCalendar();
+
+}catch(e){
+
+alert(
+'Blocco non riuscito: '+friendly(e)
+);
+
+quickBlock.disabled=false;
+}
+},
+'secondary'
+);
+
+card.append(quickBlock);
+}
+
 root.append(card);
 }
 }
@@ -1336,57 +3340,94 @@ root.append(card);
 /* PROFILO */
 
 function renderProfile(){
+
 const root=$('sectionContent');
+
 root.replaceChildren();
-add(root,
+
+add(
+root,
 el('h3','Il tuo account'),
 el('p','Email: '+user.email),
 el('p','Ruolo: '+role),
-el('p','ID account: '+user.id,'small')
+el(
+'p',
+'ID account: '+user.id,
+'small'
+)
 );
 }
 
 /* INIZIALIZZAZIONE */
 
 async function initialize(){
+
 try{
+
 db.auth.onAuthStateChange(event=>{
+
 if(event==='PASSWORD_RECOVERY'){
+
 resetting=true;
 resetReady=true;
+
 show('reset');
 return;
 }
+
 if(resetting)return;
+
 if(event==='SIGNED_OUT'){
-user=null;role='client';
+
+user=null;
+role='client';
+
 show('auth');
 }
 });
 
 if(recoveryLink()){
+
 resetting=true;
+
 const {data:{session},error}=
 await db.auth.getSession();
 
 if(error||!session){
+
 show('reset');
-msg('resetStatus',
-'Link scaduto o non valido.',true);
+
+msg(
+'resetStatus',
+'Link scaduto o non valido.',
+true
+);
+
 return;
 }
+
 resetReady=true;
+
 show('reset');
 return;
 }
+
 await userState();
+
 }catch(e){
+
 show('auth');
-msg('authStatus',friendly(e),true);
+
+msg(
+'authStatus',
+friendly(e),
+true
+);
 }
 }
 
 initialize();
+
 </script>
 </body>
 </html>
