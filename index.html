@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -1304,7 +1303,7 @@ if(!confirm(
 'Richiedere una lezione il '+
 dateLabel(day)+' alle '+start+'?'
 ))return;
-
+if(status==='available'){
 book.disabled=true;
 
 try{
