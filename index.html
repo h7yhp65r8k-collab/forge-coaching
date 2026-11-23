@@ -25,7 +25,7 @@ p{line-height:1.5}
 .small,.muted{color:var(--muted);font-size:13px}
 button{width:100%;padding:13px;margin:7px 0;border:0;border-radius:11px;background:linear-gradient(120deg,#f4dc95,#c49a48);color:#17130d;font-weight:750;font-size:14px;cursor:pointer}
 button.secondary{background:#292a2e;color:var(--gold);border:1px solid #756039}
-button:disabled{opacity:.5}
+button:disabled{opacity:.5;cursor:not-allowed}
 input,select,textarea{width:100%;padding:12px;margin:7px 0;background:#101115;border:1px solid #766039;border-radius:10px;color:white;font-size:16px}
 label{display:block;margin-top:10px;font-size:14px}
 .hidden{display:none!important}
@@ -48,7 +48,7 @@ nav button.active{outline:2px solid var(--gold)}
 .calendar-head{display:flex;gap:8px;align-items:center}
 .calendar-head button{width:auto;flex:1}
 .calendar-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:12px 0}
-.day{padding:9px 2px;border:1px solid #58492e;border-radius:9px;text-align:center;font-size:12px;background:#202126}
+.day{padding:9px 2px;border:1px solid #58492e;border-radius:9px;text-align:center;font-size:12px;background:#202126;color:#eee}
 .day.selected{background:var(--gold);color:#111}
 .day small{display:block;font-size:10px;margin-bottom:5px}
 .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin:12px 0}
@@ -59,7 +59,9 @@ nav button.active{outline:2px solid var(--gold)}
 .slot{border:1px solid #554830;border-radius:10px;padding:12px;margin:7px 0}
 .slot.available{border-color:#43845a;background:#14251b}
 .slot.pending{border-color:#aa8c36;background:#302718}
-.slot.confirmed{border-color:#984c4c;background:#2b191b}
+.slot.confirmed,.slot.occupied,.slot.blocked{border-color:#984c4c;background:#2b191b}
+.slot.closed{opacity:.6;background:#1b1c20}
+.slot button{margin-bottom:0}
 .history-item{display:flex;justify-content:space-between;gap:12px;padding:11px;border-bottom:1px solid #39332a;font-size:13px}
 footer{text-align:center;color:#777;padding:24px;font-size:12px}
 #sectionCard{scroll-margin-top:12px}
@@ -152,9 +154,10 @@ const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
 const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
 const $=id=>document.getElementById(id);
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
 let user=null,role='client',active='',period='day';
 let resetting=false,resetReady=false,serial=0;
-let selectedDay='',calendarWeek='';
+let selectedDay='',calendarWeek='',calendarSerial=0;
 
 const screens=['loading','auth','forgot','reset','pending','app'];
 const descriptions={
@@ -186,65 +189,106 @@ function el(tag,text='',cls=''){
 const e=document.createElement(tag);
 e.textContent=text;e.className=cls;return e;
 }
-function add(parent,...children){children.forEach(x=>parent.append(x));return parent;}
-function money(n){return Number(n).toLocaleString('it-IT',{style:'currency',currency:'EUR'});}
-function fmt(n,d=1){return Number(n).toLocaleString('it-IT',{maximumFractionDigits:d});}
-function iso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function add(parent,...children){
+children.forEach(x=>parent.append(x));return parent;
+}
+function money(n){
+return Number(n).toLocaleString('it-IT',{
+style:'currency',currency:'EUR'
+});
+}
+function fmt(n,d=1){
+return Number(n).toLocaleString('it-IT',{
+maximumFractionDigits:d
+});
+}
+function iso(d){
+return d.getFullYear()+'-'+
+String(d.getMonth()+1).padStart(2,'0')+'-'+
+String(d.getDate()).padStart(2,'0');
+}
 function parseDay(s){return new Date(s+'T12:00:00');}
-function plusDays(s,n){const d=parseDay(s);d.setDate(d.getDate()+n);return iso(d);}
+function plusDays(s,n){
+const d=parseDay(s);d.setDate(d.getDate()+n);return iso(d);
+}
 function monday(s){
-const d=parseDay(s);d.setDate(d.getDate()-(d.getDay()+6)%7);return iso(d);
+const d=parseDay(s);
+d.setDate(d.getDate()-(d.getDay()+6)%7);
+return iso(d);
 }
 function timeLabel(t){return String(t||'').slice(0,5);}
-function dateLabel(s){return parseDay(s).toLocaleDateString('it-IT',{weekday:'short',day:'numeric',month:'short'});}
-function dt(s){return s?new Date(s).toLocaleString('it-IT'):'—';}
+function dateLabel(s){
+return parseDay(s).toLocaleDateString('it-IT',{
+weekday:'short',day:'numeric',month:'short'
+});
+}
+function dt(s){
+return s?new Date(s).toLocaleString('it-IT'):'—';
+}
 function input(type='text',placeholder=''){
 const e=el('input');e.type=type;e.placeholder=placeholder;return e;
 }
 function button(label,fn,cls=''){
 const b=el('button',label,cls);b.onclick=fn;return b;
 }
-function notice(root,text,error=false){root.append(el('div',text,'status '+(error?'error':'success')));}
-function safeDateTime(day,time){
-return new Date(day+'T'+timeLabel(time)+':00');
+function notice(root,text,error=false){
+root.append(el('div',text,'status '+(error?'error':'success')));
 }
-function cleanUrl(){history.replaceState({},document.title,location.pathname);}
+function cleanUrl(){
+history.replaceState({},document.title,location.pathname);
+}
 function recoveryLink(){
 const q=new URLSearchParams(location.search);
 const h=new URLSearchParams(location.hash.slice(1));
 return q.get('type')==='recovery'||h.get('type')==='recovery';
 }
+function todayRome(){
+return new Intl.DateTimeFormat('en-CA',{
+timeZone:'Europe/Rome',
+year:'numeric',month:'2-digit',day:'2-digit'
+}).format(new Date());
+}
 
-/* ACCESSO */
+/* AUTENTICAZIONE */
 
 async function userState(){
 if(resetting)return;
 const {data:{session},error}=await db.auth.getSession();
-if(error||!session){user=null;role='client';show('auth');return;}
+if(error||!session){
+user=null;role='client';show('auth');return;
+}
 user=session.user;
 const [r,a]=await Promise.all([
 db.from('user_roles').select('role').eq('user_id',user.id),
 db.from('account_access').select('status').eq('user_id',user.id)
 ]);
 if(r.error||a.error){show('pending');return;}
-if(a.data?.[0]?.status!=='approved'){show('pending');return;}
+if(a.data?.[0]?.status!=='approved'){
+show('pending');return;
+}
 role=r.data?.some(x=>x.role==='admin')?'admin':
 r.data?.some(x=>x.role==='trainer')?'trainer':
 r.data?.some(x=>x.role==='premium')?'premium':'client';
-$('welcome').textContent=role==='admin'?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
+$('welcome').textContent=role==='admin'?
+'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
 $('roleInfo').textContent=user.email+' • '+role;
 show('app');
 }
 async function logout(){
-serial++;await db.auth.signOut();
-user=null;role='client';active='';resetting=false;resetReady=false;
-cleanUrl();$('sectionCard').classList.add('hidden');show('auth');
+serial++;calendarSerial++;
+await db.auth.signOut();
+user=null;role='client';active='';
+resetting=false;resetReady=false;
+cleanUrl();
+$('sectionCard').classList.add('hidden');
+show('auth');
 }
 $('loginBtn').onclick=async()=>{
 const b=$('loginBtn');b.disabled=true;
 try{
 const {error}=await db.auth.signInWithPassword({
-email:$('email').value.trim(),password:$('password').value
+email:$('email').value.trim(),
+password:$('password').value
 });
 if(error)throw error;
 await userState();
@@ -254,8 +298,10 @@ finally{b.disabled=false;}
 $('signupBtn').onclick=async()=>{
 const b=$('signupBtn');b.disabled=true;
 try{
-const email=$('email').value.trim(),password=$('password').value;
-if(!email||password.length<8)throw Error('Email e password di almeno 8 caratteri richieste.');
+const email=$('email').value.trim();
+const password=$('password').value;
+if(!email||password.length<8)
+throw Error('Email e password di almeno 8 caratteri richieste.');
 const {error}=await db.auth.signUp({
 email,password,options:{emailRedirectTo:SITE_URL}
 });
@@ -265,31 +311,36 @@ msg('authStatus','Registrazione inviata. Attendi approvazione.');
 finally{b.disabled=false;}
 };
 $('forgotBtn').onclick=()=>{
-$('recoveryEmail').value=$('email').value;show('forgot');
+$('recoveryEmail').value=$('email').value;
+show('forgot');
 };
 $('backLoginBtn').onclick=()=>show('auth');
 $('sendRecoveryBtn').onclick=async()=>{
 const b=$('sendRecoveryBtn');b.disabled=true;
 try{
 const {error}=await db.auth.resetPasswordForEmail(
-$('recoveryEmail').value.trim(),{redirectTo:SITE_URL}
+$('recoveryEmail').value.trim(),
+{redirectTo:SITE_URL}
 );
 if(error)throw error;
-msg('forgotStatus','Se la mail è registrata, riceverai il link di recupero.');
+msg('forgotStatus',
+'Se la mail è registrata, riceverai il link di recupero.');
 }catch(e){msg('forgotStatus',friendly(e),true);}
 finally{b.disabled=false;}
 };
 $('savePasswordBtn').onclick=async()=>{
 const b=$('savePasswordBtn');b.disabled=true;
 try{
-if(!resetting||!resetReady)throw Error('Link non verificato.');
+if(!resetting||!resetReady)
+throw Error('Link non verificato.');
 const p=$('newPassword').value;
 if(p.length<8||p!==$('confirmPassword').value)
 throw Error('Password non valide o differenti.');
 const {error}=await db.auth.updateUser({password:p});
 if(error)throw error;
 await db.auth.signOut();
-resetting=false;resetReady=false;cleanUrl();show('auth');
+resetting=false;resetReady=false;
+cleanUrl();show('auth');
 msg('authStatus','Password aggiornata. Accedi nuovamente.');
 }catch(e){msg('resetStatus',friendly(e),true);}
 finally{b.disabled=false;}
@@ -297,13 +348,14 @@ finally{b.disabled=false;}
 $('logoutBtn').onclick=logout;
 $('pendingLogoutBtn').onclick=logout;
 
-/* SEZIONI */
+/* NAVIGAZIONE */
 
 function section(name){
-serial++;active=name;
+serial++;calendarSerial++;active=name;
 $('sectionTitle').textContent=name;
 $('sectionText').textContent=descriptions[name]||'';
-const root=$('sectionContent');root.replaceChildren();
+const root=$('sectionContent');
+root.replaceChildren();
 $('sectionCard').classList.remove('hidden');
 document.querySelectorAll('[data-section]').forEach(b=>
 b.classList.toggle('active',b.dataset.section===name));
@@ -314,70 +366,104 @@ else if(name==='Forge Weight')renderMetric('weight');
 else if(name==='Forge Hydration')renderMetric('water');
 else if(name==='Forge Nutrition')renderNutrition();
 else if(name==='Profilo')renderProfile();
-else root.append(el('p','Questa sezione richiede ancora il collegamento operativo a Supabase.','muted'));
-$('sectionCard').scrollIntoView({behavior:'smooth',block:'start'});
+else root.append(el('p',
+'Questa sezione richiede ancora il collegamento operativo a Supabase.',
+'muted'));
+$('sectionCard').scrollIntoView({
+behavior:'smooth',block:'start'
+});
 }
 document.querySelectorAll('[data-section]').forEach(b=>
 b.onclick=()=>section(b.dataset.section));
 $('closeSectionBtn').onclick=()=>{
-serial++;active='';$('sectionCard').classList.add('hidden');
-document.querySelectorAll('[data-section]').forEach(b=>b.classList.remove('active'));
+serial++;calendarSerial++;active='';
+$('sectionCard').classList.add('hidden');
+document.querySelectorAll('[data-section]').forEach(b=>
+b.classList.remove('active'));
 };
 
 /* PESO E IDRATAZIONE */
 
 const metrics={
-weight:{table:'forge_weight_entries',field:'weight_kg',unit:'kg',title:'Peso corporeo'},
-water:{table:'forge_water_entries',field:'amount_ml',unit:'ml',title:'Idratazione'}
+weight:{
+table:'forge_weight_entries',
+field:'weight_kg',unit:'kg',title:'Peso corporeo'
+},
+water:{
+table:'forge_water_entries',
+field:'amount_ml',unit:'ml',title:'Idratazione'
+}
 };
 function renderMetric(kind){
 const c=metrics[kind],root=$('sectionContent');
 period=kind==='weight'?'entry':'day';
 root.replaceChildren();
-const value=input('number',kind==='weight'?'Es. 82.5':'Es. 250');
+const value=input('number',
+kind==='weight'?'Es. 82.5':'Es. 250');
 value.step=kind==='weight'?'0.1':'1';
-value.min='1';value.max=kind==='weight'?'500':'10000';
+value.min='1';
+value.max=kind==='weight'?'500':'10000';
 const feedback=el('div','','status hidden');
 const save=button('Salva registrazione',async()=>{
 const n=Number(value.value);
 if(!value.value||!Number.isFinite(n)||n<=0||
-n>Number(value.max)||(kind==='water'&&!Number.isInteger(n))){
+n>Number(value.max)||
+(kind==='water'&&!Number.isInteger(n))){
 feedback.textContent='Inserisci un valore valido.';
 feedback.className='status error';return;
 }
 save.disabled=true;
 try{
 const {error}=await db.from(c.table).insert({
-user_id:user.id,[c.field]:n,recorded_at:new Date().toISOString()
+user_id:user.id,
+[c.field]:n,
+recorded_at:new Date().toISOString()
 });
 if(error)throw error;
-value.value='';feedback.textContent='Registrazione salvata.';
-feedback.className='status success';await loadMetric(kind);
-}catch(e){feedback.textContent=friendly(e);feedback.className='status error';}
-finally{save.disabled=false;}
+value.value='';
+feedback.textContent='Registrazione salvata.';
+feedback.className='status success';
+await loadMetric(kind);
+}catch(e){
+feedback.textContent=friendly(e);
+feedback.className='status error';
+}finally{save.disabled=false;}
 });
 add(root,el('h3',c.title),value,save,feedback);
 if(kind==='weight'){
 const goal=input('number','Obiettivo peso (kg)');
-goal.step='0.1';goal.value=localStorage.getItem('forge_goal_'+user.id)||'';
+goal.step='0.1';
+goal.value=localStorage.getItem('forge_goal_'+user.id)||'';
 root.append(el('label','Obiettivo personale'));
 root.append(goal);
 root.append(button('Salva obiettivo',()=>{
 const n=Number(goal.value);
-if(!goal.value||n<=0||n>500)return alert('Obiettivo non valido.');
+if(!goal.value||n<=0||n>500)
+return alert('Obiettivo non valido.');
 localStorage.setItem('forge_goal_'+user.id,String(n));
 alert('Obiettivo salvato sul dispositivo.');
 },'secondary'));
 }
 const filters=el('div','','filters');
-for(const [k,t] of [['entry','Singole'],['day','Giorni'],['week','Settimane'],['month','Mesi']]){
-const b=button(t,()=>{period=k;loadMetric(kind);});
-b.dataset.period=k;filters.append(b);
+for(const [k,t] of [
+['entry','Singole'],['day','Giorni'],
+['week','Settimane'],['month','Mesi']
+]){
+const b=button(t,()=>{
+period=k;loadMetric(kind);
+});
+b.dataset.period=k;
+filters.append(b);
 }
 root.append(filters);
-const summary=el('div','','stats');summary.id='metricSummary';
-const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
-svg.setAttribute('viewBox','0 0 600 260');svg.classList.add('chart');svg.id='forgeMetricSvg';
+const summary=el('div','','stats');
+summary.id='metricSummary';
+const svg=document.createElementNS(
+'http://www.w3.org/2000/svg','svg'
+);
+svg.setAttribute('viewBox','0 0 600 260');
+svg.classList.add('chart');
+svg.id='forgeMetricSvg';
 const tip=el('p','','small');tip.id='metricTip';
 const history=el('div');history.id='metricHistory';
 add(root,summary,svg,tip,history);
@@ -385,28 +471,38 @@ loadMetric(kind);
 }
 function groupMetric(rows,kind,p){
 const c=metrics[kind],sorted=rows.slice().reverse();
-if(p==='entry')return sorted.slice(-30).map(r=>({
+if(p==='entry')
+return sorted.slice(-30).map(r=>({
 key:r.recorded_at,value:Number(r[c.field])
 }));
 const groups=new Map();
 for(const r of sorted){
 const d=new Date(r.recorded_at);
 const day=new Intl.DateTimeFormat('en-CA',{
-timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
+timeZone:'Europe/Rome',
+year:'numeric',month:'2-digit',day:'2-digit'
 }).format(d);
-const key=p==='day'?day:p==='week'?monday(day):day.slice(0,7);
+const key=p==='day'?day:
+p==='week'?monday(day):day.slice(0,7);
 if(!groups.has(key))groups.set(key,[]);
 groups.get(key).push(Number(r[c.field]));
 }
-return [...groups].sort((a,b)=>a[0].localeCompare(b[0])).slice(-30)
+return [...groups]
+.sort((a,b)=>a[0].localeCompare(b[0]))
+.slice(-30)
 .map(([key,v])=>({
-key,value:kind==='water'?v.reduce((a,b)=>a+b,0):
+key,
+value:kind==='water'?
+v.reduce((a,b)=>a+b,0):
 v.reduce((a,b)=>a+b,0)/v.length
 }));
 }
 function svgNode(tag,attrs={},text){
-const n=document.createElementNS('http://www.w3.org/2000/svg',tag);
-Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));
+const n=document.createElementNS(
+'http://www.w3.org/2000/svg',tag
+);
+Object.entries(attrs).forEach(([k,v])=>
+n.setAttribute(k,v));
 if(text!==undefined)n.textContent=text;
 return n;
 }
@@ -414,35 +510,52 @@ function drawMetric(points,unit){
 const svg=$('forgeMetricSvg');if(!svg)return;
 svg.replaceChildren();
 if(!points.length){
-svg.append(svgNode('text',{x:300,y:130,fill:'#aaa','text-anchor':'middle'},'Nessun dato'));return;
+svg.append(svgNode('text',{
+x:300,y:130,fill:'#aaa','text-anchor':'middle'
+},'Nessun dato'));
+return;
 }
 const vals=points.map(p=>p.value);
 const lo=Math.min(...vals),hi=Math.max(...vals);
-const pad=Math.max((hi-lo)*.2,unit==='kg'?.5:hi*.1,1);
-const min=unit==='kg'?lo-pad:Math.max(0,lo-pad),max=hi+pad;
-const x=i=>points.length===1?300:55+i*500/(points.length-1);
+const pad=Math.max(
+(hi-lo)*.2,unit==='kg'?.5:hi*.1,1
+);
+const min=unit==='kg'?lo-pad:Math.max(0,lo-pad);
+const max=hi+pad;
+const x=i=>points.length===1?
+300:55+i*500/(points.length-1);
 const y=v=>210-(v-min)/(max-min||1)*170;
 for(let j=0;j<=4;j++){
 const yy=40+j*42.5;
-svg.append(svgNode('line',{x1:55,x2:555,y1:yy,y2:yy,stroke:'#48413a','stroke-dasharray':'4 5'}));
-svg.append(svgNode('text',{x:48,y:yy+4,fill:'#aaa','text-anchor':'end','font-size':11},
-fmt(max-j*(max-min)/4,unit==='kg'?1:0)));
+svg.append(svgNode('line',{
+x1:55,x2:555,y1:yy,y2:yy,
+stroke:'#48413a','stroke-dasharray':'4 5'
+}));
+svg.append(svgNode('text',{
+x:48,y:yy+4,fill:'#aaa',
+'text-anchor':'end','font-size':11
+},fmt(max-j*(max-min)/4,unit==='kg'?1:0)));
 }
 if(points.length>1){
 svg.append(svgNode('polyline',{
-points:points.map((p,i)=>x(i)+','+y(p.value)).join(' '),
+points:points.map((p,i)=>
+x(i)+','+y(p.value)).join(' '),
 fill:'none',stroke:'#f0cd76','stroke-width':3
 }));
 }
 points.forEach((p,i)=>{
-const dot=svgNode('circle',{cx:x(i),cy:y(p.value),r:5,fill:'#f0cd76'});
+const dot=svgNode('circle',{
+cx:x(i),cy:y(p.value),r:5,fill:'#f0cd76'
+});
 dot.addEventListener('click',()=>{
-$('metricTip').textContent=p.key+' • '+fmt(p.value,2)+' '+unit;
+$('metricTip').textContent=
+p.key+' • '+fmt(p.value,2)+' '+unit;
 });
 svg.append(dot);
 });
 $('metricTip').textContent=points.length===1?
-'Una sola registrazione.':'Tocca i punti del grafico.';
+'Una sola registrazione.':
+'Tocca i punti del grafico.';
 }
 async function loadMetric(kind){
 const s=serial,c=metrics[kind],p=period;
@@ -450,11 +563,15 @@ const root=$('metricHistory');
 if(!root)return;
 root.textContent='Caricamento...';
 try{
-const {data,error}=await db.from(c.table).select('*')
-.eq('user_id',user.id).order('recorded_at',{ascending:false}).limit(1000);
+const {data,error}=await db.from(c.table)
+.select('*')
+.eq('user_id',user.id)
+.order('recorded_at',{ascending:false})
+.limit(1000);
 if(error)throw error;
 if(s!==serial)return;
-const rows=data||[],points=groupMetric(rows,kind,p);
+const rows=data||[];
+const points=groupMetric(rows,kind,p);
 document.querySelectorAll('[data-period]').forEach(b=>
 b.classList.toggle('active',b.dataset.period===p));
 drawMetric(points,c.unit);
@@ -464,62 +581,107 @@ const values=valid.map(r=>Number(r[c.field]));
 const stats=[];
 if(kind==='weight'&&values.length){
 stats.push(['Peso attuale',fmt(values[0],1)+' kg']);
-stats.push(['Peso iniziale',fmt(values[values.length-1],1)+' kg']);
-stats.push(['Variazione',fmt(values[0]-values[values.length-1],2)+' kg']);
-stats.push(['Media',fmt(values.reduce((a,b)=>a+b,0)/values.length,2)+' kg']);
+stats.push(['Peso iniziale',
+fmt(values[values.length-1],1)+' kg']);
+stats.push(['Variazione',
+fmt(values[0]-values[values.length-1],2)+' kg']);
+stats.push(['Media',
+fmt(values.reduce((a,b)=>a+b,0)/values.length,2)+' kg']);
 }
 if(kind==='water'){
-const today=new Date().toLocaleDateString('en-CA',{timeZone:'Europe/Rome'});
-const total=valid.filter(r=>new Date(r.recorded_at)
-.toLocaleDateString('en-CA',{timeZone:'Europe/Rome'})===today)
-.reduce((a,r)=>a+Number(r.amount_ml),0);
+const today=todayRome();
+const total=valid.filter(r=>
+new Date(r.recorded_at).toLocaleDateString(
+'en-CA',{timeZone:'Europe/Rome'}
+)===today
+).reduce((a,r)=>a+Number(r.amount_ml),0);
 stats.push(['Acqua oggi',fmt(total,0)+' ml']);
 stats.push(['Registrazioni',String(rows.length)]);
 }
 for(const [k,v] of stats){
 const box=el('div','','stat');
-add(box,el('span',k),el('strong',v));$('metricSummary').append(box);
+add(box,el('span',k),el('strong',v));
+$('metricSummary').append(box);
 }
 root.replaceChildren(el('h3','Storico'));
-if(!rows.length)root.append(el('p','Nessuna registrazione.','muted'));
+if(!rows.length)
+root.append(el('p','Nessuna registrazione.','muted'));
 for(const r of rows.slice(0,20)){
-root.append(el('div',dt(r.recorded_at)+' — '+fmt(r[c.field],2)+' '+c.unit,'history-item'));
+root.append(el('div',
+dt(r.recorded_at)+' — '+
+fmt(r[c.field],2)+' '+c.unit,
+'history-item'));
 }
-}catch(e){root.replaceChildren(el('div',friendly(e),'status error'));}
+}catch(e){
+root.replaceChildren(
+el('div',friendly(e),'status error')
+);
+}
 }
 
 /* NUTRIZIONE */
 
 async function renderNutrition(){
 const root=$('sectionContent');
-root.replaceChildren(el('p','Lettura dei dati nutrizionali da Supabase.','muted'));
+root.replaceChildren(el('p',
+'Lettura dei dati nutrizionali da Supabase.','muted'));
 const filters=el('div','','filters');
-const output=el('div');root.append(filters,output);
+const output=el('div');
+root.append(filters,output);
+let nutritionRequest=0;
 async function load(p){
-output.replaceChildren(el('p','Caricamento...','muted'));
+const request=++nutritionRequest;
+output.replaceChildren(
+el('p','Caricamento...','muted')
+);
 try{
 let q;
-if(p==='day')q=db.from('forge_nutrition_daily_chart')
-.select('*').eq('user_id',user.id).order('day',{ascending:false}).limit(30);
-else q=db.from('forge_nutrition_period_chart')
-.select('*').eq('user_id',user.id).eq('period_type',p)
+if(p==='day')
+q=db.from('forge_nutrition_daily_chart')
+.select('*').eq('user_id',user.id)
+.order('day',{ascending:false}).limit(30);
+else
+q=db.from('forge_nutrition_period_chart')
+.select('*').eq('user_id',user.id)
+.eq('period_type',p)
 .order('period_start',{ascending:false}).limit(12);
-const {data,error}=await q;if(error)throw error;
+const {data,error}=await q;
+if(error)throw error;
+if(request!==nutritionRequest||
+active!=='Forge Nutrition')return;
 output.replaceChildren();
-if(!data?.length){output.append(el('p','Nessun dato nutrizionale disponibile.','muted'));return;}
+if(!data?.length){
+output.append(el('p',
+'Nessun dato nutrizionale disponibile.','muted'));
+return;
+}
 for(const r of data){
 const card=el('div','','item');
 const date=r.day||r.period_start;
-add(card,el('h3',String(date).slice(0,10)),
-el('div','Calorie: '+fmt(r.total_calories||0,0)+' kcal','price'),
-el('p','Proteine: '+fmt(r.total_protein||0)+' g'),
-el('p','Carboidrati: '+fmt(r.total_carbohydrates||0)+' g'),
-el('p','Grassi: '+fmt(r.total_fat||0)+' g'));
+add(card,
+el('h3',String(date).slice(0,10)),
+el('div','Calorie: '+
+fmt(r.total_calories||0,0)+' kcal','price'),
+el('p','Proteine: '+
+fmt(r.total_protein||0)+' g'),
+el('p','Carboidrati: '+
+fmt(r.total_carbohydrates||0)+' g'),
+el('p','Grassi: '+
+fmt(r.total_fat||0)+' g')
+);
 output.append(card);
 }
-}catch(e){output.replaceChildren(el('div',friendly(e),'status error'));}
+}catch(e){
+if(request===nutritionRequest)
+output.replaceChildren(
+el('div',friendly(e),'status error')
+);
 }
-for(const [p,t] of [['day','Giorni'],['week','Settimane'],['month','Mesi']]){
+}
+for(const [p,t] of [
+['day','Giorni'],['week','Settimane'],
+['month','Mesi']
+]){
 filters.append(button(t,()=>load(p)));
 }
 load('day');
@@ -527,23 +689,32 @@ load('day');
 
 /* FORGE SHOP */
 
-const methods={paypal:'PayPal',bank_transfer:'Bonifico',cash:'Contanti al coach'};
+const methods={
+paypal:'PayPal',
+bank_transfer:'Bonifico',
+cash:'Contanti al coach'
+};
 async function renderShop(){
 const s=serial,root=$('sectionContent');
-root.replaceChildren(el('p','Caricamento catalogo...','muted'));
+root.replaceChildren(el('p',
+'Caricamento catalogo...','muted'));
 try{
-const {data,error}=await db.from('forge_shop_packages')
+const {data,error}=await db
+.from('forge_shop_packages')
 .select('id,title,total_sessions,price_eur,active,created_at')
 .order('created_at',{ascending:true});
-if(error)throw error;if(s!==serial)return;
+if(error)throw error;
+if(s!==serial)return;
 root.replaceChildren(el('h3','Catalogo pacchetti'));
 for(const pkg of data||[]){
 if(!pkg.active&&role!=='admin')continue;
 const card=el('div','','item');
-add(card,el('h3',pkg.title),
+add(card,
+el('h3',pkg.title),
 el('div',money(pkg.price_eur),'price'),
 el('p',pkg.total_sessions+' lezioni'),
-el('p',pkg.active?'Disponibile':'Disattivato','small'));
+el('p',pkg.active?'Disponibile':'Disattivato','small')
+);
 if(pkg.active){
 const method=el('select');
 Object.entries(methods).forEach(([v,t])=>{
@@ -551,52 +722,88 @@ const o=el('option',t);o.value=v;method.append(o);
 });
 const feedback=el('div','','status hidden');
 const buy=button('Richiedi acquisto',async()=>{
-if(!confirm('Richiedere '+pkg.title+' per '+money(pkg.price_eur)+'?'))return;
+if(!confirm(
+'Richiedere '+pkg.title+' per '+
+money(pkg.price_eur)+'?'
+))return;
 buy.disabled=true;
 try{
-const {error}=await db.rpc('forge_shop_create_order',{
-p_package_id:pkg.id,p_payment_method:method.value
+const {error}=await db.rpc(
+'forge_shop_create_order',{
+p_package_id:pkg.id,
+p_payment_method:method.value
 });
 if(error)throw error;
 feedback.className='status success';
-feedback.textContent='Ordine registrato. Attendi la conferma del pagamento.';
+feedback.textContent=
+'Ordine registrato. Attendi la conferma del pagamento.';
 await loadOrders();
-}catch(e){feedback.className='status error';feedback.textContent=friendly(e);}
-finally{buy.disabled=false;}
+}catch(e){
+feedback.className='status error';
+feedback.textContent=friendly(e);
+}finally{buy.disabled=false;}
 });
-add(card,el('label','Metodo di pagamento'),method,
-el('p','La richiesta non esegue automaticamente il pagamento.','small'),buy,feedback);
+add(card,
+el('label','Metodo di pagamento'),
+method,
+el('p',
+'La richiesta non esegue automaticamente il pagamento.',
+'small'),
+buy,feedback);
 }
 if(role==='admin'){
-const title=input('text','Nome');title.value=pkg.title;
-const sessions=input('number','Lezioni');sessions.value=pkg.total_sessions;
-const price=input('number','Prezzo');price.value=pkg.price_eur;price.step='.01';
+const title=input('text','Nome');
+title.value=pkg.title;
+const sessions=input('number','Lezioni');
+sessions.value=pkg.total_sessions;
+const price=input('number','Prezzo');
+price.value=pkg.price_eur;
+price.step='.01';
 const feedback=el('div','','status hidden');
 const save=button('Salva modifiche',async()=>{
-const n=Number(price.value),v=Number(sessions.value);
-if(!title.value.trim()||!Number.isInteger(v)||v<1||
-price.value===''||!Number.isFinite(n)||n<0)return alert('Valori non validi.');
+const n=Number(price.value);
+const v=Number(sessions.value);
+if(!title.value.trim()||
+!Number.isInteger(v)||v<1||
+price.value===''||
+!Number.isFinite(n)||n<0)
+return alert('Valori non validi.');
 save.disabled=true;
 try{
-const {data,error}=await db.from('forge_shop_packages')
-.update({title:title.value.trim(),total_sessions:v,price_eur:n})
+const {data,error}=await db
+.from('forge_shop_packages')
+.update({
+title:title.value.trim(),
+total_sessions:v,price_eur:n
+})
 .eq('id',pkg.id).select('id');
 if(error)throw error;
-if(!data?.length)throw Error('Modifica non autorizzata.');
+if(!data?.length)
+throw Error('Modifica non autorizzata.');
 renderShop();
-}catch(e){feedback.className='status error';feedback.textContent=friendly(e);}
-finally{save.disabled=false;}
+}catch(e){
+feedback.className='status error';
+feedback.textContent=friendly(e);
+}finally{save.disabled=false;}
 },'secondary');
-const toggle=button(pkg.active?'Disattiva':'Attiva',async()=>{
+const toggle=button(
+pkg.active?'Disattiva':'Attiva',
+async()=>{
 try{
-const {data,error}=await db.from('forge_shop_packages')
-.update({active:!pkg.active}).eq('id',pkg.id).select('id');
+const {data,error}=await db
+.from('forge_shop_packages')
+.update({active:!pkg.active})
+.eq('id',pkg.id).select('id');
 if(error)throw error;
-if(!data?.length)throw Error('Modifica non autorizzata.');
+if(!data?.length)
+throw Error('Modifica non autorizzata.');
 renderShop();
 }catch(e){alert(friendly(e));}
 },'secondary');
-add(card,el('label','Modifica pacchetto'),title,sessions,price,save,toggle,feedback);
+add(card,
+el('label','Modifica pacchetto'),
+title,sessions,price,
+save,toggle,feedback);
 }
 root.append(card);
 }
@@ -604,249 +811,539 @@ if(role==='admin'){
 const card=el('div','','item');
 const title=input('text','Nome nuovo pacchetto');
 const sessions=input('number','Numero lezioni');
-const price=input('number','Prezzo €');price.step='.01';
+const price=input('number','Prezzo €');
+price.step='.01';
 const create=button('Pubblica nuovo pacchetto',async()=>{
-const n=Number(price.value),v=Number(sessions.value);
-if(!title.value.trim()||!Number.isInteger(v)||v<1||
-price.value===''||!Number.isFinite(n)||n<0)return alert('Dati non validi.');
+const n=Number(price.value);
+const v=Number(sessions.value);
+if(!title.value.trim()||
+!Number.isInteger(v)||v<1||
+price.value===''||
+!Number.isFinite(n)||n<0)
+return alert('Dati non validi.');
 create.disabled=true;
 try{
-const {data,error}=await db.from('forge_shop_packages')
-.insert({title:title.value.trim(),total_sessions:v,price_eur:n,active:true}).select('id');
+const {data,error}=await db
+.from('forge_shop_packages')
+.insert({
+title:title.value.trim(),
+total_sessions:v,
+price_eur:n,active:true
+}).select('id');
 if(error)throw error;
-if(!data?.length)throw Error('Creazione non autorizzata.');
+if(!data?.length)
+throw Error('Creazione non autorizzata.');
 renderShop();
 }catch(e){alert(friendly(e));}
 finally{create.disabled=false;}
 });
-add(card,el('h3','Nuovo pacchetto'),title,sessions,price,create);
+add(card,
+el('h3','Nuovo pacchetto'),
+title,sessions,price,create);
 root.append(card);
 }
-const orders=el('div');orders.id='ordersRoot';root.append(orders);
+const orders=el('div');
+orders.id='ordersRoot';
+root.append(orders);
 await loadOrders();
-}catch(e){if(s===serial)root.replaceChildren(el('div',friendly(e),'status error'));}
+}catch(e){
+if(s===serial)
+root.replaceChildren(
+el('div',friendly(e),'status error')
+);
+}
 }
 async function loadOrders(){
 const root=$('ordersRoot');if(!root)return;
-root.replaceChildren(el('h3',role==='admin'?'Ordini e incassi':'I miei ordini'));
+root.replaceChildren(el('h3',
+role==='admin'?'Ordini e incassi':'I miei ordini'));
 try{
 let q=db.from('forge_shop_orders')
 .select('id,client_id,package_title,total_sessions,price_eur,payment_method,payment_status,created_at,confirmed_at,activated_package_id')
 .order('created_at',{ascending:false}).limit(100);
 if(role!=='admin')q=q.eq('client_id',user.id);
-const {data,error}=await q;if(error)throw error;
+const {data,error}=await q;
+if(error)throw error;
 if(!root.isConnected)return;
 const orders=data||[];
 if(role==='admin'){
-const confirmed=orders.filter(o=>o.payment_status==='confirmed');
-const pending=orders.filter(o=>o.payment_status==='pending');
+const confirmed=orders.filter(o=>
+o.payment_status==='confirmed');
+const pending=orders.filter(o=>
+o.payment_status==='pending');
 const box=el('div','','stats');
 for(const [k,v] of [
-['Incassi confermati',money(confirmed.reduce((a,o)=>a+Number(o.price_eur),0))],
+['Incassi confermati',
+money(confirmed.reduce((a,o)=>
+a+Number(o.price_eur),0))],
 ['Ordini in attesa',String(pending.length)]
 ]){
-const x=el('div','','stat');add(x,el('span',k),el('strong',v));box.append(x);
+const x=el('div','','stat');
+add(x,el('span',k),el('strong',v));
+box.append(x);
 }
 root.append(box);
 }
-if(!orders.length)root.append(el('p','Nessun ordine.','muted'));
+if(!orders.length)
+root.append(el('p','Nessun ordine.','muted'));
 for(const o of orders){
 const card=el('div','','item');
-add(card,el('h3',o.package_title),
+add(card,
+el('h3',o.package_title),
 el('div',money(o.price_eur),'price'),
 el('p',o.total_sessions+' lezioni'),
-el('p','Pagamento: '+(methods[o.payment_method]||o.payment_method)),
+el('p','Pagamento: '+
+(methods[o.payment_method]||o.payment_method)),
 el('p','Stato: '+o.payment_status),
-el('p','Richiesto: '+dt(o.created_at),'small'));
-if(o.confirmed_at)card.append(el('p','Confermato: '+dt(o.confirmed_at),'small'));
+el('p','Richiesto: '+dt(o.created_at),'small')
+);
+if(o.confirmed_at)
+card.append(el('p',
+'Confermato: '+dt(o.confirmed_at),'small'));
 if(role==='admin'){
-card.append(el('p','Cliente: '+o.client_id,'small'));
-if(o.payment_status==='pending'&&!o.activated_package_id){
+card.append(el('p',
+'Cliente: '+o.client_id,'small'));
+if(o.payment_status==='pending'&&
+!o.activated_package_id){
 const feedback=el('div','','status hidden');
-const confirmBtn=button('Conferma incasso e attiva',async()=>{
-if(!confirm('Confermi di aver ricevuto '+money(o.price_eur)+'?'))return;
-confirmBtn.disabled=true;cancelBtn.disabled=true;
+const confirmBtn=button(
+'Conferma incasso e attiva',async()=>{
+if(!confirm(
+'Confermi di aver ricevuto '+
+money(o.price_eur)+'?'
+))return;
+confirmBtn.disabled=true;
+cancelBtn.disabled=true;
 try{
-const {error}=await db.rpc('forge_shop_confirm_order',{p_order_id:o.id});
-if(error)throw error;await loadOrders();
-}catch(e){feedback.className='status error';feedback.textContent=friendly(e);}
-finally{confirmBtn.disabled=false;cancelBtn.disabled=false;}
+const {error}=await db.rpc(
+'forge_shop_confirm_order',
+{p_order_id:o.id}
+);
+if(error)throw error;
+await loadOrders();
+}catch(e){
+feedback.className='status error';
+feedback.textContent=friendly(e);
+}finally{
+confirmBtn.disabled=false;
+cancelBtn.disabled=false;
+}
 });
-const cancelBtn=button('Annulla ordine',async()=>{
+const cancelBtn=button(
+'Annulla ordine',async()=>{
 if(!confirm('Annullare ordine?'))return;
-confirmBtn.disabled=true;cancelBtn.disabled=true;
+confirmBtn.disabled=true;
+cancelBtn.disabled=true;
 try{
-const {error}=await db.rpc('forge_shop_cancel_order',{p_order_id:o.id});
-if(error)throw error;await loadOrders();
-}catch(e){feedback.className='status error';feedback.textContent=friendly(e);}
-finally{confirmBtn.disabled=false;cancelBtn.disabled=false;}
+const {error}=await db.rpc(
+'forge_shop_cancel_order',
+{p_order_id:o.id}
+);
+if(error)throw error;
+await loadOrders();
+}catch(e){
+feedback.className='status error';
+feedback.textContent=friendly(e);
+}finally{
+confirmBtn.disabled=false;
+cancelBtn.disabled=false;
+}
 },'secondary');
 add(card,confirmBtn,cancelBtn,feedback);
 }
 }
 root.append(card);
 }
-}catch(e){root.append(el('div',friendly(e),'status error'));}
+}catch(e){
+root.append(el('div',
+friendly(e),'status error'));
+}
 }
 
 /* PACCHETTI LEZIONI */
 
 async function renderPackages(){
 const root=$('sectionContent');
-root.replaceChildren(el('p','Caricamento pacchetti...','muted'));
+root.replaceChildren(el('p',
+'Caricamento pacchetti...','muted'));
 try{
-let q=db.from('forge_lesson_package_summary').select('*');
-if(role!=='admin')q=q.eq('client_id',user.id);
-const {data,error}=await q;if(error)throw error;
+let q=db.from('forge_lesson_package_summary')
+.select('*');
+if(role!=='admin')
+q=q.eq('client_id',user.id);
+const {data,error}=await q;
+if(error)throw error;
+if(active!=='Pacchetti lezioni')return;
 root.replaceChildren(el('h3','Pacchetti lezioni'));
-if(!data?.length)root.append(el('p','Nessun pacchetto assegnato.','muted'));
+if(!data?.length)
+root.append(el('p',
+'Nessun pacchetto assegnato.','muted'));
 for(const p of data||[]){
 const card=el('div','','item');
-add(card,el('h3',p.title||'Pacchetto'),
+add(card,
+el('h3',p.title||'Pacchetto'),
 el('p','Acquistate: '+p.total_sessions),
 el('p','Utilizzate: '+p.used_sessions),
-el('div',p.remaining_sessions+' rimanenti','price'),
-el('p','Stato: '+p.status,'small'));
+el('div',
+p.remaining_sessions+' rimanenti','price'),
+el('p','Stato: '+p.status,'small')
+);
 if(Number(p.remaining_sessions)<=2)
-card.append(el('p','Pacchetto in esaurimento: valuta il rinnovo.','small'));
+card.append(el('p',
+'Pacchetto in esaurimento: valuta il rinnovo.',
+'small'));
 root.append(card);
 }
-root.append(button('Acquista o rinnova',()=>section('Forge Shop')));
-}catch(e){root.replaceChildren(el('div',friendly(e),'status error'));}
+root.append(button(
+'Acquista o rinnova',
+()=>section('Forge Shop')
+));
+}catch(e){
+root.replaceChildren(el('div',
+friendly(e),'status error'));
+}
 }
 
-/* CALENDARIO FORGE */
+/* FORGE CALENDAR */
 
 function renderCalendar(){
-const root=$('sectionContent');root.replaceChildren();
-selectedDay=iso(new Date());calendarWeek=monday(selectedDay);
+const root=$('sectionContent');
+root.replaceChildren();
+selectedDay=todayRome();
+calendarWeek=monday(selectedDay);
 root.append(el('h3','Forge Calendar'));
-root.append(el('p','Prenotazioni in presenza e online.','muted'));
+root.append(el('p',
+'Prenotazioni in presenza e online. Durata: 60 minuti.',
+'muted'));
 const legend=el('div','','legend');
 for(const [color,label] of [
-['green','Disponibile'],['yellow','In attesa'],['red','Occupato']
+['green','Disponibile'],
+['yellow','In attesa'],
+['red','Occupato o bloccato']
 ]){
-const item=el('span');const dot=el('span','','dot '+color);
-add(item,dot,document.createTextNode(label));legend.append(item);
+const item=el('span');
+const dot=el('span','','dot '+color);
+add(item,dot,document.createTextNode(label));
+legend.append(item);
 }
 root.append(legend);
 const controls=el('div','','calendar-head');
 add(controls,
-button('‹ Settimana',()=>{calendarWeek=plusDays(calendarWeek,-7);loadCalendar();},'secondary'),
-button('Oggi',()=>{selectedDay=iso(new Date());calendarWeek=monday(selectedDay);loadCalendar();},'secondary'),
-button('Settimana ›',()=>{calendarWeek=plusDays(calendarWeek,7);loadCalendar();},'secondary'));
+button('‹ Settimana',()=>{
+calendarWeek=plusDays(calendarWeek,-7);
+selectedDay=calendarWeek;
+loadCalendar();
+},'secondary'),
+button('Oggi',()=>{
+selectedDay=todayRome();
+calendarWeek=monday(selectedDay);
+loadCalendar();
+},'secondary'),
+button('Settimana ›',()=>{
+calendarWeek=plusDays(calendarWeek,7);
+selectedDay=calendarWeek;
+loadCalendar();
+},'secondary')
+);
 root.append(controls);
-const days=el('div','','calendar-grid');days.id='calendarDays';
+const days=el('div','','calendar-grid');
+days.id='calendarDays';
 root.append(days);
-const details=el('div');details.id='calendarDetails';root.append(details);
+const details=el('div');
+details.id='calendarDetails';
+root.append(details);
 loadCalendar();
 }
+
 async function loadCalendar(){
-const s=serial;
-const days=$('calendarDays'),details=$('calendarDetails');
+const request=++calendarSerial;
+const sectionSerial=serial;
+const day=selectedDay;
+const days=$('calendarDays');
+const details=$('calendarDetails');
 if(!days||!details)return;
-days.replaceChildren();details.replaceChildren(el('p','Caricamento calendario...','muted'));
+
+days.replaceChildren();
+details.replaceChildren(
+el('p','Caricamento calendario...','muted')
+);
+
 for(let i=0;i<7;i++){
-const day=plusDays(calendarWeek,i);
-const b=button('',()=>{selectedDay=day;loadCalendar();},
-'day'+(selectedDay===day?' selected':''));
-b.textContent='';
-add(b,el('small',parseDay(day).toLocaleDateString('it-IT',{weekday:'short'})),
-el('strong',day.slice(-2)));
+const date=plusDays(calendarWeek,i);
+const b=button('',()=>{
+selectedDay=date;
+loadCalendar();
+},'day'+(selectedDay===date?' selected':''));
+add(b,
+el('small',
+parseDay(date).toLocaleDateString(
+'it-IT',{weekday:'short'}
+)),
+el('strong',date.slice(-2))
+);
 days.append(b);
 }
+
 try{
-let q=db.from('bookings')
+const bookingsQuery=db.from('bookings')
 .select('id,trainer_id,client_id,booking_date,start_time,end_time,status,session_mode,duration_minutes')
-.gte('booking_date',calendarWeek)
-.lte('booking_date',plusDays(calendarWeek,6))
+.eq('booking_date',day)
 .order('start_time',{ascending:true});
-if(role!=='admin')q=q.eq('client_id',user.id);
-const {data,error}=await q;
-if(error)throw error;
-if(s!==serial||active!=='Prenotazioni')return;
-details.replaceChildren(el('h3',dateLabel(selectedDay)));
-const rows=(data||[]).filter(b=>b.booking_date===selectedDay);
-if(!rows.length)details.append(el('p','Nessuna prenotazione visibile per questo giorno.','muted'));
-for(const booking of rows){
-const css=booking.status==='pending'?'pending':
-['confirmed','approved'].includes(booking.status)?'confirmed':'';
+
+const results=await Promise.all([
+bookingsQuery,
+db.rpc('forge_calendar_slots',{p_date:day})
+]);
+
+const bookingResult=results[0];
+const slotResult=results[1];
+
+if(request!==calendarSerial||
+sectionSerial!==serial||
+active!=='Prenotazioni')return;
+
+if(bookingResult.error)throw bookingResult.error;
+
+details.replaceChildren(
+el('h3',dateLabel(day))
+);
+
+const bookings=bookingResult.data||[];
+
+if(role==='admin'){
+renderAdminBookings(details,bookings);
+}else{
+renderClientBookings(details,bookings);
+}
+
+if(slotResult.error){
+details.append(el('div',
+'Disponibilità: '+friendly(slotResult.error),
+'status error'));
+return;
+}
+
+renderCalendarSlots(
+details,
+slotResult.data||[],
+day,
+request
+);
+
+}catch(e){
+if(request===calendarSerial)
+details.replaceChildren(
+el('div','Errore calendario: '+
+friendly(e),'status error')
+);
+}
+}
+
+function renderClientBookings(root,bookings){
+const mine=bookings.filter(b=>
+b.client_id===user.id);
+
+if(!mine.length)return;
+
+root.append(el('h3','Le tue prenotazioni'));
+
+for(const booking of mine){
+const css=booking.status==='pending'?
+'pending':
+['confirmed','approved'].includes(
+booking.status
+)?'confirmed':'';
 const card=el('div','','slot '+css);
 add(card,
-el('strong',timeLabel(booking.start_time)+' – '+timeLabel(booking.end_time)),
+el('strong',
+timeLabel(booking.start_time)+' – '+
+timeLabel(booking.end_time)),
 el('p','Stato: '+booking.status,'small'),
-el('p','Modalità: '+(booking.session_mode==='online'?'Online':'In presenza'),'small'));
-if(role==='admin'){
-card.append(el('p','Cliente ID: '+booking.client_id,'small'));
+el('p','Modalità: '+
+(booking.session_mode==='online'?
+'Online':'In presenza'),'small')
+);
+root.append(card);
+}
+}
+
+function renderAdminBookings(root,bookings){
+root.append(el('h3','Gestione prenotazioni'));
+
+if(!bookings.length){
+root.append(el('p',
+'Nessuna prenotazione visibile per questa data.',
+'muted'));
+}
+
+for(const booking of bookings){
+const css=booking.status==='pending'?
+'pending':
+['confirmed','approved'].includes(
+booking.status
+)?'confirmed':'';
+
+const card=el('div','','slot '+css);
+
+add(card,
+el('strong',
+timeLabel(booking.start_time)+' – '+
+timeLabel(booking.end_time)),
+el('p','Stato: '+booking.status,'small'),
+el('p','Modalità: '+
+(booking.session_mode==='online'?
+'Online':'In presenza'),'small'),
+el('p','Cliente ID: '+booking.client_id,'small')
+);
+
 if(booking.status==='pending'){
 const feedback=el('div','','status hidden');
-for(const [approve,label] of [[true,'Approva'],[false,'Rifiuta']]){
-card.append(button(label,async()=>{
+
+for(const [approve,label] of [
+[true,'Approva'],
+[false,'Rifiuta']
+]){
+const action=button(label,async()=>{
+if(!confirm(
+label+' la prenotazione delle '+
+timeLabel(booking.start_time)+'?'
+))return;
+
+action.disabled=true;
+
 try{
-const {error}=await db.rpc('forge_decide_booking',{
-p_booking_id:booking.id,p_approve:approve
+const {error}=await db.rpc(
+'forge_decide_booking',{
+p_booking_id:booking.id,
+p_approve:approve
 });
 if(error)throw error;
 await loadCalendar();
-}catch(e){feedback.className='status error';feedback.textContent=friendly(e);}
-},approve?'':'secondary'));
+}catch(e){
+feedback.className='status error';
+feedback.textContent=friendly(e);
+action.disabled=false;
+}
+},approve?'':'secondary');
+
+card.append(action);
 }
 card.append(feedback);
 }
-}
-details.append(card);
-}
-if(role!=='admin')renderBookingForm(details);
-else details.append(el('p','Gestione delle disponibilità e dei blocchi manuali: da completare nel database.','muted'));
-}catch(e){
-details.replaceChildren(el('div','Errore calendario: '+friendly(e),'status error'));
+root.append(card);
 }
 }
-function renderBookingForm(root){
-const card=el('div','','item');
-card.append(el('h3','Richiedi una lezione'));
-const date=input('date');date.value=selectedDay;date.min=iso(new Date());
-const start=input('time');start.value='10:00';start.step=1800;
-const duration=el('select');
-for(const n of [30,60,90]){
-const o=el('option',n+' minuti');o.value=n;duration.append(o);
-}
+
+function renderCalendarSlots(root,slots,day,request){
+root.append(el('h3',
+role==='admin'?
+'Disponibilità della giornata':
+'Orari prenotabili'
+));
+
 const mode=el('select');
-for(const [v,t] of [['in_person','In presenza'],['online','Online']]){
-const o=el('option',t);o.value=v;mode.append(o);
+for(const [v,t] of [
+['in_person','In presenza'],
+['online','Online']
+]){
+const o=el('option',t);
+o.value=v;
+mode.append(o);
 }
-const feedback=el('div','','status hidden');
-const request=button('Richiedi prenotazione',async()=>{
-if(!date.value||!start.value)return alert('Inserisci data e orario.');
-request.disabled=true;
+
+if(role!=='admin'){
+root.append(el('label','Modalità della lezione'));
+root.append(mode);
+root.append(el('p',
+'Scegli un orario verde. La prenotazione richiede approvazione del coach.',
+'muted'));
+}
+
+if(!slots.length){
+root.append(el('p',
+'Nessuno slot visualizzabile per questa data.',
+'muted'));
+return;
+}
+
+const available=slots.filter(s=>
+s.slot_status==='available').length;
+
+root.append(el('p',
+available+' orari disponibili su '+
+slots.length+' fasce visualizzate.',
+'small'));
+
+for(const slot of slots){
+const status=slot.slot_status;
+const start=timeLabel(slot.slot_start);
+const end=timeLabel(slot.slot_end);
+
+const css=status==='available'?
+'available':
+status==='occupied'?'occupied':
+status==='blocked'?'blocked':'closed';
+
+const card=el('div','','slot '+css);
+
+const label={
+available:'Disponibile',
+occupied:'Occupato',
+blocked:'Bloccato',
+closed:'Non disponibile'
+}[status]||status;
+
+add(card,
+el('strong',start+' – '+end),
+el('p',label,'small')
+);
+
+if(status==='available'&&role!=='admin'){
+const book=button('Richiedi '+start,async()=>{
+if(!confirm(
+'Richiedere una lezione il '+
+dateLabel(day)+' alle '+start+'?'
+))return;
+
+book.disabled=true;
+
 try{
-const {error}=await db.rpc('forge_request_booking',{
-p_date:date.value,p_start:start.value,
-p_duration:Number(duration.value),p_mode:mode.value
+const {error}=await db.rpc(
+'forge_request_booking',{
+p_date:day,
+p_start:start,
+p_duration:60,
+p_mode:mode.value
 });
 if(error)throw error;
-feedback.className='status success';
-feedback.textContent='Richiesta inviata al coach.';
-selectedDay=date.value;calendarWeek=monday(selectedDay);
+
+if(request===calendarSerial){
 await loadCalendar();
-}catch(e){feedback.className='status error';feedback.textContent=friendly(e);}
-finally{request.disabled=false;}
+}
+}catch(e){
+alert('Prenotazione non riuscita: '+friendly(e));
+await loadCalendar();
+}finally{
+book.disabled=false;
+}
 });
-add(card,el('label','Data'),date,el('label','Orario'),start,
-el('label','Durata'),duration,el('label','Modalità'),mode,
-el('p','La richiesta sarà confermata solo dopo approvazione del coach.','small'),
-request,feedback);
+card.append(book);
+}
 root.append(card);
+}
 }
 
 /* PROFILO */
 
 function renderProfile(){
-const root=$('sectionContent');root.replaceChildren();
-add(root,el('h3','Il tuo account'),
+const root=$('sectionContent');
+root.replaceChildren();
+add(root,
+el('h3','Il tuo account'),
 el('p','Email: '+user.email),
 el('p','Ruolo: '+role),
-el('p','ID account: '+user.id,'small'));
+el('p','ID account: '+user.id,'small')
+);
 }
 
 /* INIZIALIZZAZIONE */
@@ -855,22 +1352,40 @@ async function initialize(){
 try{
 db.auth.onAuthStateChange(event=>{
 if(event==='PASSWORD_RECOVERY'){
-resetting=true;resetReady=true;show('reset');return;
+resetting=true;
+resetReady=true;
+show('reset');
+return;
 }
 if(resetting)return;
-if(event==='SIGNED_OUT'){user=null;role='client';show('auth');}
+if(event==='SIGNED_OUT'){
+user=null;role='client';
+show('auth');
+}
 });
+
 if(recoveryLink()){
 resetting=true;
-const {data:{session},error}=await db.auth.getSession();
+const {data:{session},error}=
+await db.auth.getSession();
+
 if(error||!session){
-show('reset');msg('resetStatus','Link scaduto o non valido.',true);return;
+show('reset');
+msg('resetStatus',
+'Link scaduto o non valido.',true);
+return;
 }
-resetReady=true;show('reset');return;
+resetReady=true;
+show('reset');
+return;
 }
 await userState();
-}catch(e){show('auth');msg('authStatus',friendly(e),true);}
+}catch(e){
+show('auth');
+msg('authStatus',friendly(e),true);
 }
+}
+
 initialize();
 </script>
 </body>
