@@ -8,163 +8,166 @@
 <meta name="theme-color" content="#08090b">
 <title>Forge Coaching Premium</title>
 <style>
-:root {
-  --bg:#08090b;
-  --panel:#17181c;
-  --gold:#e9c675;
-  --gold2:#b88a39;
-  --text:#f5f5f5;
-  --muted:#a4a5ab;
-  --line:#51442e;
+:root{
+--bg:#08090b;--panel:#17181c;--gold:#e9c675;
+--gold2:#b88a39;--text:#f5f5f5;
+--muted:#a4a5ab;--line:#51442e
 }
-* {box-sizing:border-box}
-body {
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,
-  "Segoe UI",Arial,sans-serif;
+*{box-sizing:border-box}
+body{
+margin:0;background:var(--bg);color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif
 }
-header {
-  text-align:center;padding:26px 16px;
-  background:radial-gradient(ellipse at top,#382b18,#08090b 70%);
-  border-bottom:1px solid #58452b;
+header{
+text-align:center;padding:26px 16px;
+background:radial-gradient(ellipse at top,#382b18,#08090b 70%);
+border-bottom:1px solid #58452b
 }
-header h1 {
-  margin:0;color:var(--gold);
-  letter-spacing:5px;font-size:30px;
+header h1{margin:0;color:var(--gold);letter-spacing:5px;font-size:30px}
+.subtitle{color:#c3a25d;font-size:11px;letter-spacing:4px;margin-top:5px}
+main{max-width:800px;margin:auto;padding:15px}
+.card{
+background:linear-gradient(145deg,#1b1b20,#111216);
+border:1px solid var(--line);border-radius:20px;
+padding:20px;margin-bottom:16px
 }
-.subtitle {
-  color:#c3a25d;font-size:11px;
-  letter-spacing:4px;margin-top:5px;
+h2,h3{color:var(--gold)}
+h2{margin:0 0 14px}
+.small,.muted{color:var(--muted);font-size:13px}
+button{
+width:100%;margin-top:9px;padding:13px;
+border:0;border-radius:12px;
+background:linear-gradient(120deg,#f4dc95,#c49a48);
+color:#17130d;font-size:15px;font-weight:750;cursor:pointer
 }
-main {max-width:800px;margin:auto;padding:15px}
-.card {
-  background:linear-gradient(145deg,#1b1b20,#111216);
-  border:1px solid var(--line);
-  border-radius:20px;padding:20px;margin-bottom:16px;
+button.secondary{
+background:#25262b;color:var(--gold);
+border:1px solid #756039
 }
-h2,h3 {color:var(--gold)}
-h2 {margin:0 0 14px}
-.small,.muted {color:var(--muted);font-size:13px}
-button {
-  width:100%;margin-top:9px;padding:13px;
-  border:0;border-radius:12px;
-  background:linear-gradient(120deg,#f4dc95,#c49a48);
-  color:#17130d;font-size:15px;font-weight:750;
-  cursor:pointer;
+button:disabled{opacity:.5;cursor:wait}
+input,select{
+width:100%;padding:13px;margin:8px 0;
+background:#101115;border:1px solid #766039;
+border-radius:11px;color:white;font-size:16px
 }
-button.secondary {
-  background:#25262b;color:var(--gold);
-  border:1px solid #756039;
+label{display:block;margin-top:10px;color:#ddd}
+.hidden{display:none!important}
+.status{
+padding:12px;margin:12px 0;border-radius:10px;
+background:#26262a;white-space:pre-wrap;overflow-wrap:anywhere
 }
-button:disabled {opacity:.5;cursor:wait}
-input,select {
-  width:100%;padding:13px;margin:8px 0;
-  background:#101115;border:1px solid #766039;
-  border-radius:11px;color:white;font-size:16px;
+.error{color:#ff9999}
+.success{color:#a7e4b4}
+nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+nav button{margin:0;min-height:65px}
+footer{text-align:center;color:#777;font-size:12px;padding:25px}
+.weight-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+.weight-icon{
+width:50px;height:50px;display:grid;place-items:center;
+border:1px solid var(--gold2);border-radius:15px;font-size:27px
 }
-label {display:block;margin-top:10px;color:#ddd}
-.hidden {display:none!important}
-.status {
-  padding:12px;margin:12px 0;border-radius:10px;
-  background:#26262a;white-space:pre-wrap;
-  overflow-wrap:anywhere;
+.weight-head h2{color:white;margin:0 0 4px}
+.weight-head p{margin:0;color:var(--muted);font-size:13px}
+.hero{
+background:radial-gradient(circle at 10% 0%,#3b2e1b,#16171a 65%);
+border:1px solid #96733b;border-radius:21px;
+padding:20px;margin:15px 0
 }
-.error {color:#ff9999}
-.success {color:#a7e4b4}
-nav {display:grid;grid-template-columns:1fr 1fr;gap:10px}
-nav button {margin:0;min-height:65px}
-footer {
-  text-align:center;color:#777;
-  font-size:12px;padding:25px;
+.hero-label{color:#d6d0c5;font-size:14px}
+.hero-value{
+font-size:clamp(40px,10vw,60px);font-weight:800;
+color:#f4d479;letter-spacing:-2px;margin:7px 0
 }
-.hero {
-  background:radial-gradient(circle at 10% 0%,#3b2e1b,#16171a 65%);
-  border:1px solid #96733b;border-radius:21px;
-  padding:20px;margin:15px 0;
+.delta{
+display:inline-block;padding:7px 11px;
+border-radius:12px;background:#343237;
+color:var(--gold);font-size:13px;font-weight:700
 }
-.hero-value {
-  font-size:clamp(40px,10vw,60px);
-  font-weight:800;color:#f4d479;
-  letter-spacing:-2px;margin:7px 0;
+.delta.up{background:#3c2024;color:#ff8787}
+.delta.down{background:#1b382a;color:#8cdda8}
+.hero-details{
+display:grid;grid-template-columns:1fr 1fr;
+gap:10px;margin-top:20px
 }
-.delta {
-  display:inline-block;padding:7px 11px;
-  border-radius:12px;background:#343237;
-  color:var(--gold);font-size:13px;font-weight:700;
+.hero-details>div{border-top:1px solid #584a33;padding-top:11px}
+.hero-details span{display:block;color:#aaa;font-size:12px}
+.hero-details strong{display:block;margin-top:5px;font-size:17px}
+.goal-row{display:flex;gap:9px;align-items:center}
+.goal-row input{flex:1;min-width:0}
+.goal-row button{width:auto;margin:0}
+.filters{
+display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+gap:6px;margin:19px 0
 }
-.delta.up {background:#3c2024;color:#ff8787}
-.delta.down {background:#1b382a;color:#8cdda8}
-.hero-details,.stats {
-  display:grid;grid-template-columns:1fr 1fr;
-  gap:10px;margin:15px 0;
+.filters button{
+margin:0;padding:12px 3px;font-size:12px;
+background:#242427;color:#d6b466;
+border:1px solid #5b4a30
 }
-.stat {
-  background:#141519;border:1px solid #6a522e;
-  border-radius:15px;padding:15px;
+.filters button.active{
+background:linear-gradient(120deg,#f3d888,#c69a44);
+color:#15120c
 }
-.stat span {
-  display:block;color:#aaa;font-size:12px;
+.chart-panel{
+background:linear-gradient(145deg,#19191c,#101114);
+border:1px solid #56472e;border-radius:19px;
+padding:14px 9px;margin-top:14px
 }
-.stat strong {
-  display:block;color:#f0ce75;
-  font-size:21px;margin-top:7px;
+.panel-heading{
+display:flex;justify-content:space-between;
+align-items:center;gap:8px;padding:0 8px
 }
-.filters {
-  display:grid;grid-template-columns:repeat(4,1fr);
-  gap:6px;margin:19px 0;
+.panel-heading h3{margin:6px 0 8px;font-size:18px}
+.panel-heading span{color:#aaa;font-size:11px;text-align:right}
+.chart{width:100%;height:auto;display:block;touch-action:manipulation}
+.chart text{fill:#a8a8ae;font-size:11px}
+.chart-tip{
+min-height:28px;text-align:center;
+color:var(--gold);font-size:13px;margin-top:6px
 }
-.filters button {
-  margin:0;padding:12px 3px;font-size:12px;
-  background:#242427;color:#d6b466;
-  border:1px solid #5b4a30;
+.stats{
+display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+gap:10px;margin:15px 0
 }
-.filters button.active {
-  background:linear-gradient(120deg,#f3d888,#c69a44);
-  color:#15120c;
+.stat{
+background:#141519;border:1px solid #6a522e;
+border-radius:15px;padding:15px
 }
-.chart-panel {
-  background:linear-gradient(145deg,#19191c,#101114);
-  border:1px solid #56472e;border-radius:19px;
-  padding:14px 9px;margin-top:14px;
+.stat span{display:block;color:#aaa;font-size:12px}
+.stat strong{
+display:block;color:#f0ce75;
+font-size:21px;margin-top:7px
 }
-.chart {
-  width:100%;height:auto;display:block;
-  touch-action:manipulation;
+.history{margin-top:22px}
+.history-item{
+display:flex;justify-content:space-between;align-items:center;
+gap:10px;padding:13px 10px;
+background:#15161a;border:1px solid #393432;
+border-radius:12px;margin:8px 0;font-size:13px
 }
-.chart text {fill:#a8a8ae;font-size:11px}
-.chart-tip {
-  min-height:28px;text-align:center;
-  color:var(--gold);font-size:13px;margin-top:6px;
+.history-item strong{color:#f0cf7a;font-size:16px;white-space:nowrap}
+.history-item span{color:#c8c8cc}
+.notice{color:#aaa;font-size:13px;margin:13px 0}
+.shop-item{
+background:#15161a;border:1px solid #655032;
+border-radius:16px;padding:16px;margin:13px 0;
+overflow-wrap:anywhere
 }
-.history-item,.shop-item {
-  padding:15px;background:#15161a;
-  border:1px solid #51442e;
-  border-radius:14px;margin:10px 0;
-  overflow-wrap:anywhere;
+.shop-item h3{margin:0 0 8px}
+.shop-price{color:#f0ce75;font-size:28px;font-weight:800}
+.shop-detail{color:#bbb;font-size:13px;margin:8px 0}
+.shop-label{
+display:inline-block;border:1px solid #786039;
+border-radius:8px;padding:6px 9px;
+color:#f0ce75;font-size:12px;margin:5px 0
 }
-.shop-price {
-  font-size:27px;font-weight:800;color:var(--gold);
-}
-.shop-item h3 {margin:0 0 8px}
-.shop-meta {color:#bbb;font-size:13px}
-.shop-actions {display:grid;gap:8px}
-.section-head {
-  display:flex;align-items:center;gap:12px;
-}
-.section-icon {
-  width:50px;height:50px;display:grid;
-  place-items:center;border:1px solid var(--gold2);
-  border-radius:15px;font-size:27px;
-}
-.goal-row {display:flex;gap:9px;align-items:center}
-.goal-row input {flex:1;min-width:0}
-.goal-row button {width:auto;margin:0}
-.notice {color:#aaa;font-size:13px;margin:13px 0}
-@media(max-width:430px) {
-  main {padding:12px}
-  .card,.hero {padding:15px}
-  header h1 {font-size:25px}
-  .hero-value {font-size:43px}
+.shop-divider{border:0;border-top:1px solid #51442e;margin:20px 0}
+.shop-note{font-size:12px;color:#b6b6bc;line-height:1.5}
+@media(max-width:430px){
+main{padding:12px}
+.card,.hero{padding:15px}
+header h1{font-size:25px}
+.hero-value{font-size:43px}
 }
 </style>
 </head>
@@ -184,11 +187,9 @@ footer {
 <section id="auth" class="card hidden">
 <h2>Accedi a Forge Coaching</h2>
 <label>Email</label>
-<input id="email" type="email"
-autocomplete="email" placeholder="La tua email">
+<input id="email" type="email" autocomplete="email" placeholder="La tua email">
 <label>Password</label>
-<input id="password" type="password"
-autocomplete="current-password" placeholder="La tua password">
+<input id="password" type="password" autocomplete="current-password" placeholder="La tua password">
 <button id="loginBtn">Accedi</button>
 <button id="signupBtn" class="secondary">Crea nuovo account</button>
 <button id="forgotBtn" class="secondary">Password dimenticata?</button>
@@ -198,8 +199,7 @@ autocomplete="current-password" placeholder="La tua password">
 <section id="forgot" class="card hidden">
 <h2>Recupera password</h2>
 <p>Riceverai un link per impostare una nuova password.</p>
-<input id="recoveryEmail" type="email"
-autocomplete="email" placeholder="La tua email">
+<input id="recoveryEmail" type="email" autocomplete="email" placeholder="La tua email">
 <button id="sendRecoveryBtn">Invia email di recupero</button>
 <button id="backLoginBtn" class="secondary">Torna all'accesso</button>
 <div id="forgotStatus" class="status hidden"></div>
@@ -207,12 +207,11 @@ autocomplete="email" placeholder="La tua email">
 
 <section id="reset" class="card hidden">
 <h2>Imposta nuova password</h2>
+<p>Inserisci e conferma la nuova password.</p>
 <label>Nuova password</label>
-<input id="newPassword" type="password"
-autocomplete="new-password" minlength="8">
+<input id="newPassword" type="password" autocomplete="new-password" minlength="8">
 <label>Conferma nuova password</label>
-<input id="confirmPassword" type="password"
-autocomplete="new-password" minlength="8">
+<input id="confirmPassword" type="password" autocomplete="new-password" minlength="8">
 <button id="savePasswordBtn">Salva nuova password</button>
 <div id="resetStatus" class="status hidden"></div>
 </section>
@@ -266,1392 +265,1268 @@ autocomplete="new-password" minlength="8">
 <script>
 'use strict';
 
-const SUPABASE_URL =
-'https://ctcbhysolhcjdsekoxkg.supabase.co';
+const SUPABASE_URL='https://ctcbhysolhcjdsekoxkg.supabase.co';
+const SUPABASE_KEY='sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
+const SITE_URL='https://h7yhp65r8k-collab.github.io/forge-coaching/';
 
-const SUPABASE_KEY =
-'sb_publishable_iTsNSEjOrS2mT8JhRBCvig_OONdjU5F';
+const $=id=>document.getElementById(id);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
+});
 
-const SITE_URL =
-'https://h7yhp65r8k-collab.github.io/forge-coaching/';
+let currentUser=null;
+let currentRole='client';
+let resetting=false;
+let resetReady=false;
+let activeSection='';
+let activePeriod='entry';
+let loadSerial=0;
+let shopSerial=0;
 
-const $ = id => document.getElementById(id);
+const screens=['loading','auth','forgot','reset','pending','app'];
 
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY,
-  {
-    auth:{
-      persistSession:true,
-      autoRefreshToken:true,
-      detectSessionInUrl:true
-    }
-  }
-);
-
-let currentUser = null;
-let currentRole = 'client';
-let resetting = false;
-let resetReady = false;
-let activeSection = '';
-let activePeriod = 'entry';
-let loadSerial = 0;
-
-const screens = [
-  'loading','auth','forgot','reset','pending','app'
-];
-
-function show(id) {
-  screens.forEach(x => {
-    $(x).classList.toggle('hidden',x!==id);
-  });
+function show(id){
+screens.forEach(x=>$(x).classList.toggle('hidden',x!==id));
 }
-
-function status(id,msg,error=false) {
-  const e=$(id);
-  if(!e)return;
-  e.textContent=msg;
-  e.className='status '+(error?'error':'success');
+function status(id,msg,error=false){
+const e=$(id);
+if(!e)return;
+e.textContent=msg;
+e.className='status '+(error?'error':'success');
 }
-
-function friendly(e) {
-  const msg=e?.message||String(e);
-  return /rate limit|too many requests|over_email_send_rate_limit/i.test(msg)
-    ?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.'
-    :msg;
+function friendly(e){
+const msg=e?.message||String(e);
+return /rate limit|too many requests|over_email_send_rate_limit/i.test(msg)
+?'Limite temporaneo di invio email raggiunto. Attendi prima di riprovare.':msg;
 }
-
-function el(tag,cls='',text='') {
-  const e=document.createElement(tag);
-  if(cls)e.className=cls;
-  e.textContent=text;
-  return e;
+function cleanUrl(){
+history.replaceState({},document.title,location.pathname);
 }
-
-function formatNum(n,dec=0) {
-  return Number(n).toLocaleString('it-IT',{
-    maximumFractionDigits:dec
-  });
+function recoveryUrl(){
+const q=new URLSearchParams(location.search);
+const h=new URLSearchParams(location.hash.slice(1));
+return q.get('type')==='recovery'||h.get('type')==='recovery';
 }
-
-function money(n) {
-  return Number(n).toLocaleString('it-IT',{
-    style:'currency',currency:'EUR'
-  });
-}
-
-function localDate(d=new Date()) {
-  const parts=new Intl.DateTimeFormat('en-CA',{
-    timeZone:'Europe/Rome',
-    year:'numeric',month:'2-digit',day:'2-digit'
-  }).formatToParts(d);
-  const p=Object.fromEntries(parts.map(x=>[x.type,x.value]));
-  return p.year+'-'+p.month+'-'+p.day;
-}
-
-function dateTime(s) {
-  if(!s)return '—';
-  return new Intl.DateTimeFormat('it-IT',{
-    timeZone:'Europe/Rome',
-    day:'2-digit',month:'2-digit',year:'numeric',
-    hour:'2-digit',minute:'2-digit'
-  }).format(new Date(s));
-}
-
-function cleanUrl() {
-  history.replaceState({},document.title,location.pathname);
-}
-
-function recoveryUrl() {
-  const q=new URLSearchParams(location.search);
-  const h=new URLSearchParams(location.hash.slice(1));
-  return q.get('type')==='recovery'||h.get('type')==='recovery';
-}
-
-function recoveryErrorInUrl() {
-  const q=new URLSearchParams(location.search);
-  const h=new URLSearchParams(location.hash.slice(1));
-  return q.get('error_description')||
-         h.get('error_description')||null;
-}
-
 const initialRecovery=recoveryUrl();
 
-async function userState() {
-  if(resetting)return;
+function recoveryErrorInUrl(){
+const q=new URLSearchParams(location.search);
+const h=new URLSearchParams(location.hash.slice(1));
+return q.get('error_description')||h.get('error_description')||null;
+}
 
-  const {data:{session},error}=await db.auth.getSession();
-
-  if(error||!session) {
-    currentUser=null;
-    show('auth');
-    return;
-  }
-
-  currentUser=session.user;
-
-  const [roles,accessResult]=await Promise.all([
-    db.from('user_roles')
-      .select('role')
-      .eq('user_id',currentUser.id),
-    db.from('account_access')
-      .select('status')
-      .eq('user_id',currentUser.id)
-  ]);
-
-  if(roles.error||accessResult.error) {
-    show('pending');
-    return;
-  }
-
-  let role='client';
-  if(roles.data?.some(r=>r.role==='admin'))role='admin';
-  else if(roles.data?.some(r=>r.role==='trainer'))role='trainer';
-  else if(roles.data?.some(r=>r.role==='premium'))role='premium';
-
-  const access=accessResult.data?.[0]?.status||'pending';
-
-  if(access!=='approved') {
-    show('pending');
-    return;
-  }
-
-  currentRole=role;
-
-  $('welcome').textContent=role==='admin'
-    ?'Amministratore riconosciuto'
-    :'Benvenuto in Forge Coaching';
-
-  $('roleInfo').textContent=
-    'Account: '+currentUser.email+' • Ruolo: '+role;
-
-  show('app');
+async function userState(){
+if(resetting)return;
+const {data:{session},error}=await db.auth.getSession();
+if(error||!session){
+currentUser=null;
+currentRole='client';
+show('auth');
+return;
+}
+currentUser=session.user;
+const [roles,accessResult]=await Promise.all([
+db.from('user_roles').select('role').eq('user_id',currentUser.id),
+db.from('account_access').select('status').eq('user_id',currentUser.id)
+]);
+if(roles.error||accessResult.error){
+show('pending');
+return;
+}
+let role='client';
+if(roles.data?.some(r=>r.role==='admin'))role='admin';
+else if(roles.data?.some(r=>r.role==='trainer'))role='trainer';
+else if(roles.data?.some(r=>r.role==='premium'))role='premium';
+const access=accessResult.data?.[0]?.status||'pending';
+if(access!=='approved'){
+show('pending');
+return;
+}
+currentRole=role;
+$('welcome').textContent=role==='admin'
+?'Amministratore riconosciuto':'Benvenuto in Forge Coaching';
+$('roleInfo').textContent='Account: '+currentUser.email+' • Ruolo: '+role;
+show('app');
 }
 
 $('loginBtn').onclick=async()=>{
-  const email=$('email').value.trim();
-  const password=$('password').value;
-
-  if(!email||!password)
-    return status('authStatus','Inserisci email e password.',true);
-
-  $('loginBtn').disabled=true;
-  try {
-    const {error}=await db.auth.signInWithPassword({
-      email,password
-    });
-    if(error)throw error;
-    await userState();
-  }catch(e) {
-    status('authStatus',friendly(e),true);
-  }finally {
-    $('loginBtn').disabled=false;
-  }
+const email=$('email').value.trim();
+const password=$('password').value;
+if(!email||!password)
+return status('authStatus','Inserisci email e password.',true);
+$('loginBtn').disabled=true;
+try{
+const {error}=await db.auth.signInWithPassword({email,password});
+if(error)throw error;
+await userState();
+}catch(e){status('authStatus',friendly(e),true)}
+finally{$('loginBtn').disabled=false}
 };
 
 $('signupBtn').onclick=async()=>{
-  const email=$('email').value.trim();
-  const password=$('password').value;
-
-  if(!email||password.length<8)
-    return status('authStatus',
-      'Inserisci email e password di almeno 8 caratteri.',true);
-
-  $('signupBtn').disabled=true;
-  try {
-    const {error}=await db.auth.signUp({
-      email,password,
-      options:{emailRedirectTo:SITE_URL}
-    });
-    if(error)throw error;
-    status('authStatus',
-      'Registrazione inviata. Controlla la tua email e attendi l’approvazione.');
-  }catch(e) {
-    status('authStatus',friendly(e),true);
-  }finally {
-    $('signupBtn').disabled=false;
-  }
+const email=$('email').value.trim();
+const password=$('password').value;
+if(!email||password.length<8)
+return status('authStatus','Inserisci email e password di almeno 8 caratteri.',true);
+$('signupBtn').disabled=true;
+try{
+const {error}=await db.auth.signUp({
+email,password,options:{emailRedirectTo:SITE_URL}
+});
+if(error)throw error;
+status('authStatus','Registrazione inviata. Controlla la tua email e attendi l’approvazione.');
+}catch(e){status('authStatus',friendly(e),true)}
+finally{$('signupBtn').disabled=false}
 };
 
 $('forgotBtn').onclick=()=>{
-  $('recoveryEmail').value=$('email').value;
-  show('forgot');
+$('recoveryEmail').value=$('email').value;
+show('forgot');
 };
-
 $('backLoginBtn').onclick=()=>show('auth');
 
 $('sendRecoveryBtn').onclick=async()=>{
-  const email=$('recoveryEmail').value.trim();
-  if(!email)
-    return status('forgotStatus','Inserisci la tua email.',true);
-
-  $('sendRecoveryBtn').disabled=true;
-  try {
-    const {error}=await db.auth.resetPasswordForEmail(email,{
-      redirectTo:SITE_URL
-    });
-    if(error)throw error;
-    status('forgotStatus',
-      'Se l’indirizzo è registrato, riceverai un’email di recupero.');
-  }catch(e) {
-    status('forgotStatus',friendly(e),true);
-  }finally {
-    $('sendRecoveryBtn').disabled=false;
-  }
+const email=$('recoveryEmail').value.trim();
+if(!email)return status('forgotStatus','Inserisci la tua email.',true);
+$('sendRecoveryBtn').disabled=true;
+try{
+const {error}=await db.auth.resetPasswordForEmail(email,{redirectTo:SITE_URL});
+if(error)throw error;
+status('forgotStatus','Se l’indirizzo è registrato, riceverai un’email con il link per reimpostare la password.');
+}catch(e){status('forgotStatus',friendly(e),true)}
+finally{$('sendRecoveryBtn').disabled=false}
 };
 
 $('savePasswordBtn').onclick=async()=>{
-  const p=$('newPassword').value;
-  const c=$('confirmPassword').value;
-
-  if(!resetting||!resetReady)
-    return status('resetStatus','Link di recupero non verificato.',true);
-  if(p.length<8)
-    return status('resetStatus','Password troppo corta.',true);
-  if(p!==c)
-    return status('resetStatus','Le password non coincidono.',true);
-
-  $('savePasswordBtn').disabled=true;
-  try {
-    const {data:{session}}=await db.auth.getSession();
-    if(!session)throw new Error('Sessione scaduta.');
-    const {error}=await db.auth.updateUser({password:p});
-    if(error)throw error;
-    await db.auth.signOut();
-    resetting=false;
-    resetReady=false;
-    cleanUrl();
-    $('newPassword').value='';
-    $('confirmPassword').value='';
-    show('auth');
-    status('authStatus','Password modificata. Accedi nuovamente.');
-  }catch(e) {
-    status('resetStatus',friendly(e),true);
-  }finally {
-    $('savePasswordBtn').disabled=false;
-  }
+const p=$('newPassword').value;
+const c=$('confirmPassword').value;
+if(!resetting||!resetReady)
+return status('resetStatus','Link di recupero non verificato.',true);
+if(p.length<8)
+return status('resetStatus','La password deve contenere almeno 8 caratteri.',true);
+if(p!==c)
+return status('resetStatus','Le password non coincidono.',true);
+$('savePasswordBtn').disabled=true;
+try{
+const {data:{session}}=await db.auth.getSession();
+if(!session)throw new Error('Sessione scaduta. Richiedi un nuovo link.');
+const {error}=await db.auth.updateUser({password:p});
+if(error)throw error;
+await db.auth.signOut();
+resetting=false;
+resetReady=false;
+cleanUrl();
+$('newPassword').value='';
+$('confirmPassword').value='';
+show('auth');
+status('authStatus','Password modificata. Accedi con la nuova password.');
+}catch(e){status('resetStatus',friendly(e),true)}
+finally{$('savePasswordBtn').disabled=false}
 };
 
-async function logout() {
-  loadSerial++;
-  await db.auth.signOut();
-  currentUser=null;
-  currentRole='client';
-  resetting=false;
-  resetReady=false;
-  cleanUrl();
-  show('auth');
+async function logout(){
+loadSerial++;
+shopSerial++;
+await db.auth.signOut();
+currentUser=null;
+currentRole='client';
+resetting=false;
+resetReady=false;
+cleanUrl();
+show('auth');
 }
-
 $('logoutBtn').onclick=logout;
 $('pendingLogoutBtn').onclick=logout;
 
 const descriptions={
-  'Allenamento':'Programmi assegnati dal coach ed esercizi.',
-  'Forge Nutrition':'Monitoraggio calorie e macronutrienti.',
-  'Forge Hydration':'Registra e monitora la tua idratazione.',
-  'Forge Weight':'Monitora il tuo peso corporeo nel tempo.',
-  'Progress Evolution':'Archivio fotografico e progressi.',
-  'Prenotazioni':'Calendario e richieste di prenotazione.',
-  'Video esercizi':'Libreria video degli esercizi.',
-  'Forge Premium':'Contenuti e abbonamenti premium.',
-  'Forge Studio':'Personalizzazione del profilo.',
-  'Feedback':'Diario delle sensazioni e feedback.',
-  'Pacchetti lezioni':'Lezioni utilizzate e rimanenti.',
-  'Forge Shop':'Acquista e rinnova i tuoi pacchetti.',
-  'Profilo':'Informazioni del tuo account.'
+'Allenamento':'Programmi assegnati dal coach, esercizi e registri degli allenamenti.',
+'Progress Evolution':'Archivio fotografico, misure corporee e confronti dei progressi nel tempo.',
+'Prenotazioni':'Calendario delle disponibilità del coach e richieste di prenotazione.',
+'Video esercizi':'Libreria video degli esercizi suddivisi per categoria.',
+'Forge Premium':'Contenuti esclusivi e gestione degli abbonamenti premium.',
+'Forge Studio':'Personalizzazione dell’esperienza e del profilo.',
+'Feedback':'Diario delle sensazioni e feedback sulle sessioni.',
+'Pacchetti lezioni':'Riepilogo delle lezioni acquistate, utilizzate e rimanenti.',
+'Forge Shop':'Catalogo pacchetti, acquisti, rinnovi e gestione pagamenti.',
+'Profilo':'Informazioni del tuo account e dati personali.'
 };
 
 const config={
-  'Forge Hydration':{
-    table:'forge_water_entries',
-    field:'amount_ml',
-    time:'recorded_at',
-    unit:'ml'
-  },
-  'Forge Weight':{
-    table:'forge_weight_entries',
-    field:'weight_kg',
-    time:'recorded_at',
-    unit:'kg'
-  },
-  'Forge Nutrition':{
-    daily:'forge_nutrition_daily_chart',
-    period:'forge_nutrition_period_chart',
-    unit:'kcal',
-    dayValue:'total_calories',
-    periodValue:'total_calories'
-  }
+'Forge Hydration':{
+table:'forge_water_entries',
+field:'amount_ml',
+time:'recorded_at',
+unit:'ml'
+},
+'Forge Weight':{
+table:'forge_weight_entries',
+field:'weight_kg',
+time:'recorded_at',
+unit:'kg'
+},
+'Forge Nutrition':{
+daily:'forge_nutrition_daily_chart',
+period:'forge_nutrition_period_chart',
+unit:'kcal',
+dayValue:'total_calories',
+periodValue:'total_calories'
+}
 };
 
-function showSection(name) {
-  loadSerial++;
-  activeSection=name;
-  activePeriod=name==='Forge Weight'?'entry':'day';
-
-  $('sectionTitle').textContent=name;
-  $('sectionText').textContent=descriptions[name]||'';
-  $('sectionHeading').classList.remove('hidden');
-  $('sectionContent').replaceChildren();
-  $('sectionCard').classList.remove('hidden');
-
-  if(config[name])renderDashboard(name);
-  else if(name==='Forge Shop')renderShop();
-  else if(name==='Pacchetti lezioni')renderLessonPackages();
-  else $('sectionContent').append(
-    el('p','muted','Questa sezione sarà collegata progressivamente alle funzionalità Supabase.')
-  );
-
-  $('sectionCard').scrollIntoView({behavior:'smooth'});
+function el(tag,cls='',text=''){
+const e=document.createElement(tag);
+if(cls)e.className=cls;
+e.textContent=text;
+return e;
 }
-
-document.querySelectorAll('[data-section]').forEach(b=>{
-  b.onclick=()=>showSection(b.dataset.section);
+function formatNum(n,dec=0){
+return Number(n).toLocaleString('it-IT',{maximumFractionDigits:dec});
+}
+function money(n){
+return Number(n).toLocaleString('it-IT',{
+style:'currency',currency:'EUR'
 });
+}
+function dateTime(s){
+if(!s)return '—';
+return new Intl.DateTimeFormat('it-IT',{
+timeZone:'Europe/Rome',day:'2-digit',month:'2-digit',
+year:'numeric',hour:'2-digit',minute:'2-digit'
+}).format(new Date(s));
+}
+function localDate(d=new Date()){
+const p=new Intl.DateTimeFormat('en-CA',{
+timeZone:'Europe/Rome',year:'numeric',month:'2-digit',day:'2-digit'
+}).formatToParts(d);
+const m=Object.fromEntries(p.map(x=>[x.type,x.value]));
+return m.year+'-'+m.month+'-'+m.day;
+}
+function dateParts(s){
+return {date:localDate(new Date(s))};
+}
+function weekStart(s){
+const d=new Date(s+'T12:00:00Z');
+d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);
+return d.toISOString().slice(0,10);
+}
+function chartLabel(key,period){
+if(period==='entry'){
+return new Intl.DateTimeFormat('it-IT',{
+timeZone:'Europe/Rome',day:'2-digit',month:'2-digit',
+hour:'2-digit',minute:'2-digit'
+}).format(new Date(key));
+}
+if(period==='month')return key.slice(5)+'/'+key.slice(2,4);
+return key.slice(8,10)+'/'+key.slice(5,7);
+}
+function aggregate(entries,cfg,period){
+const valid=entries.filter(e=>
+e[cfg.time]&&Number.isFinite(Number(e[cfg.field]))&&
+Number(e[cfg.field])>0
+).slice().sort((a,b)=>new Date(a[cfg.time])-new Date(b[cfg.time]));
 
+if(period==='entry'){
+return valid.slice(-30).map(e=>({
+key:e[cfg.time],
+value:Number(e[cfg.field]),
+label:chartLabel(e[cfg.time],period)
+}));
+}
+
+const groups=new Map();
+if(cfg.unit==='kg'){
+const days=new Map();
+for(const e of valid){
+days.set(dateParts(e[cfg.time]).date,Number(e[cfg.field]));
+}
+for(const [day,value] of days){
+const key=period==='day'?day:
+period==='week'?weekStart(day):day.slice(0,7);
+if(!groups.has(key))groups.set(key,[]);
+groups.get(key).push(value);
+}
+}else{
+for(const e of valid){
+const day=dateParts(e[cfg.time]).date;
+const key=period==='day'?day:
+period==='week'?weekStart(day):day.slice(0,7);
+if(!groups.has(key))groups.set(key,[]);
+groups.get(key).push(Number(e[cfg.field]));
+}
+}
+return [...groups.entries()]
+.sort((a,b)=>a[0].localeCompare(b[0]))
+.map(([key,values])=>({
+key,
+value:cfg.unit==='ml'
+?values.reduce((a,b)=>a+b,0)
+:values.reduce((a,b)=>a+b,0)/values.length,
+label:chartLabel(key,period)
+}))
+.slice(period==='day'?-30:-12);
+}
+
+function showSection(name){
+loadSerial++;
+shopSerial++;
+activeSection=name;
+activePeriod=name==='Forge Weight'?'entry':'day';
+$('sectionTitle').textContent=name;
+$('sectionText').textContent=descriptions[name]||'Dati collegati al tuo account.';
+$('sectionHeading').classList.remove('hidden');
+$('sectionContent').replaceChildren();
+$('sectionCard').classList.remove('hidden');
+
+if(config[name]){
+renderDashboard(name);
+}else if(name==='Forge Shop'){
+renderShop();
+}else if(name==='Pacchetti lezioni'){
+renderLessonPackages();
+}else{
+$('sectionContent').append(
+el('p','muted','Sezione in preparazione. I dati e le funzioni saranno collegati progressivamente.')
+);
+}
+$('sectionCard').scrollIntoView({behavior:'smooth'});
+}
+document.querySelectorAll('[data-section]').forEach(b=>{
+b.onclick=()=>showSection(b.dataset.section);
+});
 $('closeSectionBtn').onclick=()=>{
-  loadSerial++;
-  activeSection='';
-  $('sectionCard').classList.add('hidden');
+loadSerial++;
+shopSerial++;
+activeSection='';
+$('sectionCard').classList.add('hidden');
 };
 
-/* DASHBOARD PESO, ACQUA E NUTRIZIONE */
+/* FORGE WEIGHT / HYDRATION / NUTRITION */
 
-function weekStart(s) {
-  const d=new Date(s+'T12:00:00Z');
-  d.setUTCDate(d.getUTCDate()-(d.getUTCDay()+6)%7);
-  return d.toISOString().slice(0,10);
+function renderDashboard(name){
+const root=$('sectionContent');
+root.replaceChildren();
+const cfg=config[name];
+
+if(name==='Forge Weight'){
+$('sectionHeading').classList.add('hidden');
+const head=el('div','weight-head');
+const icon=el('div','weight-icon','⚖');
+const copy=el('div');
+copy.append(
+el('h2','','Forge Weight'),
+el('p','','Il tuo percorso, ogni giorno.')
+);
+head.append(icon,copy);
+root.append(head);
+
+const hero=el('div','hero');
+hero.append(el('div','hero-label','Peso attuale'));
+const value=el('div','hero-value','— kg');
+value.id='weightCurrent';
+hero.append(value);
+const delta=el('div','delta','In attesa di dati');
+delta.id='weightDelta';
+hero.append(delta);
+const details=el('div','hero-details');
+
+const start=el('div');
+start.append(el('span','','Peso iniziale'));
+const startVal=el('strong','','—');
+startVal.id='weightInitial';
+start.append(startVal);
+
+const goal=el('div');
+goal.append(el('span','','Obiettivo'));
+const goalVal=el('strong','','Non impostato');
+goalVal.id='weightGoal';
+goal.append(goalVal);
+details.append(start,goal);
+hero.append(details);
+root.append(hero);
+
+const goalBox=el('div');
+goalBox.append(el('label','','Imposta il tuo obiettivo (kg)'));
+const goalRow=el('div','goal-row');
+const goalInput=el('input');
+goalInput.type='number';
+goalInput.step='0.1';
+goalInput.min='1';
+goalInput.max='500';
+goalInput.placeholder='Es. 82';
+const goalSave=el('button','','Salva');
+goalRow.append(goalInput,goalSave);
+goalBox.append(goalRow);
+root.append(goalBox);
+
+const goalKey='forge_weight_goal_'+currentUser.id;
+const stored=localStorage.getItem(goalKey);
+if(stored&&Number(stored)>0){
+goalVal.textContent=formatNum(stored,1)+' kg';
+goalInput.value=stored;
+}
+goalSave.onclick=()=>{
+const n=Number(goalInput.value);
+if(!Number.isFinite(n)||n<=0||n>500){
+alert('Inserisci un obiettivo valido.');
+return;
+}
+localStorage.setItem(goalKey,String(n));
+goalVal.textContent=formatNum(n,1)+' kg';
+};
 }
 
-function chartLabel(key,period) {
-  if(period==='entry')return dateTime(key);
-  if(period==='month')return key.slice(5)+'/'+key.slice(2,4);
-  return key.slice(8,10)+'/'+key.slice(5,7);
+if(cfg.table){
+const form=el('div');
+const label=el('label','',
+name==='Forge Hydration'?'Aggiungi acqua (ml)':'Registra peso (kg)');
+const input=el('input');
+input.type='number';
+input.min='1';
+input.max=cfg.unit==='ml'?'10000':'500';
+input.step=cfg.unit==='ml'?'1':'0.1';
+input.placeholder=cfg.unit==='ml'?'Es. 250':'Es. 82.5';
+const save=el('button','','+ Salva registrazione');
+const msg=el('div','status hidden');
+msg.id='metricStatus';
+
+save.onclick=async()=>{
+const n=Number(input.value);
+if(!input.value.trim()||!Number.isFinite(n)||n<=0||
+(cfg.unit==='ml'&&(n>10000||!Number.isInteger(n)))||
+(cfg.unit==='kg'&&n>500)){
+return status('metricStatus','Inserisci un valore valido.',true);
+}
+save.disabled=true;
+try{
+const {error}=await db.from(cfg.table).insert({
+user_id:currentUser.id,
+[cfg.field]:n,
+[cfg.time]:new Date().toISOString()
+});
+if(error)throw error;
+input.value='';
+status('metricStatus','Registrazione salvata su Supabase.');
+await loadChart(name);
+}catch(e){
+status('metricStatus',friendly(e),true);
+}finally{save.disabled=false}
+};
+form.append(label,input,save,msg);
+root.append(form);
 }
 
-function aggregate(entries,cfg,period) {
-  const valid=entries.filter(e=>
-    e[cfg.time]&&Number.isFinite(Number(e[cfg.field]))&&
-    Number(e[cfg.field])>0
-  ).slice().sort((a,b)=>
-    new Date(a[cfg.time])-new Date(b[cfg.time])
-  );
-
-  if(period==='entry') {
-    return valid.slice(-30).map(e=>({
-      key:e[cfg.time],
-      value:Number(e[cfg.field]),
-      label:chartLabel(e[cfg.time],period)
-    }));
-  }
-
-  const groups=new Map();
-
-  if(cfg.unit==='kg') {
-    const days=new Map();
-    for(const e of valid)
-      days.set(localDate(new Date(e[cfg.time])),Number(e[cfg.field]));
-
-    for(const [day,value] of days) {
-      const key=period==='day'?day:
-        period==='week'?weekStart(day):day.slice(0,7);
-      if(!groups.has(key))groups.set(key,[]);
-      groups.get(key).push(value);
-    }
-  }else {
-    for(const e of valid) {
-      const day=localDate(new Date(e[cfg.time]));
-      const key=period==='day'?day:
-        period==='week'?weekStart(day):day.slice(0,7);
-      if(!groups.has(key))groups.set(key,[]);
-      groups.get(key).push(Number(e[cfg.field]));
-    }
-  }
-
-  return [...groups.entries()]
-    .sort((a,b)=>a[0].localeCompare(b[0]))
-    .map(([key,values])=>({
-      key,
-      value:cfg.unit==='ml'
-        ?values.reduce((a,b)=>a+b,0)
-        :values.reduce((a,b)=>a+b,0)/values.length,
-      label:chartLabel(key,period)
-    }))
-    .slice(period==='day'?-30:-12);
+if(name==='Forge Nutrition'){
+root.append(el('p','muted',
+'Il grafico legge calorie e macronutrienti dalle viste Supabase. L’inserimento dei pasti sarà aggiunto successivamente.'));
 }
 
-function svgEl(tag,attrs={},text) {
-  const e=document.createElementNS(
-    'http://www.w3.org/2000/svg',tag
-  );
-  for(const [k,v] of Object.entries(attrs))
-    e.setAttribute(k,v);
-  if(text!==undefined)e.textContent=text;
-  return e;
+const filters=el('div','filters');
+for(const [key,label] of [
+['entry','Singole'],
+['day','Giorni'],
+['week','Settimane'],
+['month','Mesi']
+]){
+if(key==='entry'&&name==='Forge Nutrition')continue;
+const b=el('button',key===activePeriod?'active':'',label);
+b.dataset.period=key;
+b.onclick=()=>{
+activePeriod=key;
+filters.querySelectorAll('button').forEach(x=>
+x.classList.toggle('active',x.dataset.period===key));
+loadChart(name);
+};
+filters.append(b);
+}
+root.append(filters);
+
+const panel=el('div','chart-panel');
+const heading=el('div','panel-heading');
+heading.append(el('h3','',
+name==='Forge Weight'?'Andamento peso':
+name==='Forge Hydration'?'Andamento idratazione':'Andamento calorie'));
+const range=el('span');
+range.id='chartRange';
+heading.append(range);
+
+const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+svg.id='metricChart';
+svg.classList.add('chart');
+svg.setAttribute('viewBox','0 0 600 270');
+svg.setAttribute('role','img');
+svg.setAttribute('aria-label','Grafico andamento');
+
+const tip=el('div','chart-tip');
+tip.id='chartTip';
+panel.append(heading,svg,tip);
+root.append(panel);
+
+const stats=el('div','stats');
+stats.id='metricStats';
+const message=el('p','notice');
+message.id='chartMessage';
+root.append(stats,message);
+
+if(name==='Forge Weight'){
+const history=el('div','history');
+history.id='weightHistory';
+root.append(history);
+}
+loadChart(name);
 }
 
-function drawChart(rows,unit) {
-  const svg=$('metricChart');
-  if(!svg)return;
-  svg.replaceChildren();
-  $('chartTip').textContent='';
-
-  if(!rows.length) {
-    svg.append(svgEl('text',{
-      x:300,y:135,'text-anchor':'middle'
-    },'Nessun dato da visualizzare'));
-    return;
-  }
-
-  const values=rows.map(r=>Number(r.value));
-  const rawMin=Math.min(...values);
-  const rawMax=Math.max(...values);
-  const range=rawMax-rawMin;
-  const pad=unit==='kg'
-    ?Math.max(range*.2,.5)
-    :Math.max(range*.15,rawMax*.05,1);
-  const min=unit==='kg'?rawMin-pad:Math.max(0,rawMin-pad);
-  const max=rawMax+pad;
-  const spread=max-min||1;
-  const left=58,right=568,top=38,bottom=208;
-  const x=i=>rows.length===1
-    ?(left+right)/2
-    :left+i*(right-left)/(rows.length-1);
-  const y=v=>bottom-(v-min)/spread*(bottom-top);
-
-  const defs=svgEl('defs');
-  const grad=svgEl('linearGradient',{
-    id:'forgeAreaGradient',x1:'0',y1:'0',x2:'0',y2:'1'
-  });
-  grad.append(
-    svgEl('stop',{
-      offset:'0%','stop-color':'#e8bd60',
-      'stop-opacity':'.38'
-    }),
-    svgEl('stop',{
-      offset:'100%','stop-color':'#e8bd60',
-      'stop-opacity':'.01'
-    })
-  );
-  defs.append(grad);
-  svg.append(defs);
-
-  for(let j=0;j<=4;j++) {
-    const yy=top+j*(bottom-top)/4;
-    const tick=max-j*spread/4;
-    svg.append(svgEl('line',{
-      x1:left,y1:yy,x2:right,y2:yy,
-      stroke:'#48413a','stroke-dasharray':'4 5'
-    }));
-    svg.append(svgEl('text',{
-      x:left-7,y:yy+4,'text-anchor':'end'
-    },formatNum(tick,unit==='kg'?1:0)));
-  }
-
-  if(rows.length>1) {
-    const points=rows.map((r,i)=>
-      x(i)+','+y(values[i])
-    ).join(' ');
-
-    svg.append(svgEl('polygon',{
-      points:left+','+bottom+' '+points+' '+right+','+bottom,
-      fill:'url(#forgeAreaGradient)'
-    }));
-    svg.append(svgEl('polyline',{
-      points,fill:'none',stroke:'#f0cd76',
-      'stroke-width':3.5,
-      'stroke-linecap':'round',
-      'stroke-linejoin':'round'
-    }));
-  }
-
-  const every=Math.max(1,Math.ceil(rows.length/4));
-
-  rows.forEach((r,i)=>{
-    const cx=x(i),cy=y(values[i]);
-    const hit=svgEl('circle',{
-      cx,cy,r:13,fill:'transparent',
-      tabindex:0,role:'button',
-      'aria-label':r.label+' '+formatNum(r.value,2)+' '+unit
-    });
-    const dot=svgEl('circle',{
-      cx,cy,r:rows.length===1?6:4.5,
-      fill:'#f1cf77',stroke:'#171717',
-      'stroke-width':1.5,'pointer-events':'none'
-    });
-
-    const select=()=>{
-      $('chartTip').textContent=
-        r.label+' • '+formatNum(r.value,2)+' '+unit;
-      svg.querySelectorAll('.selected-halo')
-        .forEach(n=>n.remove());
-      svg.append(svgEl('circle',{
-        cx,cy,r:10,fill:'none',
-        stroke:'#f1cf77','stroke-width':1.5,
-        class:'selected-halo',
-        'pointer-events':'none'
-      }));
-    };
-
-    hit.addEventListener('click',select);
-    hit.addEventListener('keydown',e=>{
-      if(e.key==='Enter'||e.key===' ') {
-        e.preventDefault();
-        select();
-      }
-    });
-    svg.append(dot,hit);
-
-    if(i===0||i===rows.length-1||
-       rows.length<=4||i%every===0) {
-      svg.append(svgEl('text',{
-        x:cx,y:237,'text-anchor':'middle'
-      },r.label.length>11?r.label.slice(0,5):r.label));
-    }
-  });
-
-  $('chartTip').textContent=rows.length===1
-    ?'Una sola registrazione disponibile.'
-    :'Tocca un punto dorato per vedere il valore.';
+function svgEl(tag,attrs={},text){
+const e=document.createElementNS('http://www.w3.org/2000/svg',tag);
+for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);
+if(text!==undefined)e.textContent=text;
+return e;
 }
 
-function addStat(label,value) {
-  const card=el('div','stat');
-  card.append(
-    el('span','',label),
-    el('strong','',value)
-  );
-  $('metricStats').append(card);
+function drawChart(rows,unit){
+const svg=$('metricChart');
+if(!svg)return;
+svg.replaceChildren();
+$('chartTip').textContent='';
+
+if(!rows.length){
+svg.append(svgEl('text',{
+x:300,y:135,'text-anchor':'middle'
+},'Nessun dato da visualizzare'));
+return;
 }
 
-function renderDashboard(name) {
-  const root=$('sectionContent');
-  const cfg=config[name];
-  root.replaceChildren();
+const values=rows.map(r=>Number(r.value));
+const rawMin=Math.min(...values);
+const rawMax=Math.max(...values);
+const range=rawMax-rawMin;
+const pad=unit==='kg'
+?Math.max(range*.2,.5)
+:Math.max(range*.15,rawMax*.05,1);
+const min=unit==='kg'?rawMin-pad:Math.max(0,rawMin-pad);
+const max=rawMax+pad;
+const spread=max-min||1;
+const left=58,right=568,top=38,bottom=208;
+const x=i=>rows.length===1
+?(left+right)/2:left+i*(right-left)/(rows.length-1);
+const y=v=>bottom-(v-min)/spread*(bottom-top);
 
-  if(name==='Forge Weight') {
-    $('sectionHeading').classList.add('hidden');
+const defs=svgEl('defs');
+const grad=svgEl('linearGradient',{
+id:'forgeAreaGradient',x1:'0',y1:'0',x2:'0',y2:'1'
+});
+grad.append(
+svgEl('stop',{offset:'0%','stop-color':'#e8bd60','stop-opacity':'.38'}),
+svgEl('stop',{offset:'100%','stop-color':'#e8bd60','stop-opacity':'.01'})
+);
+defs.append(grad);
+svg.append(defs);
 
-    const head=el('div','section-head');
-    head.append(
-      el('div','section-icon','⚖️'),
-      el('h2','','Forge Weight')
-    );
-    root.append(head);
-
-    const hero=el('div','hero');
-    hero.append(el('div','muted','Peso attuale'));
-    const value=el('div','hero-value','— kg');
-    value.id='weightCurrent';
-    const delta=el('div','delta','In attesa di dati');
-    delta.id='weightDelta';
-    hero.append(value,delta);
-
-    const details=el('div','hero-details');
-    const initial=el('div','stat');
-    initial.append(
-      el('span','','Peso iniziale'),
-      el('strong','','—')
-    );
-    initial.querySelector('strong').id='weightInitial';
-
-    const goal=el('div','stat');
-    goal.append(
-      el('span','','Obiettivo'),
-      el('strong','','Non impostato')
-    );
-    goal.querySelector('strong').id='weightGoal';
-    details.append(initial,goal);
-    hero.append(details);
-    root.append(hero);
-
-    root.append(el('label','','Obiettivo peso (kg)'));
-    const row=el('div','goal-row');
-    const input=el('input');
-    input.type='number';
-    input.step='0.1';
-    input.min='1';
-    input.max='500';
-    input.placeholder='Es. 82';
-    const save=el('button','','Salva');
-    row.append(input,save);
-    root.append(row);
-
-    const key='forge_weight_goal_'+currentUser.id;
-    const stored=localStorage.getItem(key);
-    if(stored&&Number(stored)>0) {
-      input.value=stored;
-      $('weightGoal').textContent=formatNum(stored,1)+' kg';
-    }
-    save.onclick=()=>{
-      const n=Number(input.value);
-      if(!Number.isFinite(n)||n<=0||n>500) {
-        alert('Inserisci un obiettivo valido.');
-        return;
-      }
-      localStorage.setItem(key,String(n));
-      $('weightGoal').textContent=formatNum(n,1)+' kg';
-    };
-  }
-
-  if(cfg.table) {
-    root.append(el('label','',
-      name==='Forge Hydration'
-        ?'Aggiungi acqua (ml)'
-        :'Registra peso (kg)'
-    ));
-
-    const input=el('input');
-    input.type='number';
-    input.min='1';
-    input.max=cfg.unit==='ml'?'10000':'500';
-    input.step=cfg.unit==='ml'?'1':'0.1';
-    input.placeholder=cfg.unit==='ml'?'Es. 250':'Es. 82.5';
-
-    const save=el('button','','+ Salva registrazione');
-    const msg=el('div','status hidden');
-    msg.id='metricStatus';
-
-    save.onclick=async()=>{
-      const n=Number(input.value);
-      if(!input.value.trim()||!Number.isFinite(n)||
-         n<=0||n>Number(input.max)||
-         (cfg.unit==='ml'&&!Number.isInteger(n))) {
-        return status('metricStatus','Valore non valido.',true);
-      }
-
-      save.disabled=true;
-      try {
-        const {error}=await db.from(cfg.table).insert({
-          user_id:currentUser.id,
-          [cfg.field]:n,
-          [cfg.time]:new Date().toISOString()
-        });
-        if(error)throw error;
-        input.value='';
-        status('metricStatus','Registrazione salvata su Supabase.');
-        await loadChart(name);
-      }catch(e) {
-        status('metricStatus',friendly(e),true);
-      }finally {
-        save.disabled=false;
-      }
-    };
-
-    root.append(input,save,msg);
-  }
-
-  if(name==='Forge Nutrition') {
-    root.append(el('p','muted',
-      'Grafici collegati alle viste Supabase. L’inserimento dei pasti sarà completato successivamente.'
-    ));
-  }
-
-  const filters=el('div','filters');
-  for(const [key,label] of [
-    ['entry','Singole'],
-    ['day','Giorni'],
-    ['week','Settimane'],
-    ['month','Mesi']
-  ]) {
-    if(key==='entry'&&name==='Forge Nutrition')continue;
-    const b=el('button',
-      key===activePeriod?'active':'',label
-    );
-    b.dataset.period=key;
-    b.onclick=()=>{
-      activePeriod=key;
-      filters.querySelectorAll('button').forEach(x=>
-        x.classList.toggle('active',x.dataset.period===key)
-      );
-      loadChart(name);
-    };
-    filters.append(b);
-  }
-  root.append(filters);
-
-  const panel=el('div','chart-panel');
-  const heading=el('h3','',
-    name==='Forge Weight'?'Andamento peso':
-    name==='Forge Hydration'?'Andamento idratazione':
-    'Andamento calorie'
-  );
-  const range=el('p','small');
-  range.id='chartRange';
-
-  const svg=svgEl('svg',{
-    viewBox:'0 0 600 270',
-    role:'img',
-    'aria-label':'Grafico andamento'
-  });
-  svg.id='metricChart';
-  svg.classList.add('chart');
-
-  const tip=el('div','chart-tip');
-  tip.id='chartTip';
-  panel.append(heading,range,svg,tip);
-  root.append(panel);
-
-  const stats=el('div','stats');
-  stats.id='metricStats';
-  const message=el('p','notice');
-  message.id='chartMessage';
-  root.append(stats,message);
-
-  if(name==='Forge Weight') {
-    const history=el('div');
-    history.id='weightHistory';
-    root.append(history);
-  }
-
-  loadChart(name);
+for(let j=0;j<=4;j++){
+const yy=top+j*(bottom-top)/4;
+const tick=max-j*spread/4;
+svg.append(svgEl('line',{
+x1:left,y1:yy,x2:right,y2:yy,
+stroke:'#48413a','stroke-dasharray':'4 5'
+}));
+svg.append(svgEl('text',{
+x:left-7,y:yy+4,'text-anchor':'end'
+},formatNum(tick,unit==='kg'?1:0)));
 }
 
-function renderWeightHistory(entries) {
-  const root=$('weightHistory');
-  if(!root)return;
-  root.replaceChildren();
-  root.append(el('h3','','Storico delle pesate'));
-
-  const valid=entries.filter(e=>
-    e.recorded_at&&Number.isFinite(Number(e.weight_kg))
-  ).slice().sort((a,b)=>
-    new Date(b.recorded_at)-new Date(a.recorded_at)
-  );
-
-  if(!valid.length) {
-    root.append(el('p','muted','Nessuna pesata registrata.'));
-    return;
-  }
-
-  for(const e of valid.slice(0,20)) {
-    const item=el('div','history-item');
-    item.append(
-      el('span','',dateTime(e.recorded_at)),
-      el('strong','',formatNum(e.weight_kg,2)+' kg')
-    );
-    root.append(item);
-  }
+if(rows.length>1){
+const points=rows.map((r,i)=>x(i)+','+y(values[i])).join(' ');
+svg.append(svgEl('polygon',{
+points:left+','+bottom+' '+points+' '+right+','+bottom,
+fill:'url(#forgeAreaGradient)'
+}));
+svg.append(svgEl('polyline',{
+points,fill:'none',stroke:'#f0cd76',
+'stroke-width':3.5,
+'stroke-linecap':'round',
+'stroke-linejoin':'round'
+}));
 }
 
-async function loadChart(name) {
-  const serial=++loadSerial;
-  const cfg=config[name];
-  const period=activePeriod;
-  const msg=$('chartMessage');
-
-  msg.textContent='Caricamento dati...';
-  $('metricStats').replaceChildren();
-  $('metricChart').replaceChildren();
-  $('chartTip').textContent='';
-  $('chartRange').textContent='';
-
-  try {
-    if(!currentUser)throw new Error('Accesso richiesto.');
-
-    let rows=[],entries=[],latest=null;
-
-    if(cfg.table) {
-      const {data,error}=await db.from(cfg.table)
-        .select('*')
-        .eq('user_id',currentUser.id)
-        .order(cfg.time,{ascending:false})
-        .limit(1000);
-
-      if(error)throw error;
-      if(serial!==loadSerial||activeSection!==name)return;
-
-      entries=data||[];
-      rows=aggregate(entries,cfg,period);
-
-      if(name==='Forge Hydration') {
-        const today=localDate();
-        const total=entries.filter(e=>
-          e.recorded_at&&
-          localDate(new Date(e.recorded_at))===today
-        ).reduce((s,e)=>s+Number(e.amount_ml||0),0);
-        addStat('Acqua assunta oggi',formatNum(total)+' ml');
-      }
-
-      if(name==='Forge Weight') {
-        renderWeightHistory(entries);
-        const valid=entries.filter(e=>
-          e.recorded_at&&Number(e.weight_kg)>0
-        ).slice().sort((a,b)=>
-          new Date(a.recorded_at)-new Date(b.recorded_at)
-        );
-
-        if(valid.length) {
-          const first=Number(valid[0].weight_kg);
-          const last=Number(valid[valid.length-1].weight_kg);
-          const diff=last-first;
-          const pct=first?diff/first*100:0;
-
-          $('weightCurrent').textContent=formatNum(last,1)+' kg';
-          $('weightInitial').textContent=formatNum(first,1)+' kg';
-
-          const delta=$('weightDelta');
-          delta.textContent=(diff>0?'+':'')+
-            formatNum(diff,2)+' kg ('+
-            (pct>0?'+':'')+formatNum(pct,1)+'%)';
-          delta.className='delta '+
-            (diff>0?'up':diff<0?'down':'');
-
-          addStat('Peso medio',
-            formatNum(valid.reduce((s,e)=>
-              s+Number(e.weight_kg),0
-            )/valid.length,2)+' kg'
-          );
-          addStat('Variazione totale',
-            (diff>0?'+':'')+formatNum(diff,2)+' kg'
-          );
-          addStat('Peso massimo',
-            formatNum(Math.max(...valid.map(e=>
-              Number(e.weight_kg))),2)+' kg'
-          );
-          addStat('Peso minimo',
-            formatNum(Math.min(...valid.map(e=>
-              Number(e.weight_kg))),2)+' kg'
-          );
-        }else {
-          $('weightCurrent').textContent='— kg';
-          $('weightInitial').textContent='—';
-          $('weightDelta').textContent='Nessun dato';
-        }
-      }
-    }else {
-      let query;
-      if(period==='day') {
-        query=db.from(cfg.daily).select('*')
-          .eq('user_id',currentUser.id)
-          .order('day',{ascending:false}).limit(30);
-      }else {
-        query=db.from(cfg.period).select('*')
-          .eq('user_id',currentUser.id)
-          .eq('period_type',period)
-          .order('period_start',{ascending:false}).limit(12);
-      }
-
-      const {data,error}=await query;
-      if(error)throw error;
-      if(serial!==loadSerial||activeSection!==name)return;
-
-      latest=data?.[0];
-      rows=(data||[]).slice().reverse().map(r=>{
-        const key=String(
-          r[period==='day'?'day':'period_start']||''
-        ).slice(0,10);
-        return {
-          key,
-          value:Number(
-            r[period==='day'?cfg.dayValue:cfg.periodValue]
-          ),
-          label:chartLabel(key,period)
-        };
-      }).filter(r=>Number.isFinite(r.value));
-    }
-
-    if(!rows.length) {
-      drawChart([],cfg.unit);
-      msg.textContent='Nessun dato registrato per questo intervallo.';
-      return;
-    }
-
-    drawChart(rows,cfg.unit);
-    $('chartRange').textContent=
-      rows[0].label+' – '+rows[rows.length-1].label;
-
-    const last=Number(rows[rows.length-1].value);
-    const first=Number(rows[0].value);
-    const diff=last-first;
-
-    if(name!=='Forge Weight') {
-      addStat('Ultimo valore',
-        formatNum(last,2)+' '+cfg.unit);
-      addStat('Variazione',
-        (diff>0?'+':'')+formatNum(diff,2)+' '+cfg.unit);
-    }
-
-    if(name==='Forge Nutrition'&&latest) {
-      addStat('Proteine',
-        formatNum(latest.total_protein||0,1)+' g');
-      addStat('Carboidrati',
-        formatNum(latest.total_carbohydrates||0,1)+' g');
-      addStat('Grassi',
-        formatNum(latest.total_fat||0,1)+' g');
-    }
-
-    msg.textContent=rows.length+
-      ' punti visualizzati. Dati letti da Supabase.';
-  }catch(e) {
-    if(serial===loadSerial)
-      msg.textContent='Impossibile leggere i dati: '+friendly(e);
-  }
+const every=Math.max(1,Math.ceil(rows.length/4));
+rows.forEach((r,i)=>{
+const cx=x(i),cy=y(values[i]);
+const hit=svgEl('circle',{
+cx,cy,r:13,fill:'transparent',
+tabindex:0,role:'button',
+'aria-label':r.label+' '+formatNum(r.value,2)+' '+unit
+});
+const dot=svgEl('circle',{
+cx,cy,r:rows.length===1?6:4.5,
+fill:'#f1cf77',stroke:'#171717',
+'stroke-width':1.5,'pointer-events':'none'
+});
+const select=()=>{
+$('chartTip').textContent=r.label+' • '+formatNum(r.value,2)+' '+unit;
+svg.querySelectorAll('.selected-halo').forEach(n=>n.remove());
+svg.append(svgEl('circle',{
+cx,cy,r:10,fill:'none',stroke:'#f1cf77',
+'stroke-width':1.5,class:'selected-halo',
+'pointer-events':'none'
+}));
+};
+hit.addEventListener('click',select);
+hit.addEventListener('keydown',e=>{
+if(e.key==='Enter'||e.key===' '){
+e.preventDefault();
+select();
+}
+});
+svg.append(dot,hit);
+if(i===0||i===rows.length-1||rows.length<=4||i%every===0){
+const label=r.label.length>11?r.label.slice(0,5):r.label;
+svg.append(svgEl('text',{
+x:cx,y:237,'text-anchor':'middle'
+},label));
+}
+});
+$('chartTip').textContent=rows.length===1
+?'Una sola registrazione disponibile.'
+:'Tocca un punto dorato per vedere il valore.';
 }
 
-/* FORGE SHOP */
+function renderWeightHistory(entries){
+const root=$('weightHistory');
+if(!root)return;
+root.replaceChildren();
+root.append(el('h3','','Storico delle pesate'));
+
+const valid=entries.filter(e=>
+e.recorded_at&&Number.isFinite(Number(e.weight_kg))
+).slice().sort((a,b)=>
+new Date(b.recorded_at)-new Date(a.recorded_at));
+
+if(!valid.length){
+root.append(el('p','muted','Nessuna pesata registrata.'));
+return;
+}
+root.append(el('p','small',
+'Ultime 20 registrazioni, comprese quelle dello stesso giorno.'));
+
+for(const e of valid.slice(0,20)){
+const item=el('div','history-item');
+const date=el('span','',dateTime(e.recorded_at));
+const value=el('strong','',formatNum(e.weight_kg,2)+' kg');
+item.append(date,value);
+root.append(item);
+}
+}
+
+function addStat(label,value){
+const card=el('div','stat');
+card.append(
+el('span','',label),
+el('strong','',value)
+);
+$('metricStats').append(card);
+}
+
+async function loadChart(name){
+const serial=++loadSerial;
+const cfg=config[name];
+const period=activePeriod;
+const msg=$('chartMessage');
+
+msg.textContent='Caricamento dati...';
+$('metricStats').replaceChildren();
+$('metricChart').replaceChildren();
+$('chartTip').textContent='';
+$('chartRange').textContent='';
+if($('weightHistory'))$('weightHistory').replaceChildren();
+
+try{
+if(!currentUser)throw new Error('Accedi per visualizzare i dati.');
+let rows=[],latest=null,entries=[];
+
+if(cfg.table){
+const {data,error}=await db.from(cfg.table)
+.select('*')
+.eq('user_id',currentUser.id)
+.order(cfg.time,{ascending:false})
+.limit(1000);
+
+if(error)throw error;
+if(serial!==loadSerial||activeSection!==name)return;
+entries=data||[];
+rows=aggregate(entries,cfg,period);
+
+if(name==='Forge Hydration'){
+const today=localDate();
+const total=entries.filter(e=>
+e.recorded_at&&dateParts(e.recorded_at).date===today
+).reduce((s,e)=>s+Number(e.amount_ml||0),0);
+addStat('Acqua assunta oggi',formatNum(total)+' ml');
+}
+
+if(name==='Forge Weight'){
+renderWeightHistory(entries);
+const valid=entries.filter(e=>
+e.recorded_at&&Number(e.weight_kg)>0
+).slice().sort((a,b)=>
+new Date(a.recorded_at)-new Date(b.recorded_at));
+
+if(valid.length){
+const first=Number(valid[0].weight_kg);
+const last=Number(valid[valid.length-1].weight_kg);
+const diff=last-first;
+const pct=first?diff/first*100:0;
+
+$('weightCurrent').textContent=formatNum(last,1)+' kg';
+$('weightInitial').textContent=formatNum(first,1)+' kg';
+
+const delta=$('weightDelta');
+delta.textContent=(diff>0?'+':'')+formatNum(diff,2)+
+' kg ('+(pct>0?'+':'')+formatNum(pct,1)+'%)';
+delta.className='delta '+(diff>0?'up':diff<0?'down':'');
+
+addStat('Peso medio',
+formatNum(valid.reduce((s,e)=>s+Number(e.weight_kg),0)/valid.length,2)+' kg');
+addStat('Variazione totale',
+(diff>0?'+':'')+formatNum(diff,2)+' kg');
+addStat('Peso massimo',
+formatNum(Math.max(...valid.map(e=>Number(e.weight_kg))),2)+' kg');
+addStat('Peso minimo',
+formatNum(Math.min(...valid.map(e=>Number(e.weight_kg))),2)+' kg');
+}else{
+$('weightCurrent').textContent='— kg';
+$('weightInitial').textContent='—';
+$('weightDelta').textContent='Nessun dato';
+}
+}
+}else{
+let query;
+if(period==='day'){
+query=db.from(cfg.daily).select('*')
+.eq('user_id',currentUser.id)
+.order('day',{ascending:false}).limit(30);
+}else{
+query=db.from(cfg.period).select('*')
+.eq('user_id',currentUser.id)
+.eq('period_type',period)
+.order('period_start',{ascending:false}).limit(12);
+}
+const {data,error}=await query;
+if(serial!==loadSerial||activeSection!==name)return;
+if(error)throw error;
+latest=data?.[0];
+
+rows=(data||[]).slice().reverse().map(r=>{
+const key=String(r[period==='day'?'day':'period_start']||'').slice(0,10);
+return {
+key,
+value:Number(r[period==='day'?cfg.dayValue:cfg.periodValue]),
+label:chartLabel(key,period)
+};
+}).filter(r=>Number.isFinite(r.value));
+}
+
+if(!rows.length){
+drawChart([],cfg.unit);
+msg.textContent='Nessun dato registrato per questo intervallo.';
+return;
+}
+
+drawChart(rows,cfg.unit);
+$('chartRange').textContent=rows[0].label+' – '+rows[rows.length-1].label;
+const last=Number(rows[rows.length-1].value);
+const first=Number(rows[0].value);
+const diff=last-first;
+
+if(name!=='Forge Weight'){
+addStat(period==='entry'?'Ultima registrazione':
+period==='day'?'Ultimo valore':'Ultimo periodo',
+formatNum(last,2)+' '+cfg.unit);
+addStat('Variazione',
+(diff>0?'+':'')+formatNum(diff,2)+' '+cfg.unit);
+}
+
+if(name==='Forge Nutrition'&&latest){
+addStat('Proteine',formatNum(latest.total_protein||0,1)+' g');
+addStat('Carboidrati',formatNum(latest.total_carbohydrates||0,1)+' g');
+addStat('Grassi',formatNum(latest.total_fat||0,1)+' g');
+}
+msg.textContent=rows.length+
+' punti visualizzati. Dati letti da Supabase.'+
+(entries.length===1000
+?' Sono state lette le 1000 registrazioni più recenti.':'');
+}catch(e){
+if(serial===loadSerial&&activeSection===name)
+msg.textContent='Impossibile leggere i dati: '+friendly(e);
+}
+}
+
+/* FORGE SHOP - NUOVA SEZIONE */
 
 const paymentLabels={
-  paypal:'PayPal',
-  bank_transfer:'Bonifico bancario',
-  cash:'Contanti al coach'
+paypal:'PayPal',
+bank_transfer:'Bonifico bancario',
+cash:'Contanti al coach'
 };
 
 const paymentStatusLabels={
-  pending:'In attesa',
-  confirmed:'Confermato',
-  rejected:'Rifiutato',
-  refunded:'Rimborsato'
+pending:'In attesa di pagamento',
+confirmed:'Pagamento confermato',
+rejected:'Ordine rifiutato',
+refunded:'Rimborsato'
 };
 
-function shopMessage(root,message,isError=false) {
-  const p=el('div','status '+(isError?'error':'success'),message);
-  root.append(p);
-  return p;
+function shopNotice(root,text,isError=false){
+const box=el('div','status '+(isError?'error':'success'),text);
+root.append(box);
+return box;
 }
 
-async function renderShop() {
-  const serial=++loadSerial;
-  const root=$('sectionContent');
-  root.replaceChildren();
-  root.append(el('p','muted','Caricamento catalogo...'));
-
-  try {
-    const {data,error}=await db.from('forge_shop_packages')
-      .select('id,title,total_sessions,price_eur,active')
-      .order('created_at',{ascending:true});
-
-    if(error)throw error;
-    if(serial!==loadSerial||activeSection!=='Forge Shop')return;
-
-    root.replaceChildren();
-
-    root.append(el('h3','','Catalogo pacchetti'));
-
-    const packages=(data||[]).filter(p=>
-      p.active||currentRole==='admin'
-    );
-
-    if(!packages.length)
-      root.append(el('p','muted','Nessun pacchetto disponibile.'));
-
-    for(const pkg of packages) {
-      const card=el('div','shop-item');
-      card.append(
-        el('h3','',pkg.title),
-        el('div','shop-price',money(pkg.price_eur)),
-        el('p','shop-meta',
-          pkg.total_sessions+' lezioni • '+
-          (pkg.active?'Disponibile':'Non attivo')
-        )
-      );
-
-      if(pkg.active) {
-        const method=el('select');
-        for(const [value,label] of Object.entries(paymentLabels)) {
-          const option=el('option','',label);
-          option.value=value;
-          method.append(option);
-        }
-
-        const buy=el('button','','Richiedi acquisto');
-        const feedback=el('div','status hidden');
-
-        buy.onclick=async()=>{
-          const methodValue=method.value;
-          if(!confirm(
-            'Confermi la richiesta per '+pkg.title+
-            ' al prezzo di '+money(pkg.price_eur)+
-            ' tramite '+paymentLabels[methodValue]+'?'
-          ))return;
-
-          buy.disabled=true;
-          try {
-            const {data:orderId,error}=await db.rpc(
-              'forge_shop_create_order',{
-                p_package_id:pkg.id,
-                p_payment_method:methodValue
-              }
-            );
-            if(error)throw error;
-            feedback.textContent=
-              'Richiesta registrata. Ordine: '+orderId+
-              '. Pagamento in attesa di verifica. '+
-              'Non effettuare versamenti senza aver ricevuto '+
-              'le istruzioni dal coach.';
-            feedback.className='status success';
-            await renderShopOrders();
-          }catch(e) {
-            feedback.textContent=friendly(e);
-            feedback.className='status error';
-          }finally {
-            buy.disabled=false;
-          }
-        };
-
-        card.append(
-          el('label','','Metodo di pagamento'),
-          method,buy,feedback
-        );
-      }
-
-      if(currentRole==='admin') {
-        const priceInput=el('input');
-        priceInput.type='number';
-        priceInput.min='0';
-        priceInput.step='0.01';
-        priceInput.value=pkg.price_eur;
-
-        const edit=el('button','secondary','Aggiorna prezzo');
-        edit.onclick=async()=>{
-          const n=Number(priceInput.value);
-          if(priceInput.value.trim()===''||
-             !Number.isFinite(n)||n<0) {
-            alert('Prezzo non valido.');
-            return;
-          }
-          edit.disabled=true;
-          try {
-            const {data,error}=await db
-              .from('forge_shop_packages')
-              .update({price_eur:n})
-              .eq('id',pkg.id)
-              .select('id');
-            if(error)throw error;
-            if(!data?.length)
-              throw new Error('Modifica non autorizzata.');
-            await renderShop();
-          }catch(e) {
-            alert(friendly(e));
-          }finally {
-            edit.disabled=false;
-          }
-        };
-
-        const toggle=el('button','secondary',
-          pkg.active?'Disattiva pacchetto':'Attiva pacchetto'
-        );
-        toggle.onclick=async()=>{
-          toggle.disabled=true;
-          try {
-            const {data,error}=await db
-              .from('forge_shop_packages')
-              .update({active:!pkg.active})
-              .eq('id',pkg.id)
-              .select('id');
-            if(error)throw error;
-            if(!data?.length)
-              throw new Error('Modifica non autorizzata.');
-            await renderShop();
-          }catch(e) {
-            alert(friendly(e));
-          }finally {
-            toggle.disabled=false;
-          }
-        };
-
-        card.append(
-          el('label','','Prezzo amministratore (€)'),
-          priceInput,edit,toggle
-        );
-      }
-
-      root.append(card);
-    }
-
-    if(currentRole==='admin')
-      renderShopAdmin(root);
-
-    const orders=el('div');
-    orders.id='shopOrders';
-    root.append(orders);
-    await renderShopOrders();
-
-  }catch(e) {
-    if(serial===loadSerial) {
-      root.replaceChildren();
-      shopMessage(root,'Errore catalogo: '+friendly(e),true);
-    }
-  }
+function shopInput(label,placeholder,type='text'){
+const wrap=el('div');
+wrap.append(el('label','',label));
+const input=el('input');
+input.type=type;
+input.placeholder=placeholder;
+wrap.append(input);
+return {wrap,input};
 }
 
-function renderShopAdmin(root) {
-  const box=el('div','shop-item');
-  box.append(el('h3','','Amministrazione catalogo'));
+async function renderShop(){
+const serial=++shopSerial;
+const root=$('sectionContent');
+root.replaceChildren();
+root.append(el('p','muted','Caricamento Forge Shop...'));
 
-  const title=el('input');
-  title.placeholder='Nome pacchetto';
+try{
+const {data,error}=await db.from('forge_shop_packages')
+.select('id,title,total_sessions,price_eur,active,created_at')
+.order('created_at',{ascending:true});
 
-  const sessions=el('input');
-  sessions.type='number';
-  sessions.min='1';
-  sessions.step='1';
-  sessions.placeholder='Numero lezioni';
+if(error)throw error;
+if(serial!==shopSerial||activeSection!=='Forge Shop')return;
 
-  const price=el('input');
-  price.type='number';
-  price.min='0';
-  price.step='0.01';
-  price.placeholder='Prezzo in euro';
+root.replaceChildren();
+root.append(el('h3','','Catalogo pacchetti'));
 
-  const save=el('button','','Crea pacchetto');
-  const feedback=el('div','status hidden');
+const packages=(data||[]).filter(p=>
+p.active||currentRole==='admin'
+);
 
-  save.onclick=async()=>{
-    const t=title.value.trim();
-    const s=Number(sessions.value);
-    const p=Number(price.value);
-
-    if(!t||!Number.isInteger(s)||s<=0||
-       price.value.trim()===''||
-       !Number.isFinite(p)||p<0) {
-      feedback.textContent='Inserisci dati validi.';
-      feedback.className='status error';
-      return;
-    }
-
-    save.disabled=true;
-    try {
-      const {data,error}=await db
-        .from('forge_shop_packages')
-        .insert({
-          title:t,total_sessions:s,price_eur:p,active:true
-        })
-        .select('id');
-      if(error)throw error;
-      if(!data?.length)
-        throw new Error('Creazione non autorizzata.');
-      await renderShop();
-    }catch(e) {
-      feedback.textContent=friendly(e);
-      feedback.className='status error';
-    }finally {
-      save.disabled=false;
-    }
-  };
-
-  box.append(
-    el('label','','Nome pacchetto'),title,
-    el('label','','Numero lezioni'),sessions,
-    el('label','','Prezzo (€)'),price,
-    save,feedback
-  );
-  root.append(box);
+if(!packages.length){
+root.append(el('p','muted','Nessun pacchetto disponibile.'));
 }
 
-async function renderShopOrders() {
-  const root=$('shopOrders');
-  if(!root||!currentUser)return;
+for(const pkg of packages){
+const card=el('div','shop-item');
+card.append(
+el('h3','',pkg.title),
+el('div','shop-price',money(pkg.price_eur)),
+el('p','shop-detail',pkg.total_sessions+' lezioni'),
+el('span','shop-label',pkg.active?'Disponibile':'Disattivato')
+);
 
-  const owner=currentUser.id;
-  const admin=currentRole==='admin';
-  root.replaceChildren();
-  root.append(el('h3','',
-    admin?'Gestione ordini':'I miei ordini'
-  ));
+if(pkg.active){
+const select=el('select');
+for(const [value,label] of Object.entries(paymentLabels)){
+const option=el('option','',label);
+option.value=value;
+select.append(option);
+}
+const buy=el('button','','Richiedi acquisto');
+const feedback=el('div','status hidden');
 
-  try {
-    let query=db.from('forge_shop_orders')
-      .select('id,client_id,package_title,total_sessions,price_eur,payment_method,payment_status,created_at,confirmed_at,activated_package_id')
-      .order('created_at',{ascending:false})
-      .limit(100);
+buy.onclick=async()=>{
+const method=select.value;
+if(!confirm(
+'Confermi la richiesta del pacchetto "'+
+pkg.title+'" per '+money(pkg.price_eur)+
+' tramite '+paymentLabels[method]+'?'
+))return;
 
-    if(!admin)query=query.eq('client_id',owner);
+buy.disabled=true;
+try{
+const {data:orderId,error}=await db.rpc(
+'forge_shop_create_order',{
+p_package_id:pkg.id,
+p_payment_method:method
+});
+if(error)throw error;
 
-    const {data,error}=await query;
-    if(error)throw error;
-    if(currentUser?.id!==owner||activeSection!=='Forge Shop')return;
+feedback.textContent=
+'Richiesta registrata correttamente.\n'+
+'Ordine: '+orderId+'\n'+
+'Stato: in attesa di pagamento.\n'+
+'Le lezioni saranno attivate solo dopo conferma del coach.';
+feedback.className='status success';
+await loadShopOrders();
+}catch(e){
+feedback.textContent=friendly(e);
+feedback.className='status error';
+}finally{
+buy.disabled=false;
+}
+};
 
-    if(!data?.length) {
-      root.append(el('p','muted','Nessun ordine presente.'));
-      return;
-    }
+card.append(
+el('label','','Scegli come pagare'),
+select,
+el('p','shop-note',
+'PayPal e bonifico: riceverai le istruzioni dal coach. '+
+'Contanti: consegna direttamente al coach. '+
+'La richiesta non esegue un pagamento automatico.'),
+buy,feedback
+);
+}
 
-    for(const order of data) {
-      const card=el('div','shop-item');
-      card.append(
-        el('h3','',order.package_title),
-        el('div','shop-price',money(order.price_eur)),
-        el('p','shop-meta',
-          order.total_sessions+' lezioni • '+
-          (paymentLabels[order.payment_method]||
-           order.payment_method)
-        ),
-        el('p','small',
-          'Stato: '+
-          (paymentStatusLabels[order.payment_status]||
-           order.payment_status)
-        ),
-        el('p','small','Data: '+dateTime(order.created_at))
-      );
+if(currentRole==='admin'){
+card.append(el('hr','shop-divider'));
 
-      if(admin) {
-        card.append(
-          el('p','small','Cliente ID: '+order.client_id),
-          el('p','small','Ordine ID: '+order.id)
-        );
+const price=shopInput('Modifica prezzo (€)','Prezzo','number');
+price.input.min='0';
+price.input.step='0.01';
+price.input.value=pkg.price_eur;
 
-        if(order.payment_status==='pending'&&
-           !order.activated_package_id) {
-          const confirmBtn=el('button','',
-            'Conferma incasso e attiva lezioni'
-          );
-          const feedback=el('div','status hidden');
+const title=shopInput('Nome pacchetto','Nome');
+title.input.value=pkg.title;
 
-          confirmBtn.onclick=async()=>{
-            if(!confirm(
-              'Hai verificato personalmente di aver ricevuto '+
-              money(order.price_eur)+' per questo ordine? '+
-              'La conferma attiverà le lezioni.'
-            ))return;
+const sessions=shopInput('Numero lezioni','Lezioni','number');
+sessions.input.min='1';
+sessions.input.step='1';
+sessions.input.value=pkg.total_sessions;
 
-            confirmBtn.disabled=true;
-            try {
-              const {data,error}=await db.rpc(
-                'forge_shop_confirm_order',{
-                  p_order_id:order.id
-                }
-              );
-              if(error)throw error;
-              feedback.textContent=
-                'Pacchetto attivato: '+data;
-              feedback.className='status success';
-              await renderShopOrders();
-            }catch(e) {
-              feedback.textContent=friendly(e);
-              feedback.className='status error';
-            }finally {
-              confirmBtn.disabled=false;
-            }
-          };
-          card.append(confirmBtn,feedback);
-        }
-      }
+const update=el('button','secondary','Salva modifiche pacchetto');
+const toggle=el('button','secondary',
+pkg.active?'Disattiva pacchetto':'Attiva pacchetto');
+const feedback=el('div','status hidden');
 
-      root.append(card);
-    }
-  }catch(e) {
-    shopMessage(root,
-      'Impossibile caricare gli ordini: '+friendly(e),true
-    );
-  }
+update.onclick=async()=>{
+const n=Number(price.input.value);
+const s=Number(sessions.input.value);
+const t=title.input.value.trim();
+if(!t||price.input.value.trim()===''||
+!Number.isFinite(n)||n<0||
+!Number.isInteger(s)||s<=0){
+feedback.textContent='Inserisci nome, prezzo e lezioni validi.';
+feedback.className='status error';
+return;
+}
+update.disabled=true;
+try{
+const {data,error}=await db.from('forge_shop_packages')
+.update({
+title:t,
+price_eur:n,
+total_sessions:s
+})
+.eq('id',pkg.id)
+.select('id');
+if(error)throw error;
+if(!data?.length)throw new Error('Modifica non autorizzata.');
+await renderShop();
+}catch(e){
+feedback.textContent=friendly(e);
+feedback.className='status error';
+}finally{update.disabled=false}
+};
+
+toggle.onclick=async()=>{
+toggle.disabled=true;
+try{
+const {data,error}=await db.from('forge_shop_packages')
+.update({active:!pkg.active})
+.eq('id',pkg.id)
+.select('id');
+if(error)throw error;
+if(!data?.length)throw new Error('Modifica non autorizzata.');
+await renderShop();
+}catch(e){
+feedback.textContent=friendly(e);
+feedback.className='status error';
+}finally{toggle.disabled=false}
+};
+
+card.append(
+title.wrap,sessions.wrap,price.wrap,
+update,toggle,feedback
+);
+}
+root.append(card);
+}
+
+if(currentRole==='admin'){
+const adminBox=el('div','shop-item');
+adminBox.append(el('h3','','Crea nuovo pacchetto'));
+
+const title=shopInput('Nome pacchetto','Es. 10 lezioni');
+const sessions=shopInput('Numero lezioni','Es. 10','number');
+sessions.input.min='1';
+sessions.input.step='1';
+
+const price=shopInput('Prezzo in euro','Es. 350','number');
+price.input.min='0';
+price.input.step='0.01';
+
+const create=el('button','','Pubblica pacchetto');
+const feedback=el('div','status hidden');
+
+create.onclick=async()=>{
+const t=title.input.value.trim();
+const s=Number(sessions.input.value);
+const p=Number(price.input.value);
+
+if(!t||!Number.isInteger(s)||s<=0||
+price.input.value.trim()===''||
+!Number.isFinite(p)||p<0){
+feedback.textContent='Compila correttamente tutti i campi.';
+feedback.className='status error';
+return;
+}
+
+create.disabled=true;
+try{
+const {data,error}=await db.from('forge_shop_packages')
+.insert({
+title:t,total_sessions:s,price_eur:p,active:true
+})
+.select('id');
+if(error)throw error;
+if(!data?.length)throw new Error('Creazione non autorizzata.');
+await renderShop();
+}catch(e){
+feedback.textContent=friendly(e);
+feedback.className='status error';
+}finally{create.disabled=false}
+};
+
+adminBox.append(
+title.wrap,sessions.wrap,price.wrap,
+create,feedback
+);
+root.append(adminBox);
+}
+
+root.append(el('hr','shop-divider'));
+const orders=el('div');
+orders.id='shopOrders';
+root.append(orders);
+await loadShopOrders();
+
+}catch(e){
+if(serial===shopSerial&&activeSection==='Forge Shop'){
+root.replaceChildren();
+shopNotice(root,'Errore Forge Shop: '+friendly(e),true);
+}
+}
+}
+
+async function loadShopOrders(){
+const root=$('shopOrders');
+if(!root||!currentUser)return;
+
+const serial=shopSerial;
+const userId=currentUser.id;
+const admin=currentRole==='admin';
+
+root.replaceChildren();
+root.append(el('h3','',
+admin?'Ordini clienti e conferme':'I miei ordini'));
+
+try{
+let query=db.from('forge_shop_orders')
+.select('id,client_id,package_title,total_sessions,price_eur,payment_method,payment_status,created_at,confirmed_at,activated_package_id')
+.order('created_at',{ascending:false})
+.limit(100);
+
+if(!admin)query=query.eq('client_id',userId);
+
+const {data,error}=await query;
+if(error)throw error;
+if(serial!==shopSerial||
+activeSection!=='Forge Shop'||
+currentUser?.id!==userId)return;
+
+if(!data?.length){
+root.append(el('p','muted','Nessun ordine registrato.'));
+return;
+}
+
+for(const order of data){
+const card=el('div','shop-item');
+card.append(
+el('h3','',order.package_title),
+el('div','shop-price',money(order.price_eur)),
+el('p','shop-detail',order.total_sessions+' lezioni'),
+el('p','shop-detail','Pagamento: '+
+(paymentLabels[order.payment_method]||order.payment_method)),
+el('span','shop-label',
+paymentStatusLabels[order.payment_status]||order.payment_status),
+el('p','small','Richiesto: '+dateTime(order.created_at))
+);
+
+if(order.confirmed_at){
+card.append(el('p','small',
+'Confermato: '+dateTime(order.confirmed_at)));
+}
+
+if(admin){
+card.append(
+el('p','small','Cliente ID: '+order.client_id),
+el('p','small','Ordine ID: '+order.id)
+);
+
+if(order.payment_status==='pending'&&
+!order.activated_package_id){
+const confirmBtn=el('button','',
+'Conferma incasso e attiva lezioni');
+const feedback=el('div','status hidden');
+
+confirmBtn.onclick=async()=>{
+if(!confirm(
+'Confermi di avere VERIFICATO l’incasso di '+
+money(order.price_eur)+' per questo cliente?\n'+
+'Questa operazione attiverà il pacchetto lezioni.'
+))return;
+
+confirmBtn.disabled=true;
+try{
+const {data:packageId,error}=await db.rpc(
+'forge_shop_confirm_order',{
+p_order_id:order.id
+});
+if(error)throw error;
+feedback.textContent=
+'Pagamento confermato. Pacchetto attivato: '+packageId;
+feedback.className='status success';
+await loadShopOrders();
+}catch(e){
+feedback.textContent=friendly(e);
+feedback.className='status error';
+}finally{confirmBtn.disabled=false}
+};
+
+card.append(confirmBtn,feedback);
+}
+}
+root.append(card);
+}
+}catch(e){
+if(serial===shopSerial&&activeSection==='Forge Shop')
+shopNotice(root,'Errore lettura ordini: '+friendly(e),true);
+}
 }
 
 /* PACCHETTI LEZIONI */
 
-async function renderLessonPackages() {
-  const serial=++loadSerial;
-  const root=$('sectionContent');
-  root.replaceChildren();
-  root.append(el('p','muted','Caricamento lezioni...'));
+async function renderLessonPackages(){
+const serial=++loadSerial;
+const root=$('sectionContent');
+root.replaceChildren();
+root.append(el('p','muted','Caricamento pacchetti lezioni...'));
 
-  try {
-    let query=db.from('forge_lesson_package_summary')
-      .select('*');
+try{
+let query=db.from('forge_lesson_package_summary')
+.select('*');
 
-    if(currentRole!=='admin')
-      query=query.eq('client_id',currentUser.id);
-
-    const {data,error}=await query;
-    if(error)throw error;
-    if(serial!==loadSerial||
-       activeSection!=='Pacchetti lezioni')return;
-
-    root.replaceChildren();
-
-    if(!data?.length) {
-      root.append(el('p','muted',
-        'Nessun pacchetto lezioni assegnato.'
-      ));
-      return;
-    }
-
-    for(const pkg of data) {
-      const card=el('div','shop-item');
-      card.append(
-        el('h3','',pkg.title||'Pacchetto lezioni'),
-        el('p','shop-meta',
-          'Lezioni totali: '+pkg.total_sessions
-        ),
-        el('p','shop-meta',
-          'Lezioni utilizzate: '+pkg.used_sessions
-        ),
-        el('div','shop-price',
-          String(pkg.remaining_sessions??0)+' rimanenti'
-        ),
-        el('p','small',
-          'Stato: '+(pkg.status||'—')
-        )
-      );
-
-      if(pkg.package_alert)
-        card.append(el('p','notice',
-          'Avviso: '+pkg.package_alert
-        ));
-
-      root.append(card);
-    }
-  }catch(e) {
-    if(serial===loadSerial) {
-      root.replaceChildren();
-      shopMessage(root,
-        'Errore caricamento pacchetti: '+friendly(e),true
-      );
-    }
-  }
+if(currentRole!=='admin'){
+query=query.eq('client_id',currentUser.id);
 }
 
-/* EVENTI AUTENTICAZIONE */
+const {data,error}=await query;
+if(error)throw error;
+if(serial!==loadSerial||
+activeSection!=='Pacchetti lezioni')return;
+
+root.replaceChildren();
+
+if(!data?.length){
+root.append(el('p','muted',
+'Non risultano pacchetti lezioni assegnati.'));
+const buy=el('button','','Vai a Forge Shop');
+buy.onclick=()=>showSection('Forge Shop');
+root.append(buy);
+return;
+}
+
+for(const pkg of data){
+const card=el('div','shop-item');
+card.append(
+el('h3','',pkg.title||'Pacchetto lezioni'),
+el('p','shop-detail','Lezioni acquistate: '+
+(pkg.total_sessions??'—')),
+el('p','shop-detail','Lezioni utilizzate: '+
+(pkg.used_sessions??'—')),
+el('div','shop-price',
+String(pkg.remaining_sessions??'—')+' rimanenti'),
+el('p','small','Stato: '+(pkg.status||'—'))
+);
+
+const remaining=Number(pkg.remaining_sessions);
+if(Number.isFinite(remaining)&&remaining<=2){
+card.append(el('p','notice',
+remaining===0
+?'Pacchetto esaurito: puoi richiedere il rinnovo.'
+:'Pacchetto quasi esaurito: valuta il rinnovo.'));
+}
+root.append(card);
+}
+
+const buy=el('button','','Acquista o rinnova pacchetto');
+buy.onclick=()=>showSection('Forge Shop');
+root.append(buy);
+
+}catch(e){
+if(serial===loadSerial&&
+activeSection==='Pacchetti lezioni'){
+root.replaceChildren();
+shopNotice(root,
+'Impossibile leggere i pacchetti: '+friendly(e),true);
+}
+}
+}
+
+/* RECUPERO PASSWORD E AVVIO */
 
 db.auth.onAuthStateChange(event=>{
-  if(event==='PASSWORD_RECOVERY') {
-    resetting=true;
-    resetReady=true;
-    show('reset');
-    return;
-  }
-  if(resetting)return;
-  if(event==='SIGNED_OUT') {
-    currentUser=null;
-    currentRole='client';
-    show('auth');
-  }
+if(event==='PASSWORD_RECOVERY'){
+resetting=true;
+resetReady=true;
+show('reset');
+return;
+}
+if(resetting)return;
+if(event==='SIGNED_OUT'){
+currentUser=null;
+currentRole='client';
+show('auth');
+}
 });
 
 (async()=>{
-  try {
-    if(initialRecovery) {
-      resetting=true;
-      show('loading');
-      const err=recoveryErrorInUrl();
-
-      if(err) {
-        show('reset');
-        status('resetStatus',err,true);
-        return;
-      }
-
-      const {data:{session},error}=await db.auth.getSession();
-
-      if(error||!session) {
-        show('reset');
-        status('resetStatus',
-          'Link non valido o scaduto. Richiedi un nuovo recupero password.',
-          true
-        );
-        return;
-      }
-
-      resetReady=true;
-      show('reset');
-      return;
-    }
-
-    await userState();
-  }catch(e) {
-    show('auth');
-    status('authStatus',friendly(e),true);
-  }
+try{
+if(initialRecovery){
+resetting=true;
+show('loading');
+const err=recoveryErrorInUrl();
+if(err){
+show('reset');
+status('resetStatus',err,true);
+return;
+}
+const {data:{session},error}=await db.auth.getSession();
+if(error||!session){
+show('reset');
+status('resetStatus',
+'Link non valido o scaduto. Richiedi un nuovo recupero password.',true);
+return;
+}
+resetReady=true;
+show('reset');
+return;
+}
+await userState();
+}catch(e){
+show('auth');
+status('authStatus',friendly(e),true);
+}
 })();
 </script>
 </body>
