@@ -4798,7 +4798,45 @@ function nutritionPanel(root){
         if(!panel.isConnected||
           request!==searchSerial)return;
 
-        const foods=asRows(data);
+        function extractFoods(value){
+
+  if(typeof value==='string'){
+    try{
+      return extractFoods(JSON.parse(value));
+    }catch{
+      return [];
+    }
+  }
+
+  if(Array.isArray(value)){
+    return value.flatMap(extractFoods);
+  }
+
+  if(!value||typeof value!=='object'){
+    return [];
+  }
+
+  if(
+    value.food_key!=null||
+    value.food_name||
+    value.name||
+    value.product_name
+  ){
+    return [{
+      ...value,
+      name:value.name||
+        value.food_name||
+        value.product_name||
+        value.title||
+        'Alimento'
+    }];
+  }
+
+  return Object.values(value)
+    .flatMap(extractFoods);
+}
+
+const foods=extractFoods(data);
 
         result.replaceChildren();
 
