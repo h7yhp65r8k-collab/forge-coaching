@@ -10251,5 +10251,51 @@ start();
 })();
 /* END FORGE PERFORMANCE V13 */
 </script>
+   <script>
+(function(){
+function fixForge(){
+const api=window.ForgePerformanceV13;
+const clients=[
+typeof sb!=="undefined"?sb:null,
+typeof supabaseClient!=="undefined"?supabaseClient:null,
+typeof supabase!=="undefined"?supabase:null,
+typeof client!=="undefined"?client:null,
+window.sb,
+window.supabaseClient
+];
+
+const db=clients.find(c=>
+c&&typeof c.rpc==="function"
+&&c.auth);
+
+if(api&&db){
+api.connect(db);
+const status=document.getElementById("f13-status");
+if(status)status.textContent="Database collegato";
+}
+
+const headings=[...document.querySelectorAll("h1,h2,h3,h4")];
+
+const performance=headings.find(e=>
+e.textContent.trim().toUpperCase()==="FORGE PERFORMANCE");
+
+const catalog=headings.find(e=>
+e.textContent.includes("Catalogo esercizi Forge"));
+
+if(performance&&catalog){
+const panel=performance.parentElement;
+const target=catalog.parentElement;
+
+if(panel&&target&&!panel.contains(target)){
+target.before(panel);
+}
+}
+}
+
+setTimeout(fixForge,500);
+setTimeout(fixForge,1500);
+setTimeout(fixForge,3000);
+})();
+</script>
 </body>
 </html>
