@@ -8214,7 +8214,37 @@ console.info(
 
 })();
 
-/* END FORGE NUTRITION V10 */
+/* END FORGE NUTRITION V10 *//* FORGE NUTRITION V12 - STANDARD SEARCH */
+
+(() => {
+
+    const previousRpc = db.rpc.bind(db);
+
+    db.rpc = function(name, params, options) {
+
+        if (
+            name === 'forge_nutrition_v7_search'
+            && params?.p_online !== true
+        ) {
+
+            return previousRpc(
+                'forge_nutrition_v12_standard_search',
+                {
+                    p_query: params?.p_query || '',
+                    p_limit: 8
+                },
+                options
+            );
+
+        }
+
+        return previousRpc(name, params, options);
+
+    };
+
+})();
+
+/* END FORGE NUTRITION V12 */
 </script>
 </body>
 </html>
