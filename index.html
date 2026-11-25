@@ -9273,6 +9273,983 @@ console.info(
 })();
 
 /* END FORGE TRAINING V12 */
+</script><script>
+/* FORGE TRAINING V13 - PERFORMANCE */
+(function(){
+"use strict";
+
+const F13 = {
+client: null,
+session: null,
+data: null
+};
+
+function db(){
+if(F13.client) return F13.client;
+throw new Error("Client Supabase non collegato");
+}
+
+async function rpc(name,args={}){
+const {data,error}=await db().rpc(name,args);
+if(error) throw new Error(error.message);
+return data;
+}
+
+function el(tag,text){
+const e=document.createElement(tag);
+if(text!==undefined)e.textContent=text;
+return e;
+}
+
+function number(v){
+return Number(v)||0;
+}
+
+function fmt(v){
+return number(v).toLocaleString("it-IT",{
+maximumFractionDigits:2
+});
+}
+
+function status(message){
+const e=document.getElementById("f13-status");
+if(e)e.textContent=message;
+}
+
+function button(text,action){
+const b=el("button",text);
+b.type="button";
+b.className="f13-btn";
+b.onclick=async()=>{
+b.disabled=true;
+try{
+await action();
+}catch(e){
+status(e.message);
+}finally{
+b.disabled=false;
+}
+};
+return b;
+}
+
+function input(label,type="number"){
+const wrap=el("label",label);
+const i=el("input");
+i.type=type;
+if(type==="number"){
+i.min="0";
+i.step="any";
+}
+wrap.appendChild(i);
+return {wrap,i};
+}
+
+function renderData(data){
+const target=document.getElementById("f13-results");
+if(!target)return;
+target.replaceChildren();
+
+function walk(value,parent,key){
+if(value===null||value===undefined)return;
+
+if(typeof value==="object"){
+if(key){
+parent.appendChild(el("h4",
+key.replaceAll("_"," ")));
+}
+Object.entries(value).forEach(([k,v])=>{
+walk(v,parent,k);
+});
+}else{
+const row=el("div");
+row.className="f13-row";
+row.appendChild(el("span",
+String(key).replaceAll("_"," ")));
+row.appendChild(el("strong",
+typeof value==="number"?fmt(value):String(value)));
+parent.appendChild(row);
+}
+}
+
+walk(data,target,"");
+}
+
+async function dashboard(clientId=null){
+status("Caricamento statistiche...");
+const data=await rpc(
+"forge_training_v8_dashboard",
+{p_client_id:clientId}
+);
+F13.data=data;
+renderData(data);
+status("Statistiche aggiornate");
+return data;
+}
+
+async function report(clientId){
+const data=await rpc(
+"forge_training_v7_client_report",
+{p_client_id:clientId}
+);
+renderData(data);
+return data;
+}
+
+async function session(id){
+const data=await rpc(
+"forge_training_v6_get_session",
+{p_session_id:id}
+);
+F13.session=id;
+renderData(data);
+return data;
+}
+
+async function saveSet(s){
+if(!s.sessionId||!s.itemId){
+throw new Error("Sessione o esercizio mancante");
+}
+
+if(!Number.isInteger(Number(s.setNumber))||
+Number(s.setNumber)<1){
+throw new Error("Numero serie non valido");
+}
+
+if(!Number.isInteger(Number(s.reps))||
+Number(s.reps)<1||
+Number(s.kg)<0){
+throw new Error("Ripetizioni o carico non validi");
+}
+
+return rpc("forge_training_v6_save_set",{
+p_session_id:s.sessionId,
+p_workout_item_id:s.itemId,
+p_set_number:Number(s.setNumber),
+p_repetitions:Number(s.reps),
+p_load_kg:Number(s.kg),
+p_rir:s.rir==null?null:Number(s.rir),
+p_rpe:s.rpe==null?null:Number(s.rpe),
+p_rest_seconds:s.rest==null?null:Number(s.rest),
+p_set_type:s.type||"working",
+p_notes:s.notes||null,
+p_duration_seconds:null
+});
+}
+
+function mount(){
+if(document.getElementById("forge-v13"))return;
+
+const style=el("style");
+style.textContent=`
+#forge-v13{
+background:#191a1f;
+color:#f5f5f5;
+border:1px solid #59492f;
+border-radius:16px;
+padding:16px;
+margin:16px 0;
+}
+#forge-v13 h2,#forge-v13 h3,
+#forge-v13 h4{
+color:#e9c675;
+}
+#forge-v13 input{
+width:100%;
+padding:12px;
+margin:6px 0 12px;
+background:#08090b;
+color:white;
+border:1px solid #59492f;
+border-radius:8px;
+font-size:16px;
+}
+.f13-btn{
+background:#e9c675;
+color:#08090b;
+border:0;
+border-radius:10px;
+padding:12px;
+margin:5px 0;
+width:100%;
+font-weight:700;
+}
+.f13-row{
+display:flex;
+justify-content:space-between;
+gap:10px;
+padding:10px 0;
+border-bottom:1px solid #333;
+overflow-wrap:anywhere;
+}
+#f13-status{
+font-size:13px;
+color:#e9c675;
+margin:12px 0;
+}
+#f13-total{
+font-size:32px;
+color:#e9c675;
+font-weight:800;
+}
+`;
+document.head.appendChild(style);
+
+const panel=el("section");
+panel.id="forge-v13";
+
+panel.appendChild(el("h2",
+"FORGE PERFORMANCE"));
+
+panel.appendChild(el("p",
+"Volume, tonnellaggio e progressione"));
+
+const details=el("details");
+details.appendChild(el("summary",
+"Calcolatore tonnellaggio"));
+
+const sets=input("Numero serie");
+const reps=input("Ripetizioni");
+const kg=input("Carico in kg");
+
+sets.i.value="3";
+reps.i.value="12";
+kg.i.value="70";
+
+details.append(sets.wrap,reps.wrap,kg.wrap);
+
+const total=el("div");
+total.id="f13-total";
+details.appendChild(total);
+
+function calculate(){
+const value=
+Math.max(0,number(sets.i.value))*
+Math.max(0,number(reps.i.value))*
+Math.max(0,number(kg.i.value));
+total.textContent=fmt(value)+" kg";
+}
+
+[sets.i,reps.i,kg.i].forEach(i=>{
+i.addEventListener("input",calculate);
+});
+
+calculate();
+panel.appendChild(details);
+
+panel.appendChild(button(
+"Aggiorna statistiche allenamento",
+()=>dashboard()
+));
+
+const st=el("div");
+st.id="f13-status";
+panel.appendChild(st);
+
+const results=el("div");
+results.id="f13-results";
+panel.appendChild(results);
+
+document.body.appendChild(panel);
+}
+
+window.ForgePerformanceV13={
+connect(client){
+F13.client=client;
+},
+mount,
+dashboard,
+report,
+session,
+saveSet,
+tonnage(sets){
+return sets.reduce((sum,s)=>{
+return sum+
+number(s.repetitions)*
+number(s.load_kg);
+},0);
+}
+};
+
+function start(){
+try{
+if(typeof sb!=="undefined"&&
+typeof sb.rpc==="function"){
+F13.client=sb;
+}else if(typeof supabaseClient!=="undefined"&&
+typeof supabaseClient.rpc==="function"){
+F13.client=supabaseClient;
+}else if(typeof supabase!=="undefined"&&
+typeof supabase.rpc==="function"){
+F13.client=supabase;
+}
+}catch(e){
+console.warn("Forge V13:",e.message);
+}
+mount();
+}
+
+if(document.readyState==="loading"){
+document.addEventListener(
+"DOMContentLoaded",start,{once:true});
+}else{
+start();
+}
+
+})();
+/* END FORGE PERFORMANCE V13 */
+</script>
+   <script>
+/* FORGE TRAINING V13 - PERFORMANCE */
+(function(){
+"use strict";
+
+const F13 = {
+client: null,
+session: null,
+data: null
+};
+
+function db(){
+if(F13.client) return F13.client;
+throw new Error("Client Supabase non collegato");
+}
+
+async function rpc(name,args={}){
+const {data,error}=await db().rpc(name,args);
+if(error) throw new Error(error.message);
+return data;
+}
+
+function el(tag,text){
+const e=document.createElement(tag);
+if(text!==undefined)e.textContent=text;
+return e;
+}
+
+function number(v){
+return Number(v)||0;
+}
+
+function fmt(v){
+return number(v).toLocaleString("it-IT",{
+maximumFractionDigits:2
+});
+}
+
+function status(message){
+const e=document.getElementById("f13-status");
+if(e)e.textContent=message;
+}
+
+function button(text,action){
+const b=el("button",text);
+b.type="button";
+b.className="f13-btn";
+b.onclick=async()=>{
+b.disabled=true;
+try{
+await action();
+}catch(e){
+status(e.message);
+}finally{
+b.disabled=false;
+}
+};
+return b;
+}
+
+function input(label,type="number"){
+const wrap=el("label",label);
+const i=el("input");
+i.type=type;
+if(type==="number"){
+i.min="0";
+i.step="any";
+}
+wrap.appendChild(i);
+return {wrap,i};
+}
+
+function renderData(data){
+const target=document.getElementById("f13-results");
+if(!target)return;
+target.replaceChildren();
+
+function walk(value,parent,key){
+if(value===null||value===undefined)return;
+
+if(typeof value==="object"){
+if(key){
+parent.appendChild(el("h4",
+key.replaceAll("_"," ")));
+}
+Object.entries(value).forEach(([k,v])=>{
+walk(v,parent,k);
+});
+}else{
+const row=el("div");
+row.className="f13-row";
+row.appendChild(el("span",
+String(key).replaceAll("_"," ")));
+row.appendChild(el("strong",
+typeof value==="number"?fmt(value):String(value)));
+parent.appendChild(row);
+}
+}
+
+walk(data,target,"");
+}
+
+async function dashboard(clientId=null){
+status("Caricamento statistiche...");
+const data=await rpc(
+"forge_training_v8_dashboard",
+{p_client_id:clientId}
+);
+F13.data=data;
+renderData(data);
+status("Statistiche aggiornate");
+return data;
+}
+
+async function report(clientId){
+const data=await rpc(
+"forge_training_v7_client_report",
+{p_client_id:clientId}
+);
+renderData(data);
+return data;
+}
+
+async function session(id){
+const data=await rpc(
+"forge_training_v6_get_session",
+{p_session_id:id}
+);
+F13.session=id;
+renderData(data);
+return data;
+}
+
+async function saveSet(s){
+if(!s.sessionId||!s.itemId){
+throw new Error("Sessione o esercizio mancante");
+}
+
+if(!Number.isInteger(Number(s.setNumber))||
+Number(s.setNumber)<1){
+throw new Error("Numero serie non valido");
+}
+
+if(!Number.isInteger(Number(s.reps))||
+Number(s.reps)<1||
+Number(s.kg)<0){
+throw new Error("Ripetizioni o carico non validi");
+}
+
+return rpc("forge_training_v6_save_set",{
+p_session_id:s.sessionId,
+p_workout_item_id:s.itemId,
+p_set_number:Number(s.setNumber),
+p_repetitions:Number(s.reps),
+p_load_kg:Number(s.kg),
+p_rir:s.rir==null?null:Number(s.rir),
+p_rpe:s.rpe==null?null:Number(s.rpe),
+p_rest_seconds:s.rest==null?null:Number(s.rest),
+p_set_type:s.type||"working",
+p_notes:s.notes||null,
+p_duration_seconds:null
+});
+}
+
+function mount(){
+if(document.getElementById("forge-v13"))return;
+
+const style=el("style");
+style.textContent=`
+#forge-v13{
+background:#191a1f;
+color:#f5f5f5;
+border:1px solid #59492f;
+border-radius:16px;
+padding:16px;
+margin:16px 0;
+}
+#forge-v13 h2,#forge-v13 h3,
+#forge-v13 h4{
+color:#e9c675;
+}
+#forge-v13 input{
+width:100%;
+padding:12px;
+margin:6px 0 12px;
+background:#08090b;
+color:white;
+border:1px solid #59492f;
+border-radius:8px;
+font-size:16px;
+}
+.f13-btn{
+background:#e9c675;
+color:#08090b;
+border:0;
+border-radius:10px;
+padding:12px;
+margin:5px 0;
+width:100%;
+font-weight:700;
+}
+.f13-row{
+display:flex;
+justify-content:space-between;
+gap:10px;
+padding:10px 0;
+border-bottom:1px solid #333;
+overflow-wrap:anywhere;
+}
+#f13-status{
+font-size:13px;
+color:#e9c675;
+margin:12px 0;
+}
+#f13-total{
+font-size:32px;
+color:#e9c675;
+font-weight:800;
+}
+`;
+document.head.appendChild(style);
+
+const panel=el("section");
+panel.id="forge-v13";
+
+panel.appendChild(el("h2",
+"FORGE PERFORMANCE"));
+
+panel.appendChild(el("p",
+"Volume, tonnellaggio e progressione"));
+
+const details=el("details");
+details.appendChild(el("summary",
+"Calcolatore tonnellaggio"));
+
+const sets=input("Numero serie");
+const reps=input("Ripetizioni");
+const kg=input("Carico in kg");
+
+sets.i.value="3";
+reps.i.value="12";
+kg.i.value="70";
+
+details.append(sets.wrap,reps.wrap,kg.wrap);
+
+const total=el("div");
+total.id="f13-total";
+details.appendChild(total);
+
+function calculate(){
+const value=
+Math.max(0,number(sets.i.value))*
+Math.max(0,number(reps.i.value))*
+Math.max(0,number(kg.i.value));
+total.textContent=fmt(value)+" kg";
+}
+
+[sets.i,reps.i,kg.i].forEach(i=>{
+i.addEventListener("input",calculate);
+});
+
+calculate();
+panel.appendChild(details);
+
+panel.appendChild(button(
+"Aggiorna statistiche allenamento",
+()=>dashboard()
+));
+
+const st=el("div");
+st.id="f13-status";
+panel.appendChild(st);
+
+const results=el("div");
+results.id="f13-results";
+panel.appendChild(results);
+
+document.body.appendChild(panel);
+}
+
+window.ForgePerformanceV13={
+connect(client){
+F13.client=client;
+},
+mount,
+dashboard,
+report,
+session,
+saveSet,
+tonnage(sets){
+return sets.reduce((sum,s)=>{
+return sum+
+number(s.repetitions)*
+number(s.load_kg);
+},0);
+}
+};
+
+function start(){
+try{
+if(typeof sb!=="undefined"&&
+typeof sb.rpc==="function"){
+F13.client=sb;
+}else if(typeof supabaseClient!=="undefined"&&
+typeof supabaseClient.rpc==="function"){
+F13.client=supabaseClient;
+}else if(typeof supabase!=="undefined"&&
+typeof supabase.rpc==="function"){
+F13.client=supabase;
+}
+}catch(e){
+console.warn("Forge V13:",e.message);
+}
+mount();
+}
+
+if(document.readyState==="loading"){
+document.addEventListener(
+"DOMContentLoaded",start,{once:true});
+}else{
+start();
+}
+
+})();
+/* END FORGE PERFORMANCE V13 */
+</script>
+   <script>
+/* FORGE TRAINING V13 - PERFORMANCE */
+(function(){
+"use strict";
+
+const F13 = {
+client: null,
+session: null,
+data: null
+};
+
+function db(){
+if(F13.client) return F13.client;
+throw new Error("Client Supabase non collegato");
+}
+
+async function rpc(name,args={}){
+const {data,error}=await db().rpc(name,args);
+if(error) throw new Error(error.message);
+return data;
+}
+
+function el(tag,text){
+const e=document.createElement(tag);
+if(text!==undefined)e.textContent=text;
+return e;
+}
+
+function number(v){
+return Number(v)||0;
+}
+
+function fmt(v){
+return number(v).toLocaleString("it-IT",{
+maximumFractionDigits:2
+});
+}
+
+function status(message){
+const e=document.getElementById("f13-status");
+if(e)e.textContent=message;
+}
+
+function button(text,action){
+const b=el("button",text);
+b.type="button";
+b.className="f13-btn";
+b.onclick=async()=>{
+b.disabled=true;
+try{
+await action();
+}catch(e){
+status(e.message);
+}finally{
+b.disabled=false;
+}
+};
+return b;
+}
+
+function input(label,type="number"){
+const wrap=el("label",label);
+const i=el("input");
+i.type=type;
+if(type==="number"){
+i.min="0";
+i.step="any";
+}
+wrap.appendChild(i);
+return {wrap,i};
+}
+
+function renderData(data){
+const target=document.getElementById("f13-results");
+if(!target)return;
+target.replaceChildren();
+
+function walk(value,parent,key){
+if(value===null||value===undefined)return;
+
+if(typeof value==="object"){
+if(key){
+parent.appendChild(el("h4",
+key.replaceAll("_"," ")));
+}
+Object.entries(value).forEach(([k,v])=>{
+walk(v,parent,k);
+});
+}else{
+const row=el("div");
+row.className="f13-row";
+row.appendChild(el("span",
+String(key).replaceAll("_"," ")));
+row.appendChild(el("strong",
+typeof value==="number"?fmt(value):String(value)));
+parent.appendChild(row);
+}
+}
+
+walk(data,target,"");
+}
+
+async function dashboard(clientId=null){
+status("Caricamento statistiche...");
+const data=await rpc(
+"forge_training_v8_dashboard",
+{p_client_id:clientId}
+);
+F13.data=data;
+renderData(data);
+status("Statistiche aggiornate");
+return data;
+}
+
+async function report(clientId){
+const data=await rpc(
+"forge_training_v7_client_report",
+{p_client_id:clientId}
+);
+renderData(data);
+return data;
+}
+
+async function session(id){
+const data=await rpc(
+"forge_training_v6_get_session",
+{p_session_id:id}
+);
+F13.session=id;
+renderData(data);
+return data;
+}
+
+async function saveSet(s){
+if(!s.sessionId||!s.itemId){
+throw new Error("Sessione o esercizio mancante");
+}
+
+if(!Number.isInteger(Number(s.setNumber))||
+Number(s.setNumber)<1){
+throw new Error("Numero serie non valido");
+}
+
+if(!Number.isInteger(Number(s.reps))||
+Number(s.reps)<1||
+Number(s.kg)<0){
+throw new Error("Ripetizioni o carico non validi");
+}
+
+return rpc("forge_training_v6_save_set",{
+p_session_id:s.sessionId,
+p_workout_item_id:s.itemId,
+p_set_number:Number(s.setNumber),
+p_repetitions:Number(s.reps),
+p_load_kg:Number(s.kg),
+p_rir:s.rir==null?null:Number(s.rir),
+p_rpe:s.rpe==null?null:Number(s.rpe),
+p_rest_seconds:s.rest==null?null:Number(s.rest),
+p_set_type:s.type||"working",
+p_notes:s.notes||null,
+p_duration_seconds:null
+});
+}
+
+function mount(){
+if(document.getElementById("forge-v13"))return;
+
+const style=el("style");
+style.textContent=`
+#forge-v13{
+background:#191a1f;
+color:#f5f5f5;
+border:1px solid #59492f;
+border-radius:16px;
+padding:16px;
+margin:16px 0;
+}
+#forge-v13 h2,#forge-v13 h3,
+#forge-v13 h4{
+color:#e9c675;
+}
+#forge-v13 input{
+width:100%;
+padding:12px;
+margin:6px 0 12px;
+background:#08090b;
+color:white;
+border:1px solid #59492f;
+border-radius:8px;
+font-size:16px;
+}
+.f13-btn{
+background:#e9c675;
+color:#08090b;
+border:0;
+border-radius:10px;
+padding:12px;
+margin:5px 0;
+width:100%;
+font-weight:700;
+}
+.f13-row{
+display:flex;
+justify-content:space-between;
+gap:10px;
+padding:10px 0;
+border-bottom:1px solid #333;
+overflow-wrap:anywhere;
+}
+#f13-status{
+font-size:13px;
+color:#e9c675;
+margin:12px 0;
+}
+#f13-total{
+font-size:32px;
+color:#e9c675;
+font-weight:800;
+}
+`;
+document.head.appendChild(style);
+
+const panel=el("section");
+panel.id="forge-v13";
+
+panel.appendChild(el("h2",
+"FORGE PERFORMANCE"));
+
+panel.appendChild(el("p",
+"Volume, tonnellaggio e progressione"));
+
+const details=el("details");
+details.appendChild(el("summary",
+"Calcolatore tonnellaggio"));
+
+const sets=input("Numero serie");
+const reps=input("Ripetizioni");
+const kg=input("Carico in kg");
+
+sets.i.value="3";
+reps.i.value="12";
+kg.i.value="70";
+
+details.append(sets.wrap,reps.wrap,kg.wrap);
+
+const total=el("div");
+total.id="f13-total";
+details.appendChild(total);
+
+function calculate(){
+const value=
+Math.max(0,number(sets.i.value))*
+Math.max(0,number(reps.i.value))*
+Math.max(0,number(kg.i.value));
+total.textContent=fmt(value)+" kg";
+}
+
+[sets.i,reps.i,kg.i].forEach(i=>{
+i.addEventListener("input",calculate);
+});
+
+calculate();
+panel.appendChild(details);
+
+panel.appendChild(button(
+"Aggiorna statistiche allenamento",
+()=>dashboard()
+));
+
+const st=el("div");
+st.id="f13-status";
+panel.appendChild(st);
+
+const results=el("div");
+results.id="f13-results";
+panel.appendChild(results);
+
+document.body.appendChild(panel);
+}
+
+window.ForgePerformanceV13={
+connect(client){
+F13.client=client;
+},
+mount,
+dashboard,
+report,
+session,
+saveSet,
+tonnage(sets){
+return sets.reduce((sum,s)=>{
+return sum+
+number(s.repetitions)*
+number(s.load_kg);
+},0);
+}
+};
+
+function start(){
+try{
+if(typeof sb!=="undefined"&&
+typeof sb.rpc==="function"){
+F13.client=sb;
+}else if(typeof supabaseClient!=="undefined"&&
+typeof supabaseClient.rpc==="function"){
+F13.client=supabaseClient;
+}else if(typeof supabase!=="undefined"&&
+typeof supabase.rpc==="function"){
+F13.client=supabase;
+}
+}catch(e){
+console.warn("Forge V13:",e.message);
+}
+mount();
+}
+
+if(document.readyState==="loading"){
+document.addEventListener(
+"DOMContentLoaded",start,{once:true});
+}else{
+start();
+}
+
+})();
+/* END FORGE PERFORMANCE V13 */
 </script>
 </body>
 </html>
