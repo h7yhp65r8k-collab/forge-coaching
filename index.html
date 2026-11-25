@@ -3501,7 +3501,420 @@ window.ForgeBridge = (() => {
 
 })();
 
-/* END FORGE FRONTEND BRIDGE V1 */
+/* END FORGE FRONTEND BRIDGE V1 *//* =====================================================
+   FORGE FRONTEND BRIDGE V2
+   TRAINING - PROGRESS - PREMIUM - STUDIO
+===================================================== */
+
+(() => {
+
+const bridge = window.ForgeBridge;
+const originalSection = section;
+
+const supported = [
+  'Allenamento',
+  'Progress Evolution',
+  'Forge Premium',
+  'Forge Studio'
+];
+
+function formatValue(value) {
+
+  if(value === null || value === undefined)
+    return 'Non disponibile';
+
+  if(typeof value === 'boolean')
+    return value ? 'Sì' : 'No';
+
+  if(typeof value === 'number')
+    return fmt(value,2);
+
+  return String(value);
+}
+
+function readableLabel(key) {
+
+  const labels = {
+    weight: 'Peso',
+    weight_kg: 'Peso (kg)',
+    current_weight: 'Peso attuale',
+    body_fat: 'Massa grassa',
+    measurements: 'Misurazioni',
+    total_checkins: 'Check effettuati',
+    active: 'Attivo',
+    status: 'Stato',
+    theme: 'Tema',
+    theme_name: 'Tema selezionato',
+    subscription_status: 'Abbonamento',
+    price_eur: 'Prezzo in euro',
+    expires_at: 'Scadenza',
+    title: 'Titolo',
+    description: 'Descrizione',
+    created_at: 'Data creazione',
+    updated_at: 'Ultimo aggiornamento'
+  };
+
+  return labels[key] ||
+    key.replace(/_/g,' ')
+    .replace(/^./,x=>x.toUpperCase());
+}
+
+function privateField(key) {
+
+  return /(^id$|_id$|password|token|secret|storage_path|api_key|email|notes|url|path)/i
+    .test(key);
+}
+
+function renderData(root,data,depth=0) {
+
+  if(depth>4)return;
+
+  if(data===null||data===undefined){
+
+    root.append(el(
+      'p','Nessun dato disponibile.','muted'
+    ));
+
+    return;
+  }
+
+  if(Array.isArray(data)){
+
+    if(!data.length){
+
+      root.append(el(
+        'p','Nessuna registrazione.','muted'
+      ));
+
+      return;
+    }
+
+    for(const row of data.slice(0,50)){
+
+      const card=el('div','','item');
+
+      renderData(card,row,depth+1);
+
+      root.append(card);
+    }
+
+    return;
+  }
+
+  if(typeof data!=='object'){
+
+    root.append(el('p',formatValue(data)));
+
+    return;
+  }
+
+  for(const [key,value] of Object.entries(data)){
+
+    if(privateField(key))continue;
+
+    if(value!==null&&typeof value==='object'){
+
+      const card=el('div','','item');
+
+      card.append(el('h3',readableLabel(key)));
+
+      renderData(card,value,depth+1);
+
+      root.append(card);
+
+    }else{
+
+      const row=el('div','','history-item');
+
+      add(
+        row,
+        el('span',readableLabel(key)),
+        el('strong',formatValue(value))
+      );
+
+      root.append(row);
+    }
+  }
+}
+
+async function loadPanel(root,title,loader){
+
+  const panel=el('div','','item');
+
+  const output=el('div');
+
+  const refresh=button(
+    'Aggiorna',
+    load,
+    'secondary'
+  );
+
+  add(
+    panel,
+    el('h3',title),
+    refresh,
+    output
+  );
+
+  root.append(panel);
+
+  async function load(){
+
+    const request=serial;
+    const account=user?.id;
+
+    refresh.disabled=true;
+
+    output.replaceChildren(
+      el('p','Caricamento...','muted')
+    );
+
+    try{
+
+      const data=await loader();
+
+      if(
+        request!==serial||
+        account!==user?.id||
+        !panel.isConnected
+      )return;
+
+      output.replaceChildren();
+
+      renderData(output,data);
+
+    }catch(e){
+
+      if(panel.isConnected){
+
+        output.replaceChildren(
+          el(
+            'div',
+            friendly(e),
+            'status error'
+          )
+        );
+      }
+
+    }finally{
+
+      refresh.disabled=false;
+    }
+  }
+
+  await load();
+}
+
+/* FORGE TRAINING */
+
+function renderTrainingV2(root){
+
+  root.append(el(
+    'h3','Forge Training'
+  ));
+
+  root.append(el(
+    'p',
+    'Programmi e documenti di allenamento.',
+    'muted'
+  ));
+
+  loadPanel(
+    root,
+    'Programmi di allenamento',
+    async()=>{
+
+      let query=db
+        .from('forge_v4_programs')
+        .select(
+          'title,description,goal,difficulty,duration_weeks,start_date,end_date,status'
+        )
+        .order(
+          'created_at',
+          {ascending:false}
+        )
+        .limit(50);
+
+      if(role!=='admin'){
+
+        query=query.eq(
+          'client_id',
+          user.id
+        );
+      }
+
+      const {data,error}=await query;
+
+      if(error)throw error;
+
+      return data||[];
+    }
+  );
+
+  loadPanel(
+    root,
+    'Schede allenamento PDF',
+    async()=>{
+
+      const rows=await bridge
+        .training.getPDFs(
+          role==='admin'?null:user.id
+        );
+
+      return (rows||[]).map(row=>({
+
+        title:row.title,
+        description:row.description,
+        training_goal:row.training_goal,
+        training_frequency:row.training_frequency,
+        duration_weeks:row.duration_weeks,
+        version_number:row.version_number,
+        valid_from:row.valid_from,
+        valid_until:row.valid_until,
+        active:row.active
+
+      }));
+    }
+  );
+}
+
+/* PROGRESS EVOLUTION */
+
+function renderProgressV2(root){
+
+  root.append(el(
+    'h3','Progress Evolution'
+  ));
+
+  root.append(el(
+    'p',
+    'Monitoraggio della tua evoluzione.',
+    'muted'
+  ));
+
+  loadPanel(
+    root,
+    'Dashboard progressi',
+    ()=>bridge.progress.dashboard(
+      role==='admin'?null:user.id
+    )
+  );
+
+  root.append(button(
+    'Storico peso corporeo',
+    ()=>section('Forge Weight'),
+    'secondary'
+  ));
+
+  root.append(button(
+    'Storico idratazione',
+    ()=>section('Forge Hydration'),
+    'secondary'
+  ));
+
+  root.append(button(
+    'Andamento nutrizionale',
+    ()=>section('Forge Nutrition'),
+    'secondary'
+  ));
+}
+
+/* FORGE PREMIUM */
+
+function renderPremiumV2(root){
+
+  root.append(el(
+    'h3','Forge Premium'
+  ));
+
+  root.append(el(
+    'p',
+    'La tua esperienza esclusiva Forge.',
+    'muted'
+  ));
+
+  loadPanel(
+    root,
+    role==='admin'?
+      'Gestione Premium':
+      'Il tuo abbonamento',
+    ()=>role==='admin'?
+      bridge.premium.adminDashboard():
+      bridge.premium.dashboard()
+  );
+}
+
+/* FORGE STUDIO */
+
+function renderStudioV2(root){
+
+  root.append(el(
+    'h3','Forge Studio'
+  ));
+
+  root.append(el(
+    'p',
+    'Il tuo spazio personale.',
+    'muted'
+  ));
+
+  loadPanel(
+    root,
+    'Configurazione personale',
+    ()=>bridge.studio.dashboard()
+  );
+}
+
+/* COLLEGAMENTO ALLA NAVIGAZIONE */
+
+section=function(name){
+
+  originalSection(name);
+
+  if(!supported.includes(name))return;
+
+  const root=$('sectionContent');
+
+  root.replaceChildren();
+
+  try{
+
+    switch(name){
+
+      case 'Allenamento':
+        renderTrainingV2(root);
+        break;
+
+      case 'Progress Evolution':
+        renderProgressV2(root);
+        break;
+
+      case 'Forge Premium':
+        renderPremiumV2(root);
+        break;
+
+      case 'Forge Studio':
+        renderStudioV2(root);
+        break;
+    }
+
+  }catch(e){
+
+    root.append(el(
+      'div',
+      friendly(e),
+      'status error'
+    ));
+  }
+};
+
+console.info(
+  'FORGE FRONTEND BRIDGE V2 ATTIVO'
+);
+
+})();
+
+/* END FORGE FRONTEND BRIDGE V2 */
 initialize();
 </script>
 </body>
