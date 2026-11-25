@@ -11647,5 +11647,12 @@ busy=false;
 
 })();
 </script>
+<script>
+window.forgeSupabase = db;
+window.supabaseClient = db;
 
+if (window.ForgePerformanceV13) {
+  window.ForgePerformanceV13.connect(db);
+}
+</script>
 </html>
