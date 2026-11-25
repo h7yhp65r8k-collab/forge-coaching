@@ -8244,7 +8244,1035 @@ console.info(
 
 })();
 
-/* END FORGE NUTRITION V12 */
+/* END FORGE NUTRITION V12 *//* =====================================================
+   FORGE TRAINING V12
+   PROGRAM BUILDER - COACH EXPERIENCE
+===================================================== */
+
+(() => {
+
+'use strict';
+
+const previousSectionT12 = section;
+
+async function rpcT12(name,params={}){
+
+  const {data,error}=await db.rpc(name,params);
+
+  if(error)throw error;
+
+  if(data?.success===false){
+    throw Error(data.message||'Operazione non riuscita.');
+  }
+
+  return data;
+}
+
+function fieldT12(root,label,control){
+
+  add(root,el('label',label),control);
+
+  return control;
+}
+
+function statusT12(root,text,error=false){
+
+  root.className='status '+(
+    error?'error':'success'
+  );
+
+  root.textContent=text;
+}
+
+function numberT12(value,min,max,integer=false){
+
+  const n=Number(value);
+
+  if(
+    value===''||
+    !Number.isFinite(n)||
+    n<min||
+    n>max||
+    (integer&&!Number.isInteger(n))
+  ){
+    throw Error('Controlla i valori numerici.');
+  }
+
+  return n;
+}
+
+function selectT12(options){
+
+  const control=el('select');
+
+  for(const [value,label] of options){
+
+    const option=el('option',label);
+
+    option.value=value;
+
+    control.append(option);
+  }
+
+  return control;
+}
+
+function uuidT12(value){
+
+  return typeof value==='string'&&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    .test(value);
+}
+
+async function trainingBuilderT12(root){
+
+  const account=user?.id;
+  const request=serial;
+
+  const admin=role==='admin';
+
+  const panel=el('div','','item');
+
+  panel.id='forgeTrainingV12';
+
+  root.prepend(panel);
+
+  function current(){
+
+    return panel.isConnected&&
+      active==='Allenamento'&&
+      serial===request&&
+      user?.id===account;
+  }
+
+  panel.append(el(
+    'h3',
+    admin?
+    'Forge Training • Coach Studio':
+    'Il tuo programma di allenamento'
+  ));
+
+  const feedback=el(
+    'div','','status hidden'
+  );
+
+  const client=selectT12([
+    ['','Seleziona cliente']
+  ]);
+
+  const programs=el('div');
+  const editor=el('div');
+
+  let selectedProgram=null;
+  let selectedClient=null;
+  let busy=false;
+  let loadVersion=0;
+
+  async function execute(fn){
+
+    if(!current()||busy)return;
+
+    busy=true;
+
+    const controls=[
+      ...panel.querySelectorAll(
+        'button,input,select,textarea'
+      )
+    ];
+
+    const states=controls.map(
+      c=>c.disabled
+    );
+
+    controls.forEach(
+      c=>c.disabled=true
+    );
+
+    try{
+
+      await fn();
+
+    }catch(e){
+
+      if(current()){
+
+        statusT12(
+          feedback,friendly(e),true
+        );
+      }
+
+    }finally{
+
+      busy=false;
+
+      controls.forEach(
+        (c,i)=>c.disabled=states[i]
+      );
+    }
+  }
+
+  async function loadClients(){
+
+    const {data,error}=await db
+      .from('account_access')
+      .select('user_id,status')
+      .eq('status','approved')
+      .limit(500);
+
+    if(error)throw error;
+
+    if(!current())return;
+
+    const {data:roles,error:roleError}=await db
+      .from('user_roles')
+      .select('user_id,role')
+      .limit(1000);
+
+    if(roleError)throw roleError;
+
+    if(!current())return;
+
+    const excluded=new Set(
+      (roles||[])
+      .filter(r=>
+        ['admin','trainer'].includes(r.role)
+      )
+      .map(r=>r.user_id)
+    );
+
+    const accounts=(data||[])
+      .filter(r=>
+        r.user_id!==account&&
+        !excluded.has(r.user_id)
+      );
+
+    let profiles=[];
+
+    const ids=accounts.map(
+      r=>r.user_id
+    );
+
+    if(ids.length){
+
+      let result=await db
+        .from('profiles')
+        .select('*')
+        .in('id',ids);
+
+      if(result.error){
+
+        result=await db
+          .from('profiles')
+          .select('*')
+          .in('user_id',ids);
+      }
+
+      if(!result.error){
+        profiles=result.data||[];
+      }
+    }
+
+    if(!current())return;
+
+    client.replaceChildren();
+
+    const placeholder=el(
+      'option','Seleziona cliente'
+    );
+
+    placeholder.value='';
+
+    client.append(placeholder);
+
+    for(const row of accounts){
+
+      const profile=profiles.find(p=>
+        p.id===row.user_id||
+        p.user_id===row.user_id
+      );
+
+      const name=
+        profile?.full_name||
+        profile?.display_name||
+        profile?.name||
+        [
+          profile?.first_name,
+          profile?.last_name
+        ].filter(Boolean).join(' ')||
+        profile?.email||
+        'Cliente '+row.user_id.slice(0,8);
+
+      const option=el('option',name);
+
+      option.value=row.user_id;
+
+      client.append(option);
+    }
+
+    if(!accounts.length){
+
+      statusT12(
+        feedback,
+        'Nessun cliente approvato disponibile.'
+      );
+    }
+  }
+
+  async function loadPrograms(){
+
+    const version=++loadVersion;
+
+    const target=admin?
+      client.value:account;
+
+    programs.replaceChildren();
+
+    if(!target){
+
+      programs.append(el(
+        'p',
+        'Seleziona un cliente.',
+        'muted'
+      ));
+
+      return;
+    }
+
+    programs.append(el(
+      'p','Caricamento programmi...','muted'
+    ));
+
+    const {data,error}=await db
+      .from('forge_v4_programs')
+      .select(
+        'id,client_id,title,description,'+
+        'goal,difficulty,duration_weeks,status'
+      )
+      .eq('client_id',target)
+      .order('created_at',{
+        ascending:false
+      })
+      .limit(100);
+
+    if(!current()||
+      version!==loadVersion)return;
+
+    if(error)throw error;
+
+    programs.replaceChildren(
+      el('h3','Programmi disponibili')
+    );
+
+    if(!data?.length){
+
+      programs.append(el(
+        'p',
+        'Nessun programma assegnato.',
+        'muted'
+      ));
+    }
+
+    for(const program of data||[]){
+
+      const card=el('div','','item');
+
+      add(
+        card,
+        el('h3',program.title||'Programma'),
+        el(
+          'p',
+          'Stato: '+(program.status||'—'),
+          'small'
+        )
+      );
+
+      if(program.description){
+
+        card.append(el(
+          'p',program.description
+        ));
+      }
+
+      if(program.duration_weeks){
+
+        card.append(el(
+          'p',
+          'Durata: '+program.duration_weeks+
+          ' settimane'
+        ));
+      }
+
+      card.append(button(
+        admin?'Apri e gestisci scheda':
+        'Visualizza scheda',
+        ()=>execute(async()=>{
+
+          selectedProgram=program.id;
+          selectedClient=target;
+
+          await openProgram();
+
+          if(current()){
+            editor.scrollIntoView({
+              behavior:'smooth',
+              block:'start'
+            });
+          }
+        }),
+        'secondary'
+      ));
+
+      programs.append(card);
+    }
+  }
+
+  async function openProgram(){
+
+    const programId=selectedProgram;
+
+    if(!uuidT12(programId))return;
+
+    const data=await rpcT12(
+      'forge_v4_get_program',{
+        p_program_id:programId
+      }
+    );
+
+    if(!current()||
+      programId!==selectedProgram)return;
+
+    const result=typeof data==='string'?
+      JSON.parse(data):data;
+
+    editor.replaceChildren(
+      el('h3','Scheda di allenamento')
+    );
+
+    const program=result?.program||result;
+
+    if(program?.title){
+
+      editor.append(el(
+        'h3',program.title
+      ));
+    }
+
+    const days=
+      result?.workout_days||
+      result?.days||
+      program?.workout_days||
+      program?.days||
+      [];
+
+    if(!Array.isArray(days)){
+
+      throw Error(
+        'Formato giornate da verificare.'
+      );
+    }
+
+    if(admin){
+
+      const dayTitle=input(
+        'text','Es. Giorno A - Petto e tricipiti'
+      );
+
+      const dayNumber=input(
+        'number','Numero giornata'
+      );
+
+      dayNumber.min='1';
+      dayNumber.step='1';
+
+      dayNumber.value=String(
+        Math.max(
+          0,...days.map(
+            d=>Number(d.day_number)||0
+          )
+        )+1
+      );
+
+      const dayPanel=el(
+        'div','','item'
+      );
+
+      add(
+        dayPanel,
+        el('h3','Aggiungi giornata'),
+        dayTitle,
+        dayNumber,
+        button(
+          'Crea giornata',
+          ()=>execute(async()=>{
+
+            if(!dayTitle.value.trim()){
+
+              throw Error(
+                'Inserisci il nome della giornata.'
+              );
+            }
+
+            const number=numberT12(
+              dayNumber.value,1,100,true
+            );
+
+            await rpcT12(
+              'forge_v4_add_workout_day',{
+                p_program_id:programId,
+                p_title:dayTitle.value.trim(),
+                p_day_number:number
+              }
+            );
+
+            statusT12(
+              feedback,'Giornata creata.'
+            );
+
+            await openProgram();
+          })
+        )
+      );
+
+      editor.append(dayPanel);
+    }
+
+    if(!days.length){
+
+      editor.append(el(
+        'p',
+        'Nessuna giornata restituita dal programma.',
+        'muted'
+      ));
+    }
+
+    for(const rawDay of days){
+
+      const day=rawDay.workout_day||rawDay;
+
+      const card=el('div','','item');
+
+      add(
+        card,
+        el(
+          'h3',
+          day.title||
+          'Giorno '+(day.day_number||'')
+        )
+      );
+
+      const items=
+        rawDay.workout_items||
+        rawDay.items||
+        rawDay.exercises||
+        day.workout_items||
+        day.items||
+        [];
+
+      if(Array.isArray(items)){
+
+        for(const rawItem of items){
+
+          const item=rawItem.workout_item||
+            rawItem;
+
+          const exercise=el(
+            'div','','item'
+          );
+
+          add(
+            exercise,
+            el(
+              'strong',
+              item.exercise_name||
+              item.name||
+              'Esercizio'
+            ),
+            el(
+              'p',
+              (item.sets??'—')+
+              ' serie × '+
+              (item.repetitions??'—')+
+              ' ripetizioni'
+            ),
+            el(
+              'p',
+              'Carico: '+(item.load_kg??'—')+
+              ' kg • Recupero: '+
+              (item.rest_seconds??'—')+' sec',
+              'small'
+            )
+          );
+
+          if(item.instructions){
+
+            exercise.append(el(
+              'p',item.instructions
+            ));
+          }
+
+          card.append(exercise);
+        }
+      }
+
+      if(admin&&uuidT12(day.id)){
+
+        exerciseEditorT12(
+          card,day.id,
+          Array.isArray(items)?items:[]
+        );
+      }
+
+      editor.append(card);
+    }
+
+    if(admin){
+
+      const start=input('date');
+
+      start.value=todayRome();
+
+      const activation=el(
+        'div','','item'
+      );
+
+      add(
+        activation,
+        el('h3','Attivazione programma'),
+        el('label','Data di inizio'),
+        start,
+        button(
+          'Attiva scheda per il cliente',
+          ()=>execute(async()=>{
+
+            if(!start.value){
+
+              throw Error(
+                'Seleziona la data di inizio.'
+              );
+            }
+
+            if(!confirm(
+              'Attivare questa scheda per il cliente selezionato?'
+            ))return;
+
+            const result=await rpcT12(
+              'forge_training_v7_activate_program',{
+                p_program_id:programId,
+                p_start_date:start.value
+              }
+            );
+
+            if(result!==true){
+
+              throw Error(
+                'Attivazione non confermata.'
+              );
+            }
+
+            statusT12(
+              feedback,
+              'Programma attivato.'
+            );
+
+            await loadPrograms();
+            await openProgram();
+          })
+        )
+      );
+
+      editor.append(activation);
+    }
+  }
+
+  function exerciseEditorT12(root,dayId,items){
+
+    const details=el('details','','item');
+
+    details.append(el(
+      'summary','+ Aggiungi esercizio'
+    ));
+
+    const search=input(
+      'search','Cerca nel catalogo Forge'
+    );
+
+    const results=el('div');
+
+    const name=input(
+      'text','Nome esercizio'
+    );
+
+    const sets=input(
+      'number','Serie'
+    );
+
+    sets.value='3';
+    sets.min='1';
+
+    const reps=input(
+      'text','Es. 8-12'
+    );
+
+    reps.value='10';
+
+    const rest=input(
+      'number','Recupero in secondi'
+    );
+
+    rest.value='90';
+    rest.min='0';
+
+    const load=input(
+      'number','Carico in kg'
+    );
+
+    load.min='0';
+    load.step='0.1';
+
+    const rir=input(
+      'number','RIR'
+    );
+
+    rir.min='0';
+    rir.max='10';
+    rir.step='0.5';
+
+    const instructions=el('textarea');
+
+    instructions.placeholder=
+      'Note tecniche ed esecuzione';
+
+    instructions.rows=3;
+
+    const searchButton=button(
+      'Cerca esercizio',
+      ()=>execute(async()=>{
+
+        const data=await rpcT12(
+          'forge_training_v8_search_exercises',{
+            p_search:search.value.trim(),
+            p_muscle_group:null,
+            p_limit:30
+          }
+        );
+
+        if(!current()||
+          !details.isConnected)return;
+
+        results.replaceChildren();
+
+        const rows=Array.isArray(data)?
+          data:
+          data?.exercises||
+          data?.items||[];
+
+        if(!rows.length){
+
+          results.append(el(
+            'p',
+            'Nessun risultato. Puoi inserire il nome manualmente.',
+            'small'
+          ));
+        }
+
+        for(const exercise of rows){
+
+          const title=
+            exercise.name||
+            exercise.exercise_name||
+            exercise.title;
+
+          if(!title)continue;
+
+          results.append(button(
+            title,
+            ()=>{
+
+              name.value=title;
+
+              results.replaceChildren(
+                el(
+                  'p',
+                  'Selezionato: '+title,
+                  'success'
+                )
+              );
+            },
+            'secondary'
+          ));
+        }
+      }),
+      'secondary'
+    );
+
+    add(
+      details,
+      search,
+      searchButton,
+      results
+    );
+
+    fieldT12(details,'Esercizio',name);
+    fieldT12(details,'Serie',sets);
+    fieldT12(details,'Ripetizioni',reps);
+    fieldT12(details,'Recupero (sec)',rest);
+    fieldT12(details,'Carico (kg)',load);
+    fieldT12(details,'RIR',rir);
+    fieldT12(details,'Note tecniche',instructions);
+
+    details.append(button(
+      'Salva esercizio nella scheda',
+      ()=>execute(async()=>{
+
+        if(!name.value.trim()||
+          !reps.value.trim()){
+
+          throw Error(
+            'Inserisci esercizio e ripetizioni.'
+          );
+        }
+
+        const order=Math.max(
+          0,...items.map(i=>
+            Number(
+              i.exercise_order||
+              i.workout_item?.exercise_order
+            )||0
+          )
+        )+1;
+
+        await rpcT12(
+          'forge_v4_add_workout_item',{
+            p_workout_day_id:dayId,
+            p_exercise_name:name.value.trim(),
+            p_exercise_order:order,
+            p_sets:numberT12(
+              sets.value,1,100,true
+            ),
+            p_repetitions:reps.value.trim(),
+            p_rest_seconds:numberT12(
+              rest.value,0,3600,true
+            ),
+            p_load_kg:load.value===''?
+              null:numberT12(
+                load.value,0,2000
+              ),
+            p_rir:rir.value===''?
+              null:numberT12(
+                rir.value,0,10
+              ),
+            p_instructions:
+              instructions.value.trim()||null
+          }
+        );
+
+        statusT12(
+          feedback,'Esercizio salvato.'
+        );
+
+        await openProgram();
+      })
+    ));
+
+    root.append(details);
+  }
+
+  if(admin){
+
+    const createPanel=el(
+      'details','','item'
+    );
+
+    createPanel.append(el(
+      'summary','+ Crea nuova scheda'
+    ));
+
+    const title=input(
+      'text','Nome programma'
+    );
+
+    const description=el('textarea');
+
+    description.placeholder=
+      'Descrizione del programma';
+
+    const goal=input(
+      'text','Es. Ipertrofia'
+    );
+
+    const difficulty=selectT12([
+      ['','Non specificata'],
+      ['beginner','Principiante'],
+      ['intermediate','Intermedio'],
+      ['advanced','Avanzato']
+    ]);
+
+    const weeks=input(
+      'number','Durata in settimane'
+    );
+
+    weeks.value='8';
+    weeks.min='1';
+
+    fieldT12(
+      createPanel,'Nome scheda',title
+    );
+
+    fieldT12(
+      createPanel,'Descrizione',description
+    );
+
+    fieldT12(
+      createPanel,'Obiettivo',goal
+    );
+
+    fieldT12(
+      createPanel,'Livello',difficulty
+    );
+
+    fieldT12(
+      createPanel,'Durata settimane',weeks
+    );
+
+    createPanel.append(button(
+      'Crea programma per il cliente',
+      ()=>execute(async()=>{
+
+        if(!uuidT12(client.value)){
+
+          throw Error(
+            'Seleziona prima un cliente.'
+          );
+        }
+
+        if(!title.value.trim()){
+
+          throw Error(
+            'Inserisci il nome del programma.'
+          );
+        }
+
+        const target=client.value;
+
+        const id=await rpcT12(
+          'forge_v4_create_program',{
+            p_client_id:target,
+            p_title:title.value.trim(),
+            p_description:
+              description.value.trim()||null,
+            p_goal:goal.value.trim()||null,
+            p_difficulty:
+              difficulty.value||null,
+            p_duration_weeks:numberT12(
+              weeks.value,1,104,true
+            )
+          }
+        );
+
+        if(!uuidT12(id)){
+
+          throw Error(
+            'Identificativo programma non restituito. Controlla i programmi prima di riprovare.'
+          );
+        }
+
+        selectedProgram=id;
+        selectedClient=target;
+
+        statusT12(
+          feedback,
+          'Programma creato correttamente.'
+        );
+
+        title.value='';
+        createPanel.open=false;
+
+        await loadPrograms();
+        await openProgram();
+      })
+    ));
+
+    client.onchange=()=>{
+
+      selectedProgram=null;
+      selectedClient=null;
+
+      editor.replaceChildren();
+
+      execute(loadPrograms);
+    };
+
+    add(
+      panel,
+      el('label','Seleziona cliente'),
+      client,
+      button(
+        'Aggiorna elenco clienti',
+        ()=>execute(loadClients),
+        'secondary'
+      ),
+      createPanel
+    );
+  }
+
+  add(
+    panel,
+    feedback,
+    button(
+      'Aggiorna programmi',
+      ()=>execute(loadPrograms),
+      'secondary'
+    ),
+    programs,
+    editor
+  );
+
+  try{
+
+    if(admin){
+
+      await execute(loadClients);
+
+    }else{
+
+      await execute(loadPrograms);
+    }
+
+  }catch(e){
+
+    if(current()){
+
+      statusT12(
+        feedback,friendly(e),true
+      );
+    }
+  }
+}
+
+section=function(name){
+
+  previousSectionT12(name);
+
+  if(name!=='Allenamento')return;
+
+  const root=$('sectionContent');
+
+  trainingBuilderT12(root).catch(e=>{
+
+    if(active==='Allenamento'){
+
+      notice(root,friendly(e),true);
+    }
+  });
+};
+
+console.info(
+  'FORGE TRAINING V12 ATTIVO'
+);
+
+})();
+
+/* END FORGE TRAINING V12 */
 </script>
 </body>
 </html>
