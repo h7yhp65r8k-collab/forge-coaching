@@ -10297,5 +10297,22 @@ setTimeout(fixForge,1500);
 setTimeout(fixForge,3000);
 })();
 </script>
-</body>
+</body><script>
+(function(){
+  if(typeof db !== "undefined" &&
+     typeof db.rpc === "function" &&
+     window.ForgePerformanceV13){
+    window.ForgePerformanceV13.connect(db);
+  }
+})();
+</script>
+   <script>
+(function(){
+  if(typeof db !== "undefined" &&
+     typeof db.rpc === "function" &&
+     window.ForgePerformanceV13){
+    window.ForgePerformanceV13.connect(db);
+  }
+})();
+</script>
 </html>
