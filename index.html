@@ -3915,7 +3915,1747 @@ console.info(
 })();
 
 /* END FORGE FRONTEND BRIDGE V2 */
-initialize();
+/* =====================================================
+   FORGE FRONTEND MASTER BRIDGE V3
+   SHOP - COACHING - NUTRITION - TRAINING
+   PROGRESS - HYDRATION - VIDEO
+===================================================== */
+
+(() => {
+
+'use strict';
+
+const previousSection = section;
+const previousPackages = renderPackages;
+
+const bridge = window.ForgeBridge;
+
+const productTypes = {
+  lessons: 'Pacchetto lezioni',
+  coaching: 'Coaching online',
+  mixed: 'Coaching + lezioni'
+};
+
+const durationUnits = {
+  days: 'giorni',
+  weeks: 'settimane',
+  months: 'mesi'
+};
+
+const paymentLabels = {
+  pending: 'In attesa',
+  confirmed: 'Confermato',
+  rejected: 'Rifiutato',
+  refunded: 'Rimborsato'
+};
+
+const coachingLabels = {
+  active: 'Attivo',
+  scheduled: 'Programmato',
+  expired: 'Scaduto',
+  paused: 'Sospeso',
+  cancelled: 'Annullato'
+};
+
+async function call(name,params={}) {
+  const {data,error}=await db.rpc(name,params);
+  if(error)throw error;
+  return data;
+}
+
+function selectOptions(options,value){
+
+  const select=el('select');
+
+  for(const [key,label] of Object.entries(options)){
+    const option=el('option',label);
+    option.value=key;
+    select.append(option);
+  }
+
+  if(value!==undefined)select.value=value;
+
+  return select;
+}
+
+function field(root,label,control){
+  const box=el('div');
+  add(box,el('label',label),control);
+  root.append(box);
+  return box;
+}
+
+function feedbackBox(){
+  return el('div','','status hidden');
+}
+
+function feedbackMessage(root,text,error=false){
+  root.className='status '+(error?'error':'success');
+  root.textContent=text;
+}
+
+function isCurrent(name,request,account){
+  return active===name &&
+    serial===request &&
+    user?.id===account;
+}
+
+function asRows(data){
+
+  if(Array.isArray(data))return data;
+
+  if(data&&typeof data==='object'){
+
+    for(const key of [
+      'results','foods','items',
+      'exercises','rows','data'
+    ]){
+      if(Array.isArray(data[key])){
+        return data[key];
+      }
+    }
+
+    if(data.name||data.title||data.food_key){
+      return [data];
+    }
+  }
+
+  return [];
+}
+
+function durationText(product){
+
+  const type=product.product_type||'lessons';
+  const parts=[];
+
+  if(type==='lessons'||type==='mixed'){
+    parts.push(product.total_sessions+' lezioni');
+  }
+
+  if(type==='coaching'||type==='mixed'){
+    parts.push(
+      product.duration_value+' '+
+      (durationUnits[product.duration_unit]||
+      product.duration_unit)
+    );
+  }
+
+  return parts.join(' + ');
+}
+
+/* =====================================================
+   FORGE SHOP V2
+===================================================== */
+
+function productEditor(pkg=null){
+
+  const card=el('div','','item');
+
+  const title=input('text','Nome prodotto');
+  title.value=pkg?.title||'';
+
+  const type=selectOptions(
+    productTypes,
+    pkg?.product_type||'lessons'
+  );
+
+  const sessions=input('number','Numero lezioni');
+  sessions.min='0';
+  sessions.step='1';
+  sessions.value=pkg?.total_sessions??5;
+
+  const duration=input('number','Durata');
+  duration.min='1';
+  duration.step='1';
+  duration.value=pkg?.duration_value||4;
+
+  const unit=selectOptions(
+    durationUnits,
+    pkg?.duration_unit||'weeks'
+  );
+
+  const price=input('number','Prezzo in euro');
+  price.min='0';
+  price.step='0.01';
+  price.value=pkg?.price_eur??'';
+
+  const description=el('textarea');
+  description.placeholder='Descrizione del servizio';
+  description.value=pkg?.description||'';
+  description.rows=3;
+
+  const availability=selectOptions({
+    yes:'Pubblicato',
+    no:'Non pubblicato'
+  },pkg?.active?'yes':'no');
+
+  card.append(el(
+    'h3',
+    pkg?'Modifica prodotto':'Crea nuovo prodotto'
+  ));
+
+  field(card,'Nome',title);
+  field(card,'Tipologia',type);
+
+  const sessionBox=field(
+    card,'Numero lezioni',sessions
+  );
+
+  const durationBox=field(
+    card,'Durata coaching',duration
+  );
+
+  const unitBox=field(
+    card,'Unità di durata',unit
+  );
+
+  field(card,'Prezzo (€)',price);
+  field(card,'Descrizione',description);
+  field(card,'Visibilità nel catalogo',availability);
+
+  const preview=el('p','','small');
+  card.append(preview);
+
+  function update(){
+
+    sessionBox.classList.toggle(
+      'hidden',type.value==='coaching'
+    );
+
+    durationBox.classList.toggle(
+      'hidden',type.value==='lessons'
+    );
+
+    unitBox.classList.toggle(
+      'hidden',type.value==='lessons'
+    );
+
+    preview.textContent=
+      type.value==='coaching'?
+      'Coaching senza lezioni incluse.':
+      type.value==='mixed'?
+      'Coaching con lezioni incluse.':
+      'Pacchetto tradizionale di lezioni.';
+  }
+
+  type.onchange=update;
+  update();
+
+  const feedback=feedbackBox();
+  const request=serial;
+  const account=user?.id;
+
+  const save=button(
+    pkg?'Salva modifiche':'Crea prodotto',
+    async()=>{
+
+      const n=Number(price.value);
+
+      const count=type.value==='coaching'?
+        0:Number(sessions.value);
+
+      const length=type.value==='lessons'?
+        0:Number(duration.value);
+
+      if(
+        !title.value.trim()||
+        price.value===''||
+        !Number.isFinite(n)||
+        n<0||
+        !Number.isInteger(count)||
+        count<0||
+        (type.value!=='coaching'&&count<1)||
+        !Number.isInteger(length)||
+        (type.value!=='lessons'&&
+        (length<1||length>3650))
+      ){
+        feedbackMessage(
+          feedback,
+          'Controlla nome, prezzo, lezioni e durata.',
+          true
+        );
+        return;
+      }
+
+      save.disabled=true;
+
+      try{
+
+        await call(
+          'forge_shop_save_product_v2',{
+            p_title:title.value.trim(),
+            p_price:n,
+            p_product_type:type.value,
+            p_total_sessions:count,
+            p_duration_value:length,
+            p_duration_unit:unit.value,
+            p_description:
+              description.value.trim()||null,
+            p_active:availability.value==='yes',
+            p_id:pkg?.id||null
+          }
+        );
+
+        if(isCurrent('Forge Shop',request,account)){
+          alert('Prodotto salvato correttamente.');
+          await renderShop();
+        }
+
+      }catch(e){
+        feedbackMessage(
+          feedback,friendly(e),true
+        );
+      }finally{
+        save.disabled=false;
+      }
+    }
+  );
+
+  add(card,save,feedback);
+
+  return card;
+}
+
+/* CATALOGO SHOP */
+
+renderShop=async function(){
+
+  const root=$('sectionContent');
+  const request=serial;
+  const account=user?.id;
+
+  root.replaceChildren(
+    el('p','Caricamento Forge Shop...','muted')
+  );
+
+  try{
+
+    let query=db
+      .from('forge_shop_packages')
+      .select(
+        'id,title,total_sessions,price_eur,'+
+        'active,created_at,product_type,'+
+        'duration_value,duration_unit,description'
+      )
+      .order('created_at',{ascending:true});
+
+    if(role!=='admin'){
+      query=query.eq('active',true);
+    }
+
+    const {data,error}=await query;
+
+    if(error)throw error;
+
+    if(!isCurrent('Forge Shop',request,account)){
+      return;
+    }
+
+    root.replaceChildren(
+      el('h3','Forge Shop')
+    );
+
+    if(role==='admin'){
+
+      const createPanel=el('details');
+      createPanel.className='item';
+
+      add(
+        createPanel,
+        el('summary','+ Crea nuovo prodotto'),
+        productEditor()
+      );
+
+      root.append(createPanel);
+    }
+
+    for(const [type,label] of
+      Object.entries(productTypes)){
+
+      const products=(data||[]).filter(
+        p=>(p.product_type||'lessons')===type
+      );
+
+      if(!products.length)continue;
+
+      root.append(el('h3',label));
+
+      for(const pkg of products){
+
+        const card=el('div','','item');
+
+        add(
+          card,
+          el('h3',pkg.title),
+          el('div',money(pkg.price_eur),'price'),
+          el('p',durationText(pkg)),
+          el(
+            'p',
+            pkg.active?'Disponibile':'Non pubblicato',
+            'small'
+          )
+        );
+
+        if(pkg.description){
+          card.append(el('p',pkg.description));
+        }
+
+        if(pkg.active){
+
+          const method=selectOptions(
+            methods,'bank_transfer'
+          );
+
+          const feedback=feedbackBox();
+
+          const buy=button(
+            'Richiedi acquisto',
+            async()=>{
+
+              if(!confirm(
+                'Acquistare '+pkg.title+
+                ' per '+money(pkg.price_eur)+'?'
+              ))return;
+
+              buy.disabled=true;
+
+              try{
+
+                await call(
+                  'forge_shop_create_order',{
+                    p_package_id:pkg.id,
+                    p_payment_method:method.value
+                  }
+                );
+
+                feedbackMessage(
+                  feedback,
+                  'Ordine registrato. Attendi conferma.'
+                );
+
+                if(isCurrent(
+                  'Forge Shop',request,account
+                )){
+                  await loadOrders();
+                }
+
+              }catch(e){
+                feedbackMessage(
+                  feedback,friendly(e),true
+                );
+              }finally{
+                buy.disabled=false;
+              }
+            }
+          );
+
+          add(
+            card,
+            el('label','Metodo di pagamento'),
+            method,
+            el(
+              'p',
+              'La richiesta non esegue il pagamento.',
+              'small'
+            ),
+            buy,
+            feedback
+          );
+        }
+
+        if(role==='admin'){
+
+          const editor=el('details');
+
+          add(
+            editor,
+            el('summary','Modifica prodotto'),
+            productEditor(pkg)
+          );
+
+          card.append(editor);
+        }
+
+        root.append(card);
+      }
+    }
+
+    if(!data?.length){
+      root.append(el(
+        'p','Nessun prodotto disponibile.','muted'
+      ));
+    }
+
+    const orders=el('div');
+    orders.id='ordersRoot';
+
+    root.append(orders);
+
+    await loadOrders();
+
+  }catch(e){
+
+    if(isCurrent('Forge Shop',request,account)){
+      root.replaceChildren(
+        el('div',friendly(e),'status error')
+      );
+    }
+  }
+};
+
+/* ORDINI E INCASSI V2 */
+
+loadOrders=async function(){
+
+  const root=$('ordersRoot');
+  if(!root)return;
+
+  root.replaceChildren(
+    el(
+      'h3',
+      role==='admin'?
+      'Ordini e incassi':'I miei acquisti'
+    )
+  );
+
+  try{
+
+    let q=db.from('forge_shop_orders')
+      .select(
+        'id,client_id,package_title,'+
+        'total_sessions,price_eur,'+
+        'payment_method,payment_status,'+
+        'created_at,confirmed_at,'+
+        'activated_package_id,product_type,'+
+        'duration_value,duration_unit,'+
+        'coaching_starts_on,coaching_expires_on'
+      )
+      .order('created_at',{ascending:false})
+      .limit(100);
+
+    if(role!=='admin'){
+      q=q.eq('client_id',user.id);
+    }
+
+    const {data,error}=await q;
+
+    if(error)throw error;
+    if(!root.isConnected)return;
+
+    const orders=data||[];
+
+    if(role==='admin'){
+
+      const confirmed=orders.filter(
+        o=>o.payment_status==='confirmed'
+      );
+
+      const pending=orders.filter(
+        o=>o.payment_status==='pending'
+      );
+
+      const stats=el('div','','stats');
+
+      for(const [label,value] of [
+
+        [
+          'Incassi ultimi 100 ordini',
+          money(confirmed.reduce(
+            (a,b)=>a+Number(b.price_eur),0
+          ))
+        ],
+
+        [
+          'In attesa',
+          String(pending.length)
+        ],
+
+        [
+          'Pagamenti confermati',
+          String(confirmed.length)
+        ]
+
+      ]){
+
+        const box=el('div','','stat');
+
+        add(
+          box,
+          el('span',label),
+          el('strong',value)
+        );
+
+        stats.append(box);
+      }
+
+      root.append(stats);
+    }
+
+    if(!orders.length){
+      root.append(el(
+        'p','Nessun ordine.','muted'
+      ));
+    }
+
+    for(const order of orders){
+
+      const card=el('div','','item');
+
+      add(
+        card,
+        el('h3',order.package_title),
+        el('div',money(order.price_eur),'price'),
+        el('p',durationText(order)),
+        el(
+          'p',
+          'Pagamento: '+
+          (methods[order.payment_method]||
+          order.payment_method)
+        ),
+        el(
+          'p',
+          'Stato: '+
+          (paymentLabels[order.payment_status]||
+          order.payment_status)
+        ),
+        el('p',dt(order.created_at),'small')
+      );
+
+      if(order.coaching_starts_on){
+        card.append(el(
+          'p',
+          'Inizio coaching: '+
+          dateLabel(order.coaching_starts_on)
+        ));
+      }
+
+      if(order.coaching_expires_on){
+        card.append(el(
+          'p',
+          'Scadenza: '+
+          dateLabel(order.coaching_expires_on)
+        ));
+      }
+
+      if(role==='admin'){
+
+        card.append(el(
+          'p',
+          'Cliente: '+order.client_id,
+          'small'
+        ));
+
+        if(order.payment_status==='pending'&&
+          !order.activated_package_id){
+
+          const feedback=feedbackBox();
+
+          const approve=button(
+            'Conferma incasso e attiva',
+            ()=>processOrder(true)
+          );
+
+          const reject=button(
+            'Rifiuta ordine',
+            ()=>processOrder(false),
+            'secondary'
+          );
+
+          async function processOrder(approved){
+
+            if(!confirm(
+              approved?
+              'Hai ricevuto realmente '+
+              money(order.price_eur)+'?':
+              'Rifiutare questo ordine?'
+            ))return;
+
+            approve.disabled=true;
+            reject.disabled=true;
+
+            try{
+
+              await call(
+                approved?
+                'forge_shop_confirm_order':
+                'forge_shop_cancel_order',
+                {p_order_id:order.id}
+              );
+
+              if(root.isConnected){
+                await loadOrders();
+              }
+
+            }catch(e){
+
+              feedbackMessage(
+                feedback,friendly(e),true
+              );
+
+            }finally{
+
+              approve.disabled=false;
+              reject.disabled=false;
+            }
+          }
+
+          add(card,approve,reject,feedback);
+        }
+      }
+
+      root.append(card);
+    }
+
+    const coaching=el('div');
+
+    root.append(coaching);
+
+    await renderCoaching(coaching);
+
+  }catch(e){
+
+    if(root.isConnected){
+      notice(root,friendly(e),true);
+    }
+  }
+};
+
+/* =====================================================
+   COACHING E SCADENZE
+===================================================== */
+
+async function renderCoaching(root){
+
+  root.replaceChildren(el(
+    'h3',
+    role==='admin'?
+    'Percorsi coaching clienti':
+    'Il mio coaching'
+  ));
+
+  try{
+
+    let q=db
+      .from('forge_coaching_dashboard_v2')
+      .select('*')
+      .order('expires_on',{ascending:true})
+      .limit(100);
+
+    if(role!=='admin'){
+      q=q.eq('client_id',user.id);
+    }
+
+    const {data,error}=await q;
+
+    if(error)throw error;
+    if(!root.isConnected)return;
+
+    if(!data?.length){
+
+      root.append(el(
+        'p',
+        'Nessun percorso coaching registrato.',
+        'muted'
+      ));
+
+      return;
+    }
+
+    for(const item of data){
+
+      const card=el('div','','item');
+
+      add(
+        card,
+        el('h3',item.title),
+        el(
+          'div',
+          item.days_remaining+' giorni rimanenti',
+          'price'
+        ),
+        el('p','Inizio: '+item.starts_on),
+        el('p','Scadenza: '+item.expires_on),
+        el(
+          'p',
+          'Stato: '+
+          (coachingLabels[item.current_status]||
+          item.current_status)
+        )
+      );
+
+      if(role==='admin'){
+        card.append(el(
+          'p','Cliente: '+item.client_id,'small'
+        ));
+      }
+
+      if(item.renewal_alert){
+        card.append(el(
+          'div',
+          item.renewal_alert,
+          'calendar-warning'
+        ));
+      }
+
+      if(role!=='admin'){
+        card.append(button(
+          'Rinnova coaching',
+          ()=>section('Forge Shop'),
+          'secondary'
+        ));
+      }
+
+      root.append(card);
+    }
+
+  }catch(e){
+    if(root.isConnected){
+      notice(root,friendly(e),true);
+    }
+  }
+}
+
+renderPackages=async function(){
+
+  const request=serial;
+  const account=user?.id;
+
+  await previousPackages();
+
+  if(!isCurrent(
+    'Pacchetti lezioni',request,account
+  ))return;
+
+  const root=el('div');
+
+  $('sectionContent').append(root);
+
+  await renderCoaching(root);
+};
+
+/* =====================================================
+   FORGE NUTRITION
+   RICERCA E DIARIO
+===================================================== */
+
+function nutritionPanel(root){
+
+  const panel=el('div','','item');
+
+  const search=input(
+    'search',
+    'Cerca riso, pollo, pasta...'
+  );
+
+  const date=input('date');
+  date.value=todayRome();
+
+  const online=selectOptions({
+    local:'Catalogo interno',
+    online:'Catalogo interno + online'
+  },'local');
+
+  const result=el('div');
+
+  const feedback=feedbackBox();
+
+  let searchSerial=0;
+
+  const find=button(
+    'Cerca alimento',
+    async()=>{
+
+      const term=search.value.trim();
+
+      if(term.length<2){
+        feedbackMessage(
+          feedback,
+          'Inserisci almeno due caratteri.',
+          true
+        );
+        return;
+      }
+
+      const request=++searchSerial;
+
+      find.disabled=true;
+
+      result.replaceChildren(
+        el('p','Ricerca in corso...','muted')
+      );
+
+      try{
+
+        const data=await call(
+          'forge_nutrition_v7_search',{
+            p_query:term,
+            p_page:1,
+            p_limit:20,
+            p_online:online.value==='online'
+          }
+        );
+
+        if(!panel.isConnected||
+          request!==searchSerial)return;
+
+        const foods=asRows(data);
+
+        result.replaceChildren();
+
+        if(!foods.length){
+          result.append(el(
+            'p',
+            'Nessun alimento visualizzabile.',
+            'muted'
+          ));
+        }
+
+        for(const food of foods){
+
+          const card=el('div','','item');
+
+          const name=
+            food.name||
+            food.title||
+            food.food_name||
+            food.label||
+            'Alimento';
+
+          card.append(el('h3',String(name)));
+
+          const quantity=input(
+            'number','Quantità'
+          );
+
+          quantity.min='0.01';
+          quantity.step='0.01';
+          quantity.value='100';
+
+          const unit=selectOptions({
+            g:'Grammi',
+            kg:'Chilogrammi',
+            ml:'Millilitri',
+            l:'Litri'
+          },'g');
+
+          const status=feedbackBox();
+
+          for(const [key,value] of
+            Object.entries(food)){
+
+            if(
+              /^(kcal|calories|protein|carbohydrate|carbs|fat|fiber|energy|proteins)/i
+              .test(key)&&
+              ['string','number'].includes(
+                typeof value
+              )
+            ){
+              card.append(el(
+                'p',
+                key.replace(/_/g,' ')+
+                ': '+value,
+                'small'
+              ));
+            }
+          }
+
+          if(
+            typeof food.source==='string'&&
+            food.food_key!==undefined&&
+            food.food_key!==null
+          ){
+
+            const save=button(
+              'Aggiungi al diario',
+              async()=>{
+
+                const amount=Number(quantity.value);
+
+                if(
+                  !Number.isFinite(amount)||
+                  amount<=0||
+                  !date.value
+                ){
+                  feedbackMessage(
+                    status,
+                    'Quantità o data non valida.',
+                    true
+                  );
+                  return;
+                }
+
+                save.disabled=true;
+
+                try{
+
+                  await call(
+                    'forge_nutrition_v7_add_food',{
+                      p_source:food.source,
+                      p_food_key:String(food.food_key),
+                      p_quantity:amount,
+                      p_unit:unit.value,
+                      p_meal:'Altro',
+                      p_date:date.value,
+                      p_extra:false
+                    }
+                  );
+
+                  feedbackMessage(
+                    status,
+                    'Alimento registrato nel diario.'
+                  );
+
+                  if(panel.isConnected){
+
+                    const filters=root.querySelector(
+                      '.filters'
+                    );
+
+                    filters?.querySelector(
+                      'button'
+                    )?.click();
+                  }
+
+                }catch(e){
+
+                  feedbackMessage(
+                    status,friendly(e),true
+                  );
+
+                }finally{
+                  save.disabled=false;
+                }
+              }
+            );
+
+            add(
+              card,
+              el('label','Quantità'),
+              quantity,
+              unit,
+              save,
+              status
+            );
+
+          }else{
+
+            card.append(el(
+              'p',
+              'Alimento consultabile. '+
+              'Identificativo diario non disponibile.',
+              'small'
+            ));
+          }
+
+          result.append(card);
+        }
+
+      }catch(e){
+
+        if(panel.isConnected){
+          result.replaceChildren(el(
+            'div',friendly(e),'status error'
+          ));
+        }
+
+      }finally{
+        find.disabled=false;
+      }
+    }
+  );
+
+  add(
+    panel,
+    el('h3','Diario alimentare'),
+    el('p','Registrazione personale','small'),
+    el('label','Data'),
+    date,
+    el('label','Ricerca alimenti'),
+    search,
+    online,
+    find,
+    feedback,
+    result
+  );
+
+  search.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!find.disabled){
+      find.click();
+    }
+  });
+
+  root.prepend(panel);
+}
+
+/* =====================================================
+   FORGE TRAINING
+   CATALOGO ESERCIZI
+===================================================== */
+
+function trainingCatalog(root){
+
+  const panel=el('div','','item');
+
+  const search=input(
+    'search',
+    'Panca, squat, rematore...'
+  );
+
+  const result=el('div');
+
+  const find=button(
+    'Cerca esercizi',
+    async()=>{
+
+      find.disabled=true;
+
+      result.replaceChildren(
+        el('p','Ricerca esercizi...','muted')
+      );
+
+      try{
+
+        const data=await call(
+          'forge_training_v8_search_exercises',{
+            p_search:search.value.trim(),
+            p_muscle_group:null,
+            p_limit:50
+          }
+        );
+
+        if(!panel.isConnected)return;
+
+        result.replaceChildren();
+
+        const rows=asRows(data);
+
+        if(!rows.length){
+          result.append(el(
+            'p','Nessun esercizio trovato.','muted'
+          ));
+        }
+
+        for(const exercise of rows){
+
+          const card=el('div','','item');
+
+          const title=
+            exercise.name||
+            exercise.exercise_name||
+            exercise.title||
+            'Esercizio';
+
+          card.append(el('h3',String(title)));
+
+          for(const [key,label] of [
+            ['muscle_group','Gruppo muscolare'],
+            ['equipment','Attrezzatura'],
+            ['difficulty','Difficoltà'],
+            ['category','Categoria'],
+            ['description','Descrizione']
+          ]){
+
+            const value=exercise[key];
+
+            if(
+              value&&
+              ['string','number'].includes(
+                typeof value
+              )
+            ){
+              card.append(el(
+                'p',label+': '+value
+              ));
+            }
+          }
+
+          result.append(card);
+        }
+
+      }catch(e){
+
+        if(panel.isConnected){
+          result.replaceChildren(el(
+            'div',friendly(e),'status error'
+          ));
+        }
+
+      }finally{
+        find.disabled=false;
+      }
+    }
+  );
+
+  add(
+    panel,
+    el('h3','Catalogo esercizi Forge'),
+    search,
+    find,
+    result
+  );
+
+  root.append(panel);
+
+}
+
+/* APERTURA SCHEDE PDF PRIVATE */
+
+function trainingPDFPanel(root){
+
+  const panel=el('div','','item');
+  const output=el('div');
+
+  const load=button(
+    'Carica documenti disponibili',
+    async()=>{
+
+      load.disabled=true;
+
+      output.replaceChildren(
+        el('p','Caricamento...','muted')
+      );
+
+      try{
+
+        const data=await bridge.training.getPDFs(
+          role==='admin'?null:user.id
+        );
+
+        if(!panel.isConnected)return;
+
+        output.replaceChildren();
+
+        const rows=asRows(data);
+
+        if(!rows.length){
+          output.append(el(
+            'p','Nessuna scheda PDF.','muted'
+          ));
+        }
+
+        for(const pdf of rows){
+
+          const card=el('div','','item');
+
+          add(
+            card,
+            el('h3',pdf.title||'Scheda PDF')
+          );
+
+          if(pdf.description){
+            card.append(el('p',pdf.description));
+          }
+
+          if(typeof pdf.storage_path==='string'){
+
+            const open=button(
+              'Apri scheda PDF',
+              async()=>{
+
+                open.disabled=true;
+
+                try{
+
+                  const {data,error}=await db.storage
+                    .from('forge-training-pdf')
+                    .createSignedUrl(
+                      pdf.storage_path,120
+                    );
+
+                  if(error)throw error;
+
+                  if(!card.isConnected)return;
+
+                  const link=el(
+                    'a','Visualizza documento'
+                  );
+
+                  link.href=data.signedUrl;
+                  link.target='_blank';
+                  link.rel='noopener noreferrer';
+                  link.style.color='#e9c675';
+
+                  card.append(link);
+
+                }catch(e){
+
+                  notice(card,friendly(e),true);
+
+                }finally{
+
+                  open.disabled=false;
+                }
+              }
+            );
+
+            card.append(open);
+
+          }else{
+
+            card.append(el(
+              'p',
+              'Documento registrato; apertura non disponibile.',
+              'small'
+            ));
+          }
+
+          output.append(card);
+        }
+
+      }catch(e){
+
+        if(panel.isConnected){
+          notice(output,friendly(e),true);
+        }
+
+      }finally{
+        load.disabled=false;
+      }
+    }
+  );
+
+  add(
+    panel,
+    el('h3','Consulta schede PDF'),
+    load,
+    output
+  );
+
+  root.append(panel);
+}
+
+/* =====================================================
+   PROGRESS EVOLUTION
+===================================================== */
+
+function progressChart(root){
+
+  const panel=el('div','','item');
+
+  const metric=selectOptions({
+    weight:'Peso corporeo',
+    body_fat:'Massa grassa',
+    waist:'Circonferenza vita'
+  },'weight');
+
+  const range=selectOptions({
+    month:'Mese'
+  },'month');
+
+  const output=el('div');
+
+  const load=button(
+    'Visualizza andamento',
+    async()=>{
+
+      load.disabled=true;
+
+      output.replaceChildren(
+        el('p','Caricamento grafico...','muted')
+      );
+
+      try{
+
+        const data=await bridge.progress.chart(
+          metric.value,
+          range.value,
+          user.id
+        );
+
+        if(!panel.isConnected)return;
+
+        const points=asRows(data)
+          .filter(r=>
+            r.value!==null&&
+            r.value!==undefined&&
+            Number.isFinite(Number(r.value))
+          )
+          .map(r=>({
+            date:r.recorded_on,
+            value:Number(r.value),
+            unit:r.unit||''
+          }))
+          .sort((a,b)=>
+            String(a.date).localeCompare(String(b.date))
+          )
+          .slice(-60);
+
+        output.replaceChildren();
+
+        if(!points.length){
+
+          output.append(el(
+            'p',
+            'Nessuna misurazione disponibile.',
+            'muted'
+          ));
+
+          return;
+        }
+
+        const svg=svgNode('svg',{
+          viewBox:'0 0 600 250',
+          class:'chart'
+        });
+
+        const values=points.map(p=>p.value);
+
+        const low=Math.min(...values);
+        const high=Math.max(...values);
+
+        const padding=Math.max(
+          (high-low)*0.15,0.5
+        );
+
+        const minimum=low-padding;
+        const maximum=high+padding;
+
+        const x=i=>points.length===1?
+          300:55+i*500/(points.length-1);
+
+        const y=v=>
+          210-(v-minimum)/
+          (maximum-minimum)*170;
+
+        for(let i=0;i<=4;i++){
+
+          const yy=40+i*42.5;
+
+          svg.append(svgNode('line',{
+            x1:55,x2:555,
+            y1:yy,y2:yy,
+            stroke:'#48413a',
+            'stroke-dasharray':'4 5'
+          }));
+
+          svg.append(svgNode('text',{
+            x:48,
+            y:yy+4,
+            fill:'#aaa',
+            'font-size':11,
+            'text-anchor':'end'
+          },fmt(
+            maximum-i*(maximum-minimum)/4,1
+          )));
+        }
+
+        if(points.length>1){
+
+          svg.append(svgNode('polyline',{
+            points:points.map(
+              (p,i)=>x(i)+','+y(p.value)
+            ).join(' '),
+            fill:'none',
+            stroke:'#e9c675',
+            'stroke-width':3
+          }));
+        }
+
+        const tip=el(
+          'p',
+          'Tocca un punto per vedere il valore.',
+          'small'
+        );
+
+        points.forEach((p,i)=>{
+
+          const dot=svgNode('circle',{
+            cx:x(i),
+            cy:y(p.value),
+            r:6,
+            fill:'#e9c675'
+          });
+
+          dot.addEventListener('click',()=>{
+
+            tip.textContent=
+              p.date+' • '+
+              fmt(p.value,2)+' '+p.unit;
+          });
+
+          svg.append(dot);
+        });
+
+        const latest=points[points.length-1];
+
+        add(
+          output,
+          el(
+            'div',
+            fmt(latest.value,2)+' '+latest.unit,
+            'price'
+          ),
+          el('p','Ultima misurazione','small'),
+          svg,
+          tip
+        );
+
+        for(const point of points.slice(-10).reverse()){
+
+          output.append(el(
+            'div',
+            point.date+' • '+
+            fmt(point.value,2)+' '+point.unit,
+            'history-item'
+          ));
+        }
+
+      }catch(e){
+
+        if(panel.isConnected){
+          notice(output,friendly(e),true);
+        }
+
+      }finally{
+        load.disabled=false;
+      }
+    }
+  );
+
+  add(
+    panel,
+    el('h3','Grafico progressi personale'),
+    metric,
+    range,
+    load,
+    output
+  );
+
+  root.append(panel);
+}
+
+/* =====================================================
+   FORGE HYDRATION
+   REGISTRAZIONE RAPIDA
+===================================================== */
+
+function hydrationQuick(root){
+
+  const value=root.querySelector(
+    'input[type="number"]'
+  );
+
+  const save=[...root.querySelectorAll('button')]
+    .find(b=>
+      b.textContent==='Salva registrazione'
+    );
+
+  if(!value||!save)return;
+
+  const panel=el('div','','item');
+
+  panel.append(el(
+    'h3','Aggiungi acqua rapidamente'
+  ));
+
+  const grid=el('div','','stats');
+
+  for(const amount of [250,500,750,1000]){
+
+    const b=button(
+      '+'+amount+' ml',
+      ()=>{
+
+        if(save.disabled)return;
+
+        value.value=String(amount);
+        save.click();
+      },
+      'secondary'
+    );
+
+    grid.append(b);
+  }
+
+  add(
+    panel,
+    grid,
+    el(
+      'p',
+      'Tocca un pulsante per salvare direttamente.',
+      'small'
+    )
+  );
+
+  root.prepend(panel);
+}
+
+/* =====================================================
+   FORGE EXERCISE VIDEO
+===================================================== */
+
+async function videoLibrary(root){
+
+  root.replaceChildren(
+    el('h3','Video esercizi'),
+    el('p','Caricamento libreria...','muted')
+  );
+
+  try{
+
+    let q=db.from('exercise_videos')
+      .select(
+        'id,title,storage_path,storage_bucket,published'
+      )
+      .limit(100);
+
+    if(role!=='admin'){
+      q=q.eq('published',true);
+    }
+
+    const {data,error}=await q;
+
+    if(error)throw error;
+    if(!root.isConnected)return;
+
+    root.replaceChildren(
+      el('h3','Libreria video')
+    );
+
+    if(!data?.length){
+
+      root.append(el(
+        'p',
+        'Nessun video disponibile.',
+        'muted'
+      ));
+
+      return;
+    }
+
+    for(const video of data){
+
+      const card=el('div','','item');
+
+      add(
+        card,
+        el('h3',video.title||'Video esercizio'),
+        el(
+          'p',
+          video.published?
+          'Pubblicato':'Non pubblicato',
+          'small'
+        )
+      );
+
+      if(
+        video.storage_path&&
+        video.storage_bucket===
+          'forge-exercise-videos'
+      ){
+
+        const play=button(
+          'Guarda video',
+          async()=>{
+
+            play.disabled=true;
+
+            try{
+
+              const {data,error}=await db.storage
+                .from('forge-exercise-videos')
+                .createSignedUrl(
+                  video.storage_path,300
+                );
+
+              if(error)throw error;
+              if(!card.isConnected)return;
+
+              const old=card.querySelector('video');
+              if(old)old.remove();
+
+              const player=el('video');
+              player.controls=true;
+              player.playsInline=true;
+              player.preload='metadata';
+              player.src=data.signedUrl;
+              player.style.width='100%';
+              player.style.borderRadius='12px';
+
+              card.append(player);
+
+            }catch(e){
+
+              notice(card,friendly(e),true);
+
+            }finally{
+
+              play.disabled=false;
+            }
+          }
+        );
+
+        card.append(play);
+      }
+
+      root.append(card);
+    }
+
+  }catch(e){
+
+    if(root.isConnected){
+      root.replaceChildren(
+        el('div',friendly(e),'status error')
+      );
+    }
+  }
+}
+
+/* =====================================================
+   NAVIGAZIONE MASTER V3
+===================================================== */
+
+section=function(name){
+
+  previousSection(name);
+
+  const root=$('sectionContent');
+
+  try{
+
+    switch(name){
+
+      case 'Forge Nutrition':
+        nutritionPanel(root);
+        break;
+
+      case 'Allenamento':
+        trainingCatalog(root);
+        trainingPDFPanel(root);
+        break;
+
+      case 'Progress Evolution':
+        progressChart(root);
+        break;
+
+      case 'Forge Hydration':
+        hydrationQuick(root);
+        break;
+
+      case 'Video esercizi':{
+
+        const container=el('div');
+        root.replaceChildren(container);
+
+        videoLibrary(container);
+
+        break;
+      }
+    }
+
+  }catch(e){
+
+    notice(root,friendly(e),true);
+  }
+};
+
+console.info(
+  'FORGE FRONTEND MASTER BRIDGE V3 ATTIVO'
+);
+
+})();
+
+/* END FORGE FRONTEND MASTER BRIDGE V3 */initialize();
 </script>
 </body>
 </html>
