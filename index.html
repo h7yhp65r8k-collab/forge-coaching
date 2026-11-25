@@ -5655,7 +5655,1602 @@ console.info(
 
 })();
 
-/* END FORGE FRONTEND MASTER BRIDGE V3 */initialize();
+/* END FORGE FRONTEND MASTER BRIDGE V3 */
+/* =====================================================
+   FORGE FRONTEND MASTER BRIDGE V4
+   ORDER MANAGEMENT - COACHING - PACKAGES
+   NUTRITION - HYDRATION - WEIGHT - CALENDAR
+===================================================== */
+
+(() => {
+
+'use strict';
+
+const previousSectionV4 = section;
+const previousMetricV4 = loadMetric;
+const previousPackagesV4 = renderPackages;
+
+const labelsV4 = {
+  pending: 'In attesa',
+  confirmed: 'Confermato',
+  rejected: 'Rifiutato',
+  refunded: 'Rimborsato',
+  active: 'Attivo',
+  expired: 'Scaduto',
+  cancelled: 'Annullato',
+  paused: 'Sospeso',
+  scheduled: 'Programmato',
+  completed: 'Completato',
+  lessons: 'Pacchetto lezioni',
+  coaching: 'Coaching online',
+  mixed: 'Coaching + lezioni'
+};
+
+const styleV4 = el('style');
+
+styleV4.textContent = `
+.forge-danger {
+  background:#301c20!important;
+  color:#ffaaaa!important;
+  border:1px solid #9b5050!important;
+}
+.forge-v4-progress {
+  height:12px;
+  background:#292a30;
+  border-radius:20px;
+  overflow:hidden;
+  margin:12px 0;
+}
+.forge-v4-progress-fill {
+  height:100%;
+  background:linear-gradient(90deg,#a98138,#f0cd76);
+  border-radius:20px;
+}
+.forge-v4-tag {
+  display:inline-block;
+  border:1px solid #756039;
+  color:#e9c675;
+  border-radius:8px;
+  padding:5px 9px;
+  font-size:12px;
+  margin:5px 0;
+}
+.forge-v4-panel {
+  background:linear-gradient(145deg,#201c15,#15161a);
+  border:1px solid #756039;
+  border-radius:15px;
+  padding:15px;
+  margin:12px 0;
+}
+`;
+
+document.head.append(styleV4);
+
+async function rpcV4(name,params={}){
+
+  const {data,error}=await db.rpc(name,params);
+
+  if(error)throw error;
+
+  return data;
+}
+
+function selectV4(options,selected){
+
+  const control=el('select');
+
+  for(const [value,label] of Object.entries(options)){
+
+    const option=el('option',label);
+    option.value=value;
+    control.append(option);
+  }
+
+  if(selected!==undefined){
+    control.value=selected;
+  }
+
+  return control;
+}
+
+function statusV4(root,text,error=false){
+
+  root.textContent=text;
+  root.className='status '+(
+    error?'error':'success'
+  );
+}
+
+function visibleV4(root,request,account){
+
+  return root.isConnected &&
+    serial===request &&
+    user?.id===account;
+}
+
+function statV4(root,label,value){
+
+  const box=el('div','','stat');
+
+  add(
+    box,
+    el('span',label),
+    el('strong',value)
+  );
+
+  root.append(box);
+}
+
+function progressV4(root,value){
+
+  const bar=el('div','','forge-v4-progress');
+
+  const fill=el(
+    'div','','forge-v4-progress-fill'
+  );
+
+  fill.style.width=
+    Math.max(0,Math.min(100,value))+'%';
+
+  bar.append(fill);
+  root.append(bar);
+}
+
+/* =====================================================
+   SHOP V4 - ORDINI E INCASSI
+===================================================== */
+
+let ordersRequestV4=0;
+
+loadOrders=async function(){
+
+  const root=$('ordersRoot');
+
+  if(!root||!user)return;
+
+  const request=serial;
+  const account=user.id;
+  const admin=role==='admin';
+  const generation=++ordersRequestV4;
+
+  function current(){
+
+    return visibleV4(root,request,account)&&
+      generation===ordersRequestV4;
+  }
+
+  root.replaceChildren(
+    el('h3',admin?
+      'Ordini e incassi':
+      'I miei acquisti'),
+    el('p','Caricamento ordini...','muted')
+  );
+
+  try{
+
+    const orders=[];
+
+    const pageSize=100;
+
+    for(let offset=0;;offset+=pageSize){
+
+      let q=db.from('forge_shop_orders')
+        .select(
+          'id,client_id,package_title,'+
+          'total_sessions,price_eur,'+
+          'payment_method,payment_status,'+
+          'created_at,confirmed_at,'+
+          'activated_package_id,product_type,'+
+          'duration_value,duration_unit,'+
+          'coaching_starts_on,coaching_expires_on,'+
+          'archived_at,archive_reason'
+        )
+        .order('created_at',{ascending:false})
+        .order('id',{ascending:false})
+        .range(offset,offset+pageSize-1);
+
+      if(!admin){
+        q=q.eq('client_id',account);
+      }
+
+      const {data,error}=await q;
+
+      if(error)throw error;
+
+      if(!current())return;
+
+      orders.push(...(data||[]));
+
+      if(!data||data.length<pageSize)break;
+    }
+
+    root.replaceChildren(
+      el('h3',admin?
+        'Ordini e incassi':
+        'I miei acquisti')
+    );
+
+    if(admin){
+
+      const confirmed=orders.filter(
+        o=>o.payment_status==='confirmed'
+      );
+
+      const pending=orders.filter(
+        o=>o.payment_status==='pending'
+        &&!o.archived_at
+      );
+
+      const refunded=orders.filter(
+        o=>o.payment_status==='refunded'
+      );
+
+      const stats=el('div','','stats');
+
+      statV4(
+        stats,
+        'Incassi confermati',
+        money(confirmed.reduce(
+          (sum,o)=>sum+Number(o.price_eur),0
+        ))
+      );
+
+      statV4(
+        stats,
+        'Pagamenti confermati',
+        String(confirmed.length)
+      );
+
+      statV4(
+        stats,
+        'In attesa',
+        String(pending.length)
+      );
+
+      statV4(
+        stats,
+        'Ordini rimborsati',
+        String(refunded.length)
+      );
+
+      root.append(stats);
+
+      root.append(el(
+        'p',
+        'Gli ordini reali archiviati restano nello storico degli incassi.',
+        'small'
+      ));
+    }
+
+    const search=input(
+      'search','Cerca ordine o cliente'
+    );
+
+    const type=selectV4({
+      all:'Tutte le tipologie',
+      lessons:'Pacchetti lezioni',
+      coaching:'Coaching online',
+      mixed:'Coaching + lezioni'
+    },'all');
+
+    const payment=selectV4({
+      all:'Tutti gli stati',
+      pending:'In attesa',
+      confirmed:'Confermati',
+      rejected:'Rifiutati',
+      refunded:'Rimborsati'
+    },'all');
+
+    const archive=selectV4({
+      current:'Ordini correnti',
+      archived:'Ordini archiviati',
+      all:'Tutti gli ordini'
+    },admin?'current':'all');
+
+    const list=el('div');
+
+    add(
+      root,
+      search,
+      type,
+      payment
+    );
+
+    if(admin){
+      root.append(archive);
+    }
+
+    root.append(list);
+
+    function drawOrders(){
+
+      list.replaceChildren();
+
+      const term=search.value
+        .trim().toLowerCase();
+
+      const filtered=orders.filter(o=>{
+
+        if(type.value!=='all'&&
+          o.product_type!==type.value){
+          return false;
+        }
+
+        if(payment.value!=='all'&&
+          o.payment_status!==payment.value){
+          return false;
+        }
+
+        if(admin){
+
+          if(archive.value==='current'&&
+            o.archived_at)return false;
+
+          if(archive.value==='archived'&&
+            !o.archived_at)return false;
+        }
+
+        if(term){
+
+          const text=[
+            o.package_title,
+            o.client_id,
+            o.id
+          ].join(' ').toLowerCase();
+
+          if(!text.includes(term))return false;
+        }
+
+        return true;
+      });
+
+      list.append(el(
+        'p',
+        filtered.length+' ordini visualizzati',
+        'small'
+      ));
+
+      if(!filtered.length){
+
+        list.append(el(
+          'p','Nessun ordine trovato.','muted'
+        ));
+
+        return;
+      }
+
+      for(const order of filtered){
+
+        const card=el('div','','item');
+
+        const productType=
+          order.product_type||'lessons';
+
+        add(
+          card,
+          el('h3',order.package_title),
+          el('div',money(order.price_eur),'price'),
+          el(
+            'span',
+            labelsV4[productType]||productType,
+            'forge-v4-tag'
+          )
+        );
+
+        if(productType!=='coaching'){
+
+          card.append(el(
+            'p',order.total_sessions+' lezioni'
+          ));
+        }
+
+        if(productType!=='lessons'){
+
+          const units={
+            days:'giorni',
+            weeks:'settimane',
+            months:'mesi'
+          };
+
+          card.append(el(
+            'p',
+            'Durata: '+order.duration_value+' '+
+            (units[order.duration_unit]||
+              order.duration_unit)
+          ));
+        }
+
+        add(
+          card,
+          el(
+            'p',
+            'Pagamento: '+
+            (methods[order.payment_method]||
+              order.payment_method)
+          ),
+          el(
+            'p',
+            'Stato: '+
+            (labelsV4[order.payment_status]||
+              order.payment_status),
+            order.payment_status==='confirmed'?
+              'success':'small'
+          ),
+          el(
+            'p',
+            'Acquisto: '+dt(order.created_at),
+            'small'
+          )
+        );
+
+        if(order.coaching_starts_on){
+
+          card.append(el(
+            'p',
+            'Inizio coaching: '+
+            order.coaching_starts_on
+          ));
+        }
+
+        if(order.coaching_expires_on){
+
+          card.append(el(
+            'p',
+            'Scadenza coaching: '+
+            order.coaching_expires_on
+          ));
+        }
+
+        if(order.archived_at){
+
+          card.append(el(
+            'div',
+            'Ordine archiviato il '+
+            dt(order.archived_at),
+            'calendar-warning'
+          ));
+        }
+
+        if(admin){
+
+          card.append(el(
+            'p',
+            'Cliente: '+order.client_id,
+            'small'
+          ));
+
+          const feedback=el(
+            'div','','status hidden'
+          );
+
+          const actions=[];
+
+          async function execute(fn){
+
+            if(!current())return;
+
+            actions.forEach(b=>b.disabled=true);
+
+            try{
+
+              const result=await fn();
+
+              if(result?.success===false){
+
+                throw Error(
+                  result.message||
+                  'Operazione non riuscita.'
+                );
+              }
+
+              if(current()){
+
+                await loadOrders();
+              }
+
+            }catch(e){
+
+              if(card.isConnected){
+
+                statusV4(
+                  feedback,
+                  friendly(e),
+                  true
+                );
+              }
+
+            }finally{
+
+              actions.forEach(
+                b=>b.disabled=false
+              );
+            }
+          }
+
+          function action(label,fn,css=''){
+
+            const b=button(label,fn,css);
+
+            actions.push(b);
+            card.append(b);
+          }
+
+          if(
+            order.payment_status==='pending'&&
+            !order.activated_package_id&&
+            !order.archived_at
+          ){
+
+            action(
+              'Conferma incasso e attiva',
+              ()=>{
+
+                if(!confirm(
+                  'Hai ricevuto realmente '+
+                  money(order.price_eur)+'?'
+                ))return;
+
+                execute(()=>rpcV4(
+                  'forge_shop_confirm_order',
+                  {p_order_id:order.id}
+                ));
+              }
+            );
+
+            action(
+              'Annulla ordine',
+              ()=>{
+
+                if(!confirm(
+                  'Annullare questo ordine?'
+                ))return;
+
+                execute(()=>rpcV4(
+                  'forge_shop_cancel_order',
+                  {p_order_id:order.id}
+                ));
+              },
+              'secondary'
+            );
+          }
+
+          if(!order.archived_at){
+
+            action(
+              'Elimina ordine',
+              ()=>{
+
+                const unpaid=[
+                  'pending','rejected'
+                ].includes(
+                  order.payment_status
+                )&&!order.activated_package_id;
+
+                const message=unpaid?
+                  'Eliminare questo ordine non pagato?':
+                  'Archiviare questo ordine? Lo storico del pagamento e il servizio acquistato saranno conservati.';
+
+                if(!confirm(message))return;
+
+                execute(()=>rpcV4(
+                  'forge_shop_delete_order_v1',
+                  {
+                    p_order_id:order.id,
+                    p_test_order:false,
+                    p_reason:
+                      'Gestione amministrativa Forge Shop'
+                  }
+                ));
+              },
+              'forge-danger'
+            );
+          }
+
+          if(
+            order.client_id===account&&
+            productType==='lessons'
+          ){
+
+            action(
+              'Elimina ordine di prova',
+              ()=>{
+
+                if(!confirm(
+                  'Confermi che questo acquisto è fittizio e che non hai ricevuto denaro reale?'
+                ))return;
+
+                if(!confirm(
+                  'Eliminare ordine, eventuale pacchetto inutilizzato e relativo importo dagli incassi?'
+                ))return;
+
+                execute(()=>rpcV4(
+                  'forge_shop_delete_order_v1',
+                  {
+                    p_order_id:order.id,
+                    p_test_order:true,
+                    p_reason:
+                      'Acquisto fittizio di collaudo'
+                  }
+                ));
+              },
+              'forge-danger'
+            );
+          }
+
+          card.append(feedback);
+        }
+
+        list.append(card);
+      }
+    }
+
+    search.oninput=drawOrders;
+    type.onchange=drawOrders;
+    payment.onchange=drawOrders;
+    archive.onchange=drawOrders;
+
+    drawOrders();
+
+    if(admin){
+
+      const audit=el('details','','item');
+
+      const output=el('div');
+
+      const loadAudit=button(
+        'Carica storico operazioni',
+        async()=>{
+
+          loadAudit.disabled=true;
+
+          output.replaceChildren(
+            el('p','Caricamento...','muted')
+          );
+
+          try{
+
+            const {data,error}=await db
+              .from('forge_shop_order_audit')
+              .select(
+                'action,reason,order_snapshot,created_at'
+              )
+              .order('created_at',{
+                ascending:false
+              })
+              .limit(100);
+
+            if(error)throw error;
+
+            if(!audit.isConnected||
+              !current())return;
+
+            output.replaceChildren();
+
+            if(!data?.length){
+
+              output.append(el(
+                'p',
+                'Nessuna operazione registrata.',
+                'muted'
+              ));
+            }
+
+            const auditLabels={
+              archived:'Ordine archiviato',
+              deleted_test:'Ordine di prova eliminato',
+              deleted_unpaid:'Ordine non pagato eliminato'
+            };
+
+            for(const row of data||[]){
+
+              const snapshot=
+                row.order_snapshot||{};
+
+              const card=el('div','','item');
+
+              add(
+                card,
+                el(
+                  'h3',
+                  auditLabels[row.action]||
+                  row.action
+                ),
+                el(
+                  'p',
+                  snapshot.package_title||'Ordine'
+                ),
+                el(
+                  'p',
+                  money(snapshot.price_eur||0)
+                ),
+                el('p',row.reason||'','small'),
+                el(
+                  'p',
+                  dt(row.created_at),
+                  'small'
+                )
+              );
+
+              output.append(card);
+            }
+
+          }catch(e){
+
+            output.replaceChildren(el(
+              'div',friendly(e),'status error'
+            ));
+
+          }finally{
+
+            loadAudit.disabled=false;
+          }
+        },
+        'secondary'
+      );
+
+      add(
+        audit,
+        el('summary','Archivio operazioni amministrative'),
+        loadAudit,
+        output
+      );
+
+      root.append(audit);
+    }
+
+    const coaching=el('div');
+
+    root.append(coaching);
+
+    await coachingV4(coaching);
+
+  }catch(e){
+
+    if(current()){
+
+      root.replaceChildren(el(
+        'div',friendly(e),'status error'
+      ));
+    }
+  }
+};
+
+/* =====================================================
+   COACHING V4 - PERCORSI E SCADENZE
+===================================================== */
+
+async function coachingV4(root){
+
+  const request=serial;
+  const account=user?.id;
+  const admin=role==='admin';
+
+  root.replaceChildren(
+    el('h3',admin?
+      'Percorsi coaching clienti':
+      'Il mio coaching')
+  );
+
+  try{
+
+    let q=db
+      .from('forge_coaching_dashboard_v2')
+      .select('*')
+      .order('expires_on',{ascending:true})
+      .limit(100);
+
+    if(!admin){
+
+      q=q.eq('client_id',account);
+    }
+
+    const {data,error}=await q;
+
+    if(error)throw error;
+
+    if(!visibleV4(
+      root,request,account
+    ))return;
+
+    const rows=data||[];
+
+    const filter=selectV4({
+      all:'Tutti i percorsi',
+      active:'Attivi',
+      scheduled:'Programmati',
+      expired:'Scaduti',
+      paused:'Sospesi',
+      cancelled:'Annullati'
+    },'all');
+
+    const output=el('div');
+
+    add(root,filter,output);
+
+    function draw(){
+
+      output.replaceChildren();
+
+      const selected=rows.filter(r=>
+        filter.value==='all'||
+        r.current_status===filter.value
+      );
+
+      if(!selected.length){
+
+        output.append(el(
+          'p',
+          'Nessun percorso coaching.',
+          'muted'
+        ));
+      }
+
+      for(const r of selected){
+
+        const card=el('div','','item');
+
+        add(
+          card,
+          el('h3',r.title||'Coaching'),
+          el(
+            'div',
+            Math.max(
+              0,Number(r.days_remaining)||0
+            )+' giorni rimanenti',
+            'price'
+          ),
+          el('p','Inizio: '+(r.starts_on||'—')),
+          el('p','Scadenza: '+(r.expires_on||'—')),
+          el(
+            'p',
+            'Stato: '+
+            (labelsV4[r.current_status]||
+              r.current_status)
+          )
+        );
+
+        if(admin){
+
+          card.append(el(
+            'p',
+            'Cliente: '+r.client_id,
+            'small'
+          ));
+        }
+
+        const start=Date.parse(r.starts_on);
+        const end=Date.parse(r.expires_on);
+
+        const duration=
+          (end-start)/86400000;
+
+        if(
+          Number.isFinite(duration)&&
+          duration>0&&
+          r.days_remaining!=null&&
+          Number.isFinite(Number(r.days_remaining))
+        ){
+
+          const elapsed=100*(
+            1-Number(r.days_remaining)/duration
+          );
+
+          progressV4(card,elapsed);
+
+          card.append(el(
+            'p',
+            Math.round(Math.max(
+              0,Math.min(100,elapsed)
+            ))+'% del periodo trascorso',
+            'small'
+          ));
+        }
+
+        if(r.renewal_alert){
+
+          card.append(el(
+            'div',
+            String(r.renewal_alert),
+            'calendar-warning'
+          ));
+        }
+
+        if(!admin){
+
+          card.append(button(
+            'Rinnova coaching',
+            ()=>section('Forge Shop'),
+            'secondary'
+          ));
+        }
+
+        output.append(card);
+      }
+    }
+
+    filter.onchange=draw;
+
+    draw();
+
+  }catch(e){
+
+    if(root.isConnected){
+
+      notice(root,friendly(e),true);
+    }
+  }
+}
+
+/* =====================================================
+   PACCHETTI LEZIONI - RIEPILOGO
+===================================================== */
+
+renderPackages=async function(){
+
+  const request=serial;
+  const account=user?.id;
+
+  await previousPackagesV4();
+
+  const root=$('sectionContent');
+
+  if(
+    active!=='Pacchetti lezioni'||
+    serial!==request||
+    user?.id!==account
+  )return;
+
+  try{
+
+    let q=db
+      .from('forge_lesson_package_summary')
+      .select('*');
+
+    if(role!=='admin'){
+
+      q=q.eq('client_id',account);
+    }
+
+    const {data,error}=await q;
+
+    if(error)throw error;
+
+    if(
+      active!=='Pacchetti lezioni'||
+      serial!==request||
+      user?.id!==account
+    )return;
+
+    const rows=data||[];
+
+    const panel=el(
+      'div','','forge-v4-panel'
+    );
+
+    panel.append(el(
+      'h3','Riepilogo lezioni'
+    ));
+
+    const stats=el('div','','stats');
+
+    const activeRows=rows.filter(
+      p=>p.status==='active'
+    );
+
+    statV4(
+      stats,
+      'Pacchetti attivi',
+      String(activeRows.length)
+    );
+
+    statV4(
+      stats,
+      'Lezioni residue attive',
+      String(activeRows.reduce(
+        (sum,p)=>sum+Math.max(
+          0,Number(p.remaining_sessions)||0
+        ),0
+      ))
+    );
+
+    statV4(
+      stats,
+      'Lezioni registrate',
+      String(rows.reduce(
+        (sum,p)=>sum+
+          (Number(p.used_sessions)||0),0
+      ))
+    );
+
+    statV4(
+      stats,
+      'Pacchetti da rinnovare',
+      String(activeRows.filter(
+        p=>Number(p.remaining_sessions)<=2
+      ).length)
+    );
+
+    panel.append(stats);
+
+    for(const p of activeRows){
+
+      const total=Number(p.total_sessions)||0;
+      const used=Number(p.used_sessions)||0;
+      const remaining=Number(p.remaining_sessions)||0;
+
+      const card=el('div','','item');
+
+      add(
+        card,
+        el('h3',p.title||'Pacchetto'),
+        el(
+          'p',
+          used+' lezioni svolte su '+total
+        ),
+        el(
+          'div',
+          remaining+' rimanenti',
+          'price'
+        )
+      );
+
+      if(role==='admin'&&p.client_id){
+
+        card.append(el(
+          'p',
+          'Cliente: '+p.client_id,
+          'small'
+        ));
+      }
+
+      if(total>0){
+
+        progressV4(card,used/total*100);
+      }
+
+      if(remaining===1){
+
+        card.append(el(
+          'div',
+          'ULTIMA LEZIONE DISPONIBILE',
+          'calendar-warning'
+        ));
+
+      }else if(remaining===0){
+
+        card.append(el(
+          'div',
+          'PACCHETTO ESAURITO',
+          'calendar-warning'
+        ));
+
+      }else if(remaining===2){
+
+        card.append(el(
+          'div',
+          'Pacchetto in esaurimento',
+          'calendar-warning'
+        ));
+      }
+
+      panel.append(card);
+    }
+
+    root.prepend(panel);
+
+  }catch(e){
+
+    if(
+      serial===request&&
+      user?.id===account
+    ){
+
+      notice(root,friendly(e),true);
+    }
+  }
+};
+
+/* =====================================================
+   NUTRITION V4 - CONVERSIONI ALIMENTARI
+===================================================== */
+
+function nutritionConverterV4(root){
+
+  const panel=el('details','','item');
+
+  panel.append(el(
+    'summary',
+    'Calcolatore equivalenze alimentari'
+  ));
+
+  const mode=selectV4({
+    kcal:'Calorie',
+    protein:'Proteine',
+    carbs:'Carboidrati',
+    fat:'Grassi'
+  },'kcal');
+
+  const foodA=input(
+    'text','Alimento di partenza'
+  );
+
+  const grams=input(
+    'number','Quantità alimento A (g)'
+  );
+
+  grams.value='100';
+  grams.min='0.01';
+  grams.step='0.01';
+
+  const valueA=input(
+    'number','Valore alimento A per 100 g'
+  );
+
+  const foodB=input(
+    'text','Alimento sostitutivo'
+  );
+
+  const valueB=input(
+    'number','Valore alimento B per 100 g'
+  );
+
+  for(const control of [valueA,valueB]){
+
+    control.min='0';
+    control.step='0.01';
+  }
+
+  const output=el(
+    'div','','status hidden'
+  );
+
+  const calculate=button(
+    'Calcola equivalenza',
+    ()=>{
+
+      const q=Number(grams.value);
+      const a=Number(valueA.value);
+      const b=Number(valueB.value);
+
+      if(
+        !grams.value||
+        !valueA.value||
+        !valueB.value||
+        ![q,a,b].every(Number.isFinite)||
+        q<=0||a<=0||b<=0
+      ){
+
+        statusV4(
+          output,
+          'Inserisci quantità e valori nutrizionali positivi.',
+          true
+        );
+
+        return;
+      }
+
+      const result=q*a/b;
+
+      const unit=mode.value==='kcal'?
+        'kcal':'g';
+
+      statusV4(
+        output,
+        fmt(q,1)+' g di '+
+        (foodA.value||'alimento A')+
+        '\nEquivalgono a '+fmt(result,1)+
+        ' g di '+
+        (foodB.value||'alimento B')+
+        '\nValore equivalente: '+
+        fmt(q*a/100,1)+' '+unit
+      );
+    }
+  );
+
+  add(
+    panel,
+    el('h3','Conversione alimenti'),
+    el('label','Parametro da mantenere'),
+    mode,
+    foodA,
+    grams,
+    el('label','Valore per 100 g alimento A'),
+    valueA,
+    foodB,
+    el('label','Valore per 100 g alimento B'),
+    valueB,
+    calculate,
+    output,
+    el(
+      'p',
+      'Usa valori riferiti allo stesso stato degli alimenti: crudo, cotto o sgocciolato. La conversione mantiene solo il parametro selezionato.',
+      'small'
+    )
+  );
+
+  root.append(panel);
+}
+
+/* =====================================================
+   HYDRATION E WEIGHT V4
+===================================================== */
+
+function metricGoalPanelV4(kind){
+
+  const root=$('sectionContent');
+
+  const existing=$('forgeV4MetricGoal');
+
+  if(existing)existing.remove();
+
+  const panel=el(
+    'div','','forge-v4-panel'
+  );
+
+  panel.id='forgeV4MetricGoal';
+
+  const account=user?.id;
+
+  if(!account)return;
+
+  if(kind==='water'){
+
+    const key='forge_water_goal_'+account;
+
+    const goal=input(
+      'number','Obiettivo giornaliero ml'
+    );
+
+    goal.min='100';
+    goal.max='10000';
+    goal.step='50';
+
+    goal.value=localStorage.getItem(key)||'';
+
+    const output=el('div');
+
+    const save=button(
+      'Salva obiettivo acqua',
+      ()=>{
+
+        const n=Number(goal.value);
+
+        if(
+          !goal.value||
+          !Number.isFinite(n)||
+          n<100||n>10000
+        ){
+
+          alert('Obiettivo non valido.');
+          return;
+        }
+
+        localStorage.setItem(key,String(n));
+
+        refreshMetricGoalV4('water');
+      },
+      'secondary'
+    );
+
+    add(
+      panel,
+      el('h3','Obiettivo idratazione'),
+      goal,
+      save,
+      el(
+        'p',
+        'Obiettivo personale salvato su questo dispositivo.',
+        'small'
+      ),
+      output
+    );
+
+    output.id='forgeV4GoalOutput';
+
+  }else{
+
+    const output=el('div');
+
+    output.id='forgeV4GoalOutput';
+
+    add(
+      panel,
+      el('h3','Distanza dal peso obiettivo'),
+      output
+    );
+  }
+
+  root.prepend(panel);
+
+  refreshMetricGoalV4(kind);
+}
+
+async function refreshMetricGoalV4(kind){
+
+  const output=$('forgeV4GoalOutput');
+
+  if(!output||!user)return;
+
+  const request=serial;
+  const account=user.id;
+
+  const expected=kind==='water'?
+    'Forge Hydration':'Forge Weight';
+
+  if(active!==expected)return;
+
+  try{
+
+    if(kind==='water'){
+
+      const goal=Number(
+        localStorage.getItem(
+          'forge_water_goal_'+account
+        )
+      );
+
+      if(!goal||goal<=0){
+
+        output.replaceChildren(el(
+          'p',
+          'Imposta il tuo obiettivo giornaliero.',
+          'muted'
+        ));
+
+        return;
+      }
+
+      const today=todayRome();
+
+      const since=new Date(
+        Date.now()-48*3600000
+      ).toISOString();
+
+      const {data,error}=await db
+        .from('forge_water_entries')
+        .select('amount_ml,recorded_at')
+        .eq('user_id',account)
+        .gte('recorded_at',since);
+
+      if(error)throw error;
+
+      if(!visibleV4(
+        output,request,account
+      ))return;
+
+      const total=(data||[])
+        .filter(r=>{
+
+          const parts=new Intl.DateTimeFormat(
+            'en-GB',{
+              timeZone:'Europe/Rome',
+              year:'numeric',
+              month:'2-digit',
+              day:'2-digit'
+            }
+          ).formatToParts(
+            new Date(r.recorded_at)
+          );
+
+          const get=t=>parts.find(
+            p=>p.type===t
+          )?.value;
+
+          return get('year')+'-'+
+            get('month')+'-'+get('day')===today;
+        })
+        .reduce(
+          (sum,r)=>sum+Number(r.amount_ml),0
+        );
+
+      const percent=total/goal*100;
+
+      output.replaceChildren(
+        el(
+          'div',
+          fmt(total,0)+' / '+fmt(goal,0)+' ml',
+          'price'
+        )
+      );
+
+      progressV4(output,percent);
+
+      output.append(el(
+        'p',
+        total>=goal?
+          'Obiettivo giornaliero raggiunto.':
+          'Mancano '+fmt(goal-total,0)+' ml',
+        total>=goal?'success':'small'
+      ));
+
+    }else{
+
+      const goal=Number(
+        localStorage.getItem(
+          'forge_goal_'+account
+        )
+      );
+
+      if(!goal||goal<=0){
+
+        output.replaceChildren(el(
+          'p',
+          'Imposta il tuo peso obiettivo.',
+          'muted'
+        ));
+
+        return;
+      }
+
+      const {data,error}=await db
+        .from('forge_weight_entries')
+        .select('weight_kg')
+        .eq('user_id',account)
+        .order('recorded_at',{
+          ascending:false
+        })
+        .limit(1);
+
+      if(error)throw error;
+
+      if(!visibleV4(
+        output,request,account
+      ))return;
+
+      if(!data?.length){
+
+        output.replaceChildren(el(
+          'p',
+          'Registra il tuo peso.',
+          'muted'
+        ));
+
+        return;
+      }
+
+      const weight=Number(data[0].weight_kg);
+
+      const difference=weight-goal;
+
+      output.replaceChildren();
+
+      const stats=el('div','','stats');
+
+      statV4(
+        stats,'Peso attuale',fmt(weight,1)+' kg'
+      );
+
+      statV4(
+        stats,'Obiettivo',fmt(goal,1)+' kg'
+      );
+
+      output.append(stats);
+
+      output.append(el(
+        'div',
+        Math.abs(difference)<0.05?
+          'Obiettivo raggiunto':
+          fmt(Math.abs(difference),2)+
+          ' kg '+(
+            difference>0?
+              'sopra':'sotto'
+          )+' l’obiettivo',
+        'price'
+      ));
+    }
+
+  }catch(e){
+
+    if(visibleV4(
+      output,request,account
+    )){
+
+      statusV4(output,friendly(e),true);
+    }
+  }
+}
+
+loadMetric=async function(kind){
+
+  const request=serial;
+  const account=user?.id;
+
+  await previousMetricV4(kind);
+
+  if(
+    serial===request&&
+    user?.id===account
+  ){
+
+    await refreshMetricGoalV4(kind);
+  }
+};
+
+/* =====================================================
+   CALENDAR V4 - ORARI VALIDI
+===================================================== */
+
+calendarTimeOptions=function(){
+
+  const result=[];
+
+  for(let h=9;h<=18;h++){
+
+    for(const m of [0,15,30,45]){
+
+      if(h===18&&m>0)continue;
+
+      result.push(
+        String(h).padStart(2,'0')+':'+
+        String(m).padStart(2,'0')
+      );
+    }
+  }
+
+  return result;
+};
+
+/* =====================================================
+   NAVIGAZIONE MASTER V4
+===================================================== */
+
+section=function(name){
+
+  previousSectionV4(name);
+
+  const root=$('sectionContent');
+
+  try{
+
+    switch(name){
+
+      case 'Forge Nutrition':
+
+        nutritionConverterV4(root);
+
+        break;
+
+      case 'Forge Hydration':
+
+        metricGoalPanelV4('water');
+
+        break;
+
+      case 'Forge Weight':{
+
+        metricGoalPanelV4('weight');
+
+        const save=[...root.querySelectorAll(
+          'button'
+        )].find(
+          b=>b.textContent==='Salva obiettivo'
+        );
+
+        if(save){
+
+          save.addEventListener(
+            'click',
+            ()=>refreshMetricGoalV4('weight')
+          );
+        }
+
+        break;
+      }
+    }
+
+  }catch(e){
+
+    notice(root,friendly(e),true);
+  }
+};
+
+console.info(
+  'FORGE FRONTEND MASTER BRIDGE V4 ATTIVO'
+);
+
+})();
+
+/* END FORGE FRONTEND MASTER BRIDGE V4 */initialize();
 </script>
 </body>
 </html>
