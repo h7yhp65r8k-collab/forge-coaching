@@ -7288,7 +7288,29 @@ console.info(
 
 })();
 
-/* END FORGE FRONTEND MASTER BRIDGE V4 */initialize();
+/* END FORGE FRONTEND MASTER BRIDGE V4 */initialize();/* FORGE NUTRITION - FIX SALVATAGGIO */
+(() => {
+
+  const originalRpc = db.rpc.bind(db);
+
+  db.rpc = function(name, params, options) {
+
+    if (name === 'forge_nutrition_v7_add_food') {
+
+      params = {
+        ...params,
+        p_request_id:
+          params?.p_request_id ||
+          crypto.randomUUID()
+      };
+
+    }
+
+    return originalRpc(name, params, options);
+
+  };
+
+})();
 </script>
 </body>
 </html>
