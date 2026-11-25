@@ -3431,9 +3431,78 @@ true
 );
 }
 }
+/* FORGE FRONTEND BRIDGE V1 */
 
+window.ForgeBridge = (() => {
+
+  async function rpc(name, params = {}) {
+    const { data, error } = await db.rpc(name, params);
+    if (error) {
+      console.error("FORGE:", name, error.message);
+      throw new Error(error.message);
+    }
+    return data;
+  }
+
+  return {
+
+    training: {
+      saveSet: (params) =>
+        rpc("forge_training_v6_save_set", params),
+
+      getPDFs: (clientId = null) =>
+        rpc("forge_v10_get_client_pdfs", {
+          p_client_id: clientId,
+          p_include_archived: false
+        })
+    },
+
+    progress: {
+      dashboard: (clientId = null) =>
+        rpc("forge_progress_v4_dashboard", {
+          p_client_id: clientId
+        }),
+
+      chart: (metric, period = "month", clientId = null) =>
+        rpc("forge_progress_v4_chart", {
+          p_metric: metric,
+          p_period: period,
+          p_client_id: clientId
+        })
+    },
+
+    premium: {
+      dashboard: () =>
+        rpc("forge_premium_v3_my_dashboard"),
+
+      adminDashboard: () =>
+        rpc("forge_premium_v3_admin_dashboard")
+    },
+
+    studio: {
+      dashboard: () =>
+        rpc("forge_st_v1_get_studio")
+    },
+
+    feedback: {
+      sendMessage: (checkinId, message) =>
+        rpc("forge_fb_v1_send_message", {
+          p_checkin_id: checkinId,
+          p_message: message
+        })
+    },
+
+    videos: {
+      registerUpload: (params) =>
+        rpc("forge_ev_v1_register_upload", params)
+    }
+
+  };
+
+})();
+
+/* END FORGE FRONTEND BRIDGE V1 */
 initialize();
-
 </script>
 </body>
 </html>
