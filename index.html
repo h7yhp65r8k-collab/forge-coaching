@@ -7310,7 +7310,911 @@ console.info(
 
   };
 
+})();/* =====================================================
+   FORGE NUTRITION V10
+   ITALIAN FRONTEND EXPERIENCE
+===================================================== */
+
+(() => {
+
+'use strict';
+
+const previousSectionV10 = section;
+
+const style = document.createElement('style');
+
+style.textContent = `
+.forge-n10 {
+  background:#15161a;
+  border:1px solid #756039;
+  border-radius:15px;
+  padding:13px;
+  margin:10px 0;
+}
+.forge-n10 h3 {
+  font-size:17px;
+  margin:0 0 6px;
+  overflow-wrap:anywhere;
+}
+.forge-n10-kcal {
+  color:#e9c675;
+  font-size:27px;
+  font-weight:800;
+  margin:8px 0;
+}
+.forge-n10-macros {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin:10px 0;
+}
+.forge-n10-macro {
+  background:#202126;
+  border:1px solid #493d2a;
+  border-radius:9px;
+  padding:9px;
+}
+.forge-n10-macro span {
+  display:block;
+  color:#aaa;
+  font-size:11px;
+}
+.forge-n10-macro strong {
+  display:block;
+  color:#e9c675;
+  font-size:17px;
+  margin-top:4px;
+}
+.forge-n10-row {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+.forge-n10-source {
+  color:#aaa;
+  font-size:11px;
+  margin:5px 0;
+}
+.forge-n10 p {
+  margin:5px 0;
+}
+`;
+
+document.head.append(style);
+
+const dictionary = {
+  'chicken breast':'Petto di pollo',
+  'pechuga de pollo':'Petto di pollo',
+  'blanc de poulet':'Petto di pollo',
+  'chicken':'Pollo',
+  'pollo':'Pollo',
+  'white rice':'Riso bianco',
+  'brown rice':'Riso integrale',
+  'rice':'Riso',
+  'arroz':'Riso',
+  'pasta':'Pasta',
+  'whole wheat pasta':'Pasta integrale',
+  'egg':'Uovo',
+  'eggs':'Uova',
+  'whole milk':'Latte intero',
+  'milk':'Latte',
+  'leche':'Latte',
+  'apple':'Mela',
+  'banana':'Banana',
+  'potato':'Patata',
+  'potatoes':'Patate',
+  'salmon':'Salmone',
+  'tuna':'Tonno',
+  'beef':'Manzo',
+  'turkey breast':'Petto di tacchino',
+  'turkey':'Tacchino',
+  'oats':'Avena',
+  'oatmeal':'Fiocchi di avena',
+  'olive oil':'Olio di oliva',
+  'broccoli':'Broccoli',
+  'carrots':'Carote',
+  'lentils':'Lenticchie',
+  'chickpeas':'Ceci',
+  'almonds':'Mandorle',
+  'walnuts':'Noci',
+  'bread':'Pane',
+  'white bread':'Pane bianco',
+  'greek yogurt':'Yogurt greco'
+};
+
+function italianName(name){
+
+  const original=String(name||'Alimento');
+
+  const key=original.trim().toLowerCase();
+
+  if(dictionary[key]){
+    return dictionary[key];
+  }
+
+  const states={
+    raw:'crudo',
+    cooked:'cotto',
+    drained:'sgocciolato'
+  };
+
+  for(const [state,label] of
+    Object.entries(states)){
+
+    const suffix=', '+state;
+
+    if(key.endsWith(suffix)){
+
+      const base=key.slice(
+        0,-suffix.length
+      ).trim();
+
+      if(dictionary[base]){
+        return dictionary[base]+' ('+label+')';
+      }
+    }
+  }
+
+  return original;
+}
+
+function selectN10(options,value){
+
+  const control=el('select');
+
+  for(const [key,label] of
+    Object.entries(options)){
+
+    const option=el('option',label);
+
+    option.value=key;
+
+    control.append(option);
+  }
+
+  control.value=value;
+
+  return control;
+}
+
+function statusN10(root,text,error=false){
+
+  root.className='status '+(
+    error?'error':'success'
+  );
+
+  root.textContent=text;
+}
+
+function numberN10(value){
+
+  if(value===null||
+    value===undefined||
+    value==='')return null;
+
+  const n=Number(value);
+
+  return Number.isFinite(n)&&n>=0?
+    n:null;
+}
+
+function macroN10(root,label,value){
+
+  const box=el(
+    'div','','forge-n10-macro'
+  );
+
+  const n=numberN10(value);
+
+  add(
+    box,
+    el('span',label),
+    el(
+      'strong',
+      n===null?'—':fmt(n,1)+' g'
+    )
+  );
+
+  root.append(box);
+}
+
+function parseQuantityN10(text){
+
+  const match=text.match(
+    /^(\d+(?:[.,]\d+)?)\s*(chilogrammi|grammi|grammo|millilitri|kg|mg|ml|cl|dl|g|l)(?:\s+|$)/i
+  );
+
+  if(!match){
+    return {amount:100,unit:'g'};
+  }
+
+  const units={
+    grammi:'g',
+    grammo:'g',
+    chilogrammi:'kg',
+    millilitri:'ml'
+  };
+
+  const raw=match[2].toLowerCase();
+
+  return {
+    amount:Number(
+      match[1].replace(',','.')
+    ),
+    unit:units[raw]||raw
+  };
+}
+
+function nutritionV10(root){
+
+  const account=user?.id;
+  const request=serial;
+
+  const panel=el('div','','forge-n10');
+
+  panel.id='forgeNutritionV10';
+
+  function current(){
+
+    return panel.isConnected&&
+      active==='Forge Nutrition'&&
+      user?.id===account&&
+      serial===request;
+  }
+
+  const search=input(
+    'search',
+    'Es. 100 g di pollo'
+  );
+
+  const date=input('date');
+
+  date.value=todayRome();
+  date.max=todayRome();
+
+  const catalog=selectN10({
+    local:'Catalogo Forge',
+    online:'Catalogo Forge + internazionale'
+  },'local');
+
+  const result=el('div');
+
+  const feedback=el(
+    'div','','status hidden'
+  );
+
+  const diary=el('div');
+
+  let searchVersion=0;
+  let diaryVersion=0;
+
+  async function loadDiary(){
+
+    const version=++diaryVersion;
+    const selectedDate=date.value;
+
+    diary.replaceChildren(
+      el('h3','Diario della giornata'),
+      el('p','Caricamento...','small')
+    );
+
+    try{
+
+      if(!selectedDate){
+        throw Error('Seleziona una data.');
+      }
+
+      const rows=[];
+
+      for(let offset=0;;offset+=100){
+
+        const {data,error}=await db
+          .from('forge_nutrition_diary')
+          .select(
+            'id,food_name,quantity_g,'+
+            'calories,protein,carbohydrates,'+
+            'fat,fiber,meal_name,consumed_at'
+          )
+          .eq('user_id',account)
+          .gte(
+            'consumed_at',
+            selectedDate+'T00:00:00+02:00'
+          )
+          .lt(
+            'consumed_at',
+            plusDays(selectedDate,1)+
+            'T00:00:00+01:00'
+          )
+          .order('consumed_at',{
+            ascending:false
+          })
+          .order('id')
+          .range(offset,offset+99);
+
+        if(error)throw error;
+
+        if(!current()||
+          version!==diaryVersion)return;
+
+        rows.push(...(data||[]));
+
+        if(!data||data.length<100)break;
+      }
+
+      const romeDate=new Intl.DateTimeFormat(
+        'en-GB',{
+          timeZone:'Europe/Rome',
+          year:'numeric',
+          month:'2-digit',
+          day:'2-digit'
+        }
+      );
+
+      const entries=rows.filter(r=>{
+
+        const parts=romeDate.formatToParts(
+          new Date(r.consumed_at)
+        );
+
+        const get=t=>parts.find(
+          p=>p.type===t
+        )?.value;
+
+        return get('year')+'-'+
+          get('month')+'-'+
+          get('day')===selectedDate;
+      });
+
+      const total=key=>entries.reduce(
+        (sum,r)=>sum+(Number(r[key])||0),0
+      );
+
+      diary.replaceChildren(
+        el('h3','Diario della giornata'),
+        el(
+          'div',
+          fmt(total('calories'),0)+' kcal',
+          'forge-n10-kcal'
+        )
+      );
+
+      const macros=el(
+        'div','','forge-n10-macros'
+      );
+
+      macroN10(
+        macros,'Proteine',total('protein')
+      );
+
+      macroN10(
+        macros,'Carboidrati',
+        total('carbohydrates')
+      );
+
+      macroN10(
+        macros,'Grassi',total('fat')
+      );
+
+      macroN10(
+        macros,'Fibre',total('fiber')
+      );
+
+      diary.append(macros);
+
+      if(!entries.length){
+
+        diary.append(el(
+          'p',
+          'Nessun alimento registrato.',
+          'small'
+        ));
+      }
+
+      for(const entry of entries){
+
+        const card=el(
+          'div','','forge-n10'
+        );
+
+        add(
+          card,
+          el(
+            'strong',
+            italianName(entry.food_name)
+          ),
+          el(
+            'p',
+            entry.meal_name+' • '+
+            fmt(entry.quantity_g,1)+' g • '+
+            fmt(entry.calories,0)+' kcal',
+            'small'
+          )
+        );
+
+        diary.append(card);
+      }
+
+    }catch(e){
+
+      if(current()&&
+        version===diaryVersion){
+
+        diary.replaceChildren(
+          el('h3','Diario della giornata'),
+          el(
+            'div',
+            friendly(e),
+            'status error'
+          )
+        );
+      }
+    }
+  }
+
+  function foodCard(food,portion){
+
+    const card=el(
+      'div','','forge-n10'
+    );
+
+    const original=food.food_name||
+      food.name||'Alimento';
+
+    const name=italianName(original);
+
+    const sourceLabels={
+      internal:'Catalogo Forge',
+      custom:'Alimento personale',
+      universal:'Catalogo internazionale'
+    };
+
+    const stateLabels={
+      raw:'Crudo',
+      cooked:'Cotto',
+      drained:'Sgocciolato'
+    };
+
+    add(
+      card,
+      el('h3',name),
+      el(
+        'div',
+        sourceLabels[food.source]||
+        'Catalogo alimentare',
+        'forge-n10-source'
+      )
+    );
+
+    if(food.brand){
+
+      card.append(el(
+        'p',food.brand,'small'
+      ));
+    }
+
+    if(food.food_state){
+
+      card.append(el(
+        'p',
+        stateLabels[food.food_state]||
+        food.food_state,
+        'small'
+      ));
+    }
+
+    const basis=String(
+      food.nutrition_basis||''
+    ).toLowerCase();
+
+    const basisLabel=
+      /ml/.test(basis)?
+      'Valori per 100 ml':
+      /100.*g|^g$/.test(basis)?
+      'Valori per 100 g':
+      'Valori di riferimento del catalogo';
+
+    card.append(el(
+      'p',basisLabel,'small'
+    ));
+
+    const kcal=numberN10(
+      food.calories??food.kcal
+    );
+
+    card.append(el(
+      'div',
+      kcal===null?
+        'Calorie non disponibili':
+        fmt(kcal,1)+' kcal',
+      'forge-n10-kcal'
+    ));
+
+    const macros=el(
+      'div','','forge-n10-macros'
+    );
+
+    macroN10(
+      macros,
+      'Proteine',
+      food.protein??food.proteins
+    );
+
+    macroN10(
+      macros,
+      'Carboidrati',
+      food.carbohydrates
+    );
+
+    macroN10(
+      macros,
+      'Grassi',
+      food.fat??food.fats
+    );
+
+    macroN10(
+      macros,'Fibre',food.fiber
+    );
+
+    card.append(macros);
+
+    const quantity=input(
+      'number','Quantità'
+    );
+
+    quantity.min='0.001';
+    quantity.step='any';
+    quantity.value=portion.amount;
+
+    const unit=selectN10({
+      mg:'Milligrammi',
+      g:'Grammi',
+      kg:'Chilogrammi',
+      ml:'Millilitri',
+      cl:'Centilitri',
+      dl:'Decilitri',
+      l:'Litri'
+    },portion.unit);
+
+    const meal=selectN10({
+      Colazione:'Colazione',
+      Spuntino:'Spuntino',
+      Pranzo:'Pranzo',
+      Merenda:'Merenda',
+      Cena:'Cena',
+      Extra:'Extra',
+      Altro:'Altro'
+    },'Altro');
+
+    const controls=el(
+      'div','','forge-n10-row'
+    );
+
+    add(controls,quantity,unit);
+
+    const status=el(
+      'div','','status hidden'
+    );
+
+    let pendingRequest=null;
+    let pendingSignature=null;
+
+    const save=button(
+      'Aggiungi al diario',
+      async()=>{
+
+        if(!current())return;
+
+        const amount=Number(
+          quantity.value
+        );
+
+        if(!Number.isFinite(amount)||
+          amount<=0||
+          !date.value||
+          date.value>todayRome()){
+
+          statusN10(
+            status,
+            'Controlla quantità e data.',
+            true
+          );
+
+          return;
+        }
+
+        save.disabled=true;
+
+        try{
+
+          const signature=JSON.stringify([
+            food.source,
+            food.food_key,
+            amount,
+            unit.value,
+            meal.value,
+            date.value
+          ]);
+
+          if(
+            !pendingRequest||
+            pendingSignature!==signature
+          ){
+
+            pendingRequest=
+              crypto.randomUUID();
+
+            pendingSignature=signature;
+          }
+
+          const {data,error}=await db.rpc(
+            'forge_nutrition_v7_add_food',{
+              p_source:food.source,
+              p_food_key:String(food.food_key),
+              p_quantity:amount,
+              p_unit:unit.value,
+              p_meal:meal.value,
+              p_date:date.value,
+              p_extra:meal.value==='Extra',
+              p_request_id:pendingRequest,
+              p_density:null
+            }
+          );
+
+          if(error)throw error;
+
+          if(data?.success!==true){
+
+            throw Error(
+              data?.message||
+              'Registrazione non confermata.'
+            );
+          }
+
+          pendingRequest=null;
+          pendingSignature=null;
+
+          statusN10(
+            status,
+            'Alimento salvato nel diario.'
+          );
+
+          if(current()){
+
+            await loadDiary();
+
+            root.querySelector(
+              '.filters button'
+            )?.click();
+          }
+
+        }catch(e){
+
+          statusN10(
+            status,friendly(e),true
+          );
+
+        }finally{
+
+          save.disabled=false;
+        }
+      }
+    );
+
+    if(!food.food_key||
+      !['internal','custom','universal']
+        .includes(food.source)){
+
+      save.disabled=true;
+    }
+
+    add(
+      card,
+      el('label','Quantità'),
+      controls,
+      el('label','Pasto'),
+      meal,
+      save,
+      status
+    );
+
+    return card;
+  }
+
+  const find=button(
+    'Cerca alimento',
+    async()=>{
+
+      if(!current())return;
+
+      const term=search.value.trim();
+
+      if(term.length<2){
+
+        statusN10(
+          feedback,
+          'Inserisci almeno due caratteri.',
+          true
+        );
+
+        return;
+      }
+
+      const version=++searchVersion;
+
+      find.disabled=true;
+
+      feedback.className='status hidden';
+
+      result.replaceChildren(
+        el('p','Ricerca in corso...','small')
+      );
+
+      try{
+
+        const {data,error}=await db.rpc(
+          'forge_nutrition_v7_search',{
+            p_query:term,
+            p_page:1,
+            p_limit:20,
+            p_online:
+              catalog.value==='online'
+          }
+        );
+
+        if(error)throw error;
+
+        if(!current()||
+          version!==searchVersion)return;
+
+        const response=
+          typeof data==='string'?
+          JSON.parse(data):data;
+
+        const rows=[
+          ...(response.internal_foods||[]),
+          ...(response.custom_foods||[]),
+          ...(catalog.value==='online'?
+            [
+              ...(response.cached_foods||[]),
+              ...(response.openfoodfacts?.foods||[]),
+              ...(response.usda?.foods||[])
+            ]:[]
+          )
+        ];
+
+        const seen=new Set();
+
+        const foods=rows.filter(food=>{
+
+          const key=food.source+':'+
+            food.food_key;
+
+          if(seen.has(key))return false;
+
+          seen.add(key);
+
+          return true;
+        });
+
+        result.replaceChildren();
+
+        if(!foods.length){
+
+          result.append(el(
+            'p',
+            'Nessun alimento trovato. Prova un nome più semplice o il catalogo internazionale.',
+            'small'
+          ));
+
+          return;
+        }
+
+        result.append(el(
+          'p',
+          foods.length+' alimenti trovati',
+          'small'
+        ));
+
+        const portion=parseQuantityN10(term);
+
+        for(const food of foods){
+
+          result.append(
+            foodCard(food,portion)
+          );
+        }
+
+      }catch(e){
+
+        if(current()){
+
+          result.replaceChildren(
+            el(
+              'div',
+              friendly(e),
+              'status error'
+            )
+          );
+        }
+
+      }finally{
+
+        find.disabled=false;
+      }
+    }
+  );
+
+  search.addEventListener(
+    'keydown',
+    e=>{
+
+      if(e.key==='Enter'&&
+        !find.disabled){
+
+        find.click();
+      }
+    }
+  );
+
+  date.onchange=loadDiary;
+
+  add(
+    panel,
+    el('h3','Forge Nutrition'),
+    el(
+      'p',
+      'Diario alimentare personale',
+      'small'
+    ),
+    el('label','Data'),
+    date,
+    el('label','Cerca alimento'),
+    search,
+    catalog,
+    find,
+    feedback,
+    result,
+    diary
+  );
+
+  root.prepend(panel);
+
+  loadDiary();
+}
+
+section=function(name){
+
+  previousSectionV10(name);
+
+  if(name!=='Forge Nutrition')return;
+
+  const root=$('sectionContent');
+
+  const oldPanel=[...root.children]
+    .find(node=>
+
+      node.querySelector(
+        'input[type="search"]'
+      )&&
+
+      [...node.querySelectorAll('h3')]
+        .some(h=>
+          h.textContent==='Diario alimentare'
+        )
+    );
+
+  if(oldPanel)oldPanel.remove();
+
+  nutritionV10(root);
+};
+
+console.info(
+  'FORGE NUTRITION V10 ATTIVO'
+);
+
 })();
+
+/* END FORGE NUTRITION V10 */
 </script>
 </body>
 </html>
