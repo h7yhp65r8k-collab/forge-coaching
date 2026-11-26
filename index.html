@@ -11490,3 +11490,136 @@ enhance();
 })();
 </script>
 </body>
+<script>
+(function(){
+"use strict";
+
+if(window.forgeTrainingUnifiedV1)return;
+window.forgeTrainingUnifiedV1=true;
+
+const style=document.createElement("style");
+
+style.textContent=`
+#ftLaunch{
+display:none!important;
+}
+#ftPanel{
+position:static!important;
+inset:auto!important;
+z-index:auto!important;
+overflow:visible!important;
+padding:10px 0!important;
+background:transparent!important;
+}
+#ftPanel[hidden]{
+display:none!important;
+}
+#forgeTrainingEntry{
+margin:12px 0;
+}
+#forgeTrainingEntry button{
+min-height:48px;
+}
+`;
+
+document.head.append(style);
+
+const entry=document.createElement("div");
+entry.id="forgeTrainingEntry";
+
+const open=document.createElement("button");
+open.textContent="ALLENATI • STORICO E PERFORMANCE";
+
+entry.append(open);
+
+open.onclick=()=>{
+const launch=document.getElementById("ftLaunch");
+const panel=document.getElementById("ftPanel");
+
+if(!launch||!panel)return;
+
+launch.click();
+panel.scrollIntoView({
+behavior:"smooth",
+block:"start"
+});
+};
+
+function sync(){
+
+const nav=document.querySelector(
+'[data-section="Allenamento"]'
+);
+
+if(nav&&nav.textContent!=="Forge Training"){
+nav.textContent="Forge Training";
+}
+
+const title=document.getElementById("sectionTitle");
+const card=document.getElementById("sectionCard");
+const content=document.getElementById("sectionContent");
+const live=document.getElementById("forgeTrainingLive");
+const panel=document.getElementById("ftPanel");
+
+if(!title||!card||!content||!live)return;
+
+const opened=
+title.textContent.trim()==="Allenamento"&&
+!card.classList.contains("hidden")&&
+!document.getElementById("app").classList.contains("hidden");
+
+if(opened){
+
+if(entry.parentElement!==content){
+content.prepend(entry);
+}
+
+if(live.parentElement!==entry){
+entry.append(live);
+}
+
+const description=document.getElementById("sectionText");
+
+const text="Allenamenti, programmi, storico e performance.";
+
+if(description&&description.textContent!==text){
+description.textContent=text;
+}
+
+}else{
+
+if(panel)panel.hidden=true;
+
+if(live.parentElement!==document.body){
+document.body.append(live);
+}
+
+if(entry.isConnected)entry.remove();
+
+}
+
+}
+
+let queued=false;
+
+new MutationObserver(()=>{
+
+if(queued)return;
+queued=true;
+
+requestAnimationFrame(()=>{
+queued=false;
+sync();
+});
+
+}).observe(document.body,{
+childList:true,
+subtree:true,
+attributes:true,
+attributeFilter:["class"]
+});
+
+sync();
+
+})();
+</script>
