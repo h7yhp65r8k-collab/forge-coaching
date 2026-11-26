@@ -18774,3 +18774,863 @@ console.info(
 </script>
 
 <!-- END FORGE V27 COMPLETE -->
+
+<!-- FORGE V29 HOME & PERSONAL ACCOUNT -->
+<style>
+header{
+ padding:12px 16px!important;
+ background:#000!important;
+}
+header img{
+ display:block!important;
+ width:100%!important;
+ max-width:280px!important;
+ max-height:155px!important;
+ object-fit:contain!important;
+ margin:0 auto!important;
+}
+#f27ChangeLogo,
+#f27ChangeCover,
+#f27RemoveCover,
+.f27-actions,
+#f28Cover,
+.f28-settings{
+ display:none!important;
+}
+.f29-home,
+.f29-home.f27-cover{
+ background:var(--panel)!important;
+ background-image:none!important;
+ min-height:0!important;
+ padding:15px!important;
+ display:block!important;
+ border-radius:20px!important;
+}
+.f29-home #welcome{
+ font-size:21px!important;
+ color:var(--gold)!important;
+ text-shadow:none!important;
+ margin:0!important;
+}
+.f29-home #roleInfo{
+ font-size:12px!important;
+ color:var(--muted)!important;
+ text-shadow:none!important;
+ overflow-wrap:anywhere;
+}
+.f29-row{
+ display:flex;
+ align-items:center;
+ gap:12px;
+}
+.f29-text{
+ flex:1;
+ min-width:0;
+}
+.f29-avatar{
+ width:48px;
+ height:48px;
+ flex-shrink:0;
+ border-radius:50%;
+ border:1px solid var(--gold);
+ background:var(--bg);
+ color:var(--gold);
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:18px;
+ font-weight:800;
+ overflow:hidden;
+}
+.f29-avatar img{
+ width:100%;
+ height:100%;
+ object-fit:cover;
+}
+.f29-settings{
+ width:42px!important;
+ min-width:42px!important;
+ height:42px!important;
+ padding:9px!important;
+ margin:0!important;
+ border-radius:13px!important;
+ background:var(--bg)!important;
+ color:var(--gold)!important;
+ border:1px solid var(--line)!important;
+}
+.f29-settings svg{
+ width:22px;
+ height:22px;
+}
+.f29-panel{
+ padding:14px;
+ margin-top:14px;
+ background:var(--bg);
+ border:1px solid var(--line);
+ border-radius:16px;
+}
+.f29-panel[hidden],
+#f29Cover[hidden],
+#f29Registration[hidden]{
+ display:none!important;
+}
+#f29Cover{
+ margin-top:15px;
+ border-radius:16px;
+ overflow:hidden;
+ background:#000;
+ border:1px solid var(--line);
+}
+#f29Cover img{
+ display:block;
+ width:100%;
+ height:auto;
+ object-fit:contain;
+}
+.f29-section{
+ display:flex!important;
+ flex-direction:column!important;
+ align-items:center!important;
+ justify-content:center!important;
+ gap:9px!important;
+ min-height:94px!important;
+ padding:12px 5px!important;
+ font-size:13px!important;
+ font-weight:800!important;
+ border-radius:16px!important;
+ text-align:center!important;
+}
+.f29-section svg{
+ width:25px;
+ height:25px;
+ fill:none;
+ stroke:currentColor;
+ stroke-width:1.8;
+ stroke-linecap:round;
+ stroke-linejoin:round;
+ pointer-events:none;
+}
+.f29-section span{
+ pointer-events:none;
+}
+.f29-panel input,
+.f29-panel select{
+ width:100%;
+ margin:6px 0 12px;
+ min-height:44px;
+ border-radius:12px;
+}
+.f29-panel button{
+ margin:5px 0!important;
+ border-radius:12px!important;
+}
+.f29-label{
+ color:var(--gold);
+ font-size:12px;
+ font-weight:700;
+}
+.f29-caption{
+ color:var(--muted);
+ font-size:12px;
+ line-height:1.5;
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeV29)return;
+
+const welcome=document.getElementById('welcome');
+const home=welcome?.closest('.card');
+
+if(!home)return;
+
+window.forgeV29=true;
+
+const get=id=>document.getElementById(id);
+
+function make(tag,text='',cls=''){
+ const e=document.createElement(tag);
+ if(text)e.textContent=text;
+ if(cls)e.className=cls;
+ return e;
+}
+
+function btn(label,fn,cls='secondary'){
+ const b=make('button',label,cls);
+ b.type='button';
+ b.onclick=fn;
+ return b;
+}
+
+function field(label,value='',autocomplete='off'){
+ const box=make('div');
+ const l=make('label',label,'f29-label');
+ const i=make('input');
+ i.type='text';
+ i.value=value;
+ i.maxLength=80;
+ i.autocomplete=autocomplete;
+ i.setAttribute('aria-label',label);
+ box.append(l,i);
+ return {box,input:i};
+}
+
+function greetingField(value='neutral'){
+ const box=make('div');
+ const select=make('select');
+
+ [
+ ['neutral','Ciao'],
+ ['male','Bentornato'],
+ ['female','Bentornata']
+ ].forEach(([v,t])=>{
+ const o=make('option',t);
+ o.value=v;
+ select.append(o);
+ });
+
+ select.value=value;
+
+ if(!select.value)select.value='neutral';
+
+ box.append(
+ make('label','Come preferisci essere salutato?','f29-label'),
+ select
+ );
+
+ return {box,input:select};
+}
+
+function metadata(){
+ return user?.user_metadata||{};
+}
+
+function identity(){
+ const m=metadata();
+ return {
+ first:String(m.first_name||m.full_name||m.name||'').trim().split(/\s+/)[0],
+ last:String(m.last_name||'').trim(),
+ greeting:m.forge_greeting||'neutral'
+ };
+}
+
+function readLocal(){
+ if(!user)return {};
+
+ try{
+ return JSON.parse(
+ localStorage.getItem(
+ 'forge_personalization_v27_'+user.id
+ )||'{}'
+ )||{};
+ }catch(e){
+ return {};
+ }
+}
+
+const icons={
+ training:'<path d="M6 5v14M18 5v14M3 8v8M21 8v8M6 12h12"/>',
+ nutrition:'<path d="M4 3v7a3 3 0 006 0V3M7 3v18M20 3c-4 2-5 6-5 10h5M20 3v18"/>',
+ water:'<path d="M12 3C9 8 5 12 5 16a7 7 0 0014 0c0-4-4-8-7-13Z"/>',
+ weight:'<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7 9a5 5 0 0110 0M12 9l2-3"/>',
+ progress:'<path d="M3 3v18h18M6 16l5-5 4 3 6-8"/>',
+ calendar:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M7 3v4M17 3v4M3 10h18M8 14h2M14 14h2"/>',
+ video:'<rect x="3" y="4" width="18" height="16" rx="3"/><path d="m10 8 6 4-6 4Z"/>',
+ premium:'<path d="m3 6 5 5 4-7 4 7 5-5-2 13H5Z"/>',
+ studio:'<circle cx="12" cy="12" r="9"/><circle cx="8" cy="9" r="1"/><circle cx="14" cy="7" r="1"/><circle cx="17" cy="12" r="1"/>',
+ feedback:'<path d="M21 11a9 9 0 01-9 9H4l2-5a9 9 0 1115-4Z"/><path d="M8 11h8M8 14h5"/>',
+ packages:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/>',
+ profile:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0116 0v2"/>',
+ shop:'<path d="M3 3h3l3 12h10l2-9H7"/><circle cx="10" cy="20" r="1"/><circle cx="18" cy="20" r="1"/>',
+ settings:'<circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>'
+};
+
+function svg(name){
+ return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+
+ (icons[name]||icons.profile)+
+ '</svg>';
+}
+
+/* REGISTRAZIONE */
+
+const signup=get('signupBtn');
+
+if(signup){
+
+ const registration=make('div','','f29-panel');
+
+ registration.id='f29Registration';
+ registration.hidden=true;
+
+ const first=field('Nome','','given-name');
+ const last=field('Cognome','','family-name');
+ const greeting=greetingField();
+
+ registration.append(
+ make('h3','Crea il tuo account'),
+ first.box,
+ last.box,
+ greeting.box,
+ make('p',
+ 'Inserisci anche email e password. Il coach dovrà approvare il tuo account.',
+ 'f29-caption')
+ );
+
+ signup.before(registration);
+
+ const cancel=btn('Annulla registrazione',()=>{
+ registration.hidden=true;
+ });
+
+ registration.append(cancel);
+
+ signup.onclick=async()=>{
+
+ if(registration.hidden){
+ registration.hidden=false;
+ first.input.focus();
+ return;
+ }
+
+ signup.disabled=true;
+
+ try{
+
+ const email=get('email').value.trim();
+ const password=get('password').value;
+ const firstName=first.input.value.trim();
+ const lastName=last.input.value.trim();
+
+ if(!firstName||!lastName){
+ throw Error('Inserisci nome e cognome.');
+ }
+
+ if(!email||password.length<8){
+ throw Error('Email e password di almeno 8 caratteri richieste.');
+ }
+
+ const {error}=await db.auth.signUp({
+ email,
+ password,
+ options:{
+ emailRedirectTo:SITE_URL,
+ data:{
+ first_name:firstName,
+ last_name:lastName,
+ full_name:firstName+' '+lastName,
+ forge_greeting:greeting.input.value
+ }
+ }
+ });
+
+ if(error)throw error;
+
+ registration.hidden=true;
+ first.input.value='';
+ last.input.value='';
+
+ msg(
+ 'authStatus',
+ 'Registrazione inviata. Attendi approvazione.'
+ );
+
+ }catch(e){
+
+ msg('authStatus',friendly(e),true);
+
+ }finally{
+
+ signup.disabled=false;
+
+ }
+
+ };
+
+}
+
+/* HOME */
+
+home.classList.add('f29-home');
+
+const roleInfo=get('roleInfo');
+const logoutButton=get('logoutBtn');
+
+const row=make('div','','f29-row');
+const avatar=make('div','','f29-avatar');
+const text=make('div','','f29-text');
+
+home.prepend(row);
+
+row.append(avatar,text);
+text.append(welcome);
+
+if(roleInfo)text.append(roleInfo);
+
+const settings=btn('',()=>{
+ account.hidden=!account.hidden;
+
+ settings.setAttribute(
+ 'aria-expanded',
+ String(!account.hidden)
+ );
+
+ if(!account.hidden)renderAccount();
+},'f29-settings');
+
+settings.innerHTML=svg('settings');
+settings.setAttribute('aria-label','Impostazioni account');
+settings.setAttribute('aria-expanded','false');
+
+row.append(settings);
+
+const account=make('div','','f29-panel');
+account.hidden=true;
+
+row.after(account);
+
+const cover=make('div');
+cover.id='f29Cover';
+cover.hidden=true;
+
+const coverImage=make('img');
+coverImage.alt='Copertina personale Forge Coaching';
+
+cover.append(coverImage);
+account.after(cover);
+
+coverImage.onerror=()=>{
+ cover.hidden=true;
+};
+
+coverImage.onload=()=>{
+ if(user&&coverImage.getAttribute('src')){
+ cover.hidden=false;
+ }
+};
+
+/* FOTO PROFILO */
+
+function avatarKey(id){
+ return 'forge_avatar_v29_'+id;
+}
+
+function readAvatar(){
+ if(!user)return null;
+
+ try{
+ return localStorage.getItem(
+ avatarKey(user.id)
+ );
+ }catch(e){
+ return null;
+ }
+}
+
+function pickAvatar(){
+
+ if(!user)return;
+
+ const id=user.id;
+ const picker=make('input');
+
+ picker.type='file';
+ picker.accept='image/*';
+
+ picker.style.position='fixed';
+ picker.style.left='-9999px';
+
+ document.body.append(picker);
+
+ picker.addEventListener('cancel',()=>{
+ picker.remove();
+ },{once:true});
+
+ picker.onchange=()=>{
+
+ const file=picker.files?.[0];
+ picker.remove();
+
+ if(!file)return;
+
+ const reader=new FileReader();
+
+ reader.onerror=()=>{
+ alert('Impossibile leggere la foto.');
+ };
+
+ reader.onload=()=>{
+
+ const img=new Image();
+
+ img.onerror=()=>{
+ alert('Formato immagine non supportato.');
+ };
+
+ img.onload=()=>{
+
+ if(user?.id!==id)return;
+
+ const canvas=make('canvas');
+
+ canvas.width=320;
+ canvas.height=320;
+
+ const ctx=canvas.getContext('2d');
+ if(!ctx)return;
+
+ const side=Math.min(img.width,img.height);
+
+ ctx.drawImage(
+ img,
+ (img.width-side)/2,
+ (img.height-side)/2,
+ side,side,
+ 0,0,320,320
+ );
+
+ try{
+
+ localStorage.setItem(
+ avatarKey(id),
+ canvas.toDataURL('image/jpeg',.85)
+ );
+
+ refreshHome();
+
+ }catch(e){
+
+ alert('Spazio insufficiente sul dispositivo.');
+
+ }
+
+ };
+
+ img.src=reader.result;
+
+ };
+
+ reader.readAsDataURL(file);
+
+ };
+
+ picker.click();
+
+}
+
+/* IMPOSTAZIONI ACCOUNT */
+
+function renderAccount(){
+
+ if(!user)return;
+
+ const id=user.id;
+ const current=identity();
+
+ const first=field(
+ 'Nome',current.first,'given-name'
+ );
+
+ const last=field(
+ 'Cognome',current.last,'family-name'
+ );
+
+ const greeting=greetingField(
+ current.greeting
+ );
+
+ const status=make('p','','f29-caption');
+
+ const save=btn('Salva dati personali',async()=>{
+
+ if(user?.id!==id)return;
+
+ const f=first.input.value.trim();
+ const l=last.input.value.trim();
+
+ if(!f||!l){
+ status.textContent='Inserisci nome e cognome.';
+ return;
+ }
+
+ save.disabled=true;
+
+ try{
+
+ const {data,error}=await db.auth.updateUser({
+ data:{
+ first_name:f,
+ last_name:l,
+ full_name:f+' '+l,
+ forge_greeting:greeting.input.value
+ }
+ });
+
+ if(error)throw error;
+
+ if(user?.id!==id)return;
+
+ if(data?.user)user=data.user;
+
+ status.textContent='Profilo aggiornato.';
+ refreshHome();
+
+ }catch(e){
+
+ status.textContent=friendly(e);
+
+ }finally{
+
+ save.disabled=false;
+
+ }
+
+ });
+
+ account.replaceChildren(
+ make('h3','Il mio account'),
+ make('p',user.email||'','f29-caption'),
+ first.box,
+ last.box,
+ greeting.box,
+ save,
+ status,
+ make('h3','Foto profilo'),
+ btn('Carica foto profilo',pickAvatar),
+ btn('Rimuovi foto profilo',()=>{
+
+ if(user?.id!==id)return;
+
+ localStorage.removeItem(avatarKey(id));
+
+ refreshHome();
+
+ }),
+ make('p',
+ 'La foto profilo è salvata su questo dispositivo.',
+ 'f29-caption'),
+ btn('Personalizza app',()=>{
+
+ account.hidden=true;
+ settings.setAttribute('aria-expanded','false');
+
+ section('Forge Studio');
+
+ }),
+ btn('Apri profilo completo',()=>{
+
+ account.hidden=true;
+ settings.setAttribute('aria-expanded','false');
+
+ section('Profilo');
+
+ })
+ );
+
+ if(logoutButton){
+
+ account.append(logoutButton);
+
+ }else{
+
+ account.append(btn('Esci',()=>logout()));
+
+ }
+
+}
+
+/* AGGIORNAMENTO HOME */
+
+let lastId=null;
+let lastCover=null;
+let lastAvatar=null;
+
+function refreshHome(){
+
+ const id=user?.id||null;
+
+ if(id!==lastId){
+
+ account.hidden=true;
+ settings.setAttribute('aria-expanded','false');
+
+ lastId=id;
+ lastAvatar=null;
+
+ avatar.replaceChildren();
+
+ }
+
+ if(!id){
+
+ cover.hidden=true;
+ coverImage.removeAttribute('src');
+ lastCover=null;
+ avatar.replaceChildren();
+
+ return;
+
+ }
+
+ const p=identity();
+
+ const prefix=p.greeting==='female'
+ ?'Bentornata'
+ :p.greeting==='male'
+ ?'Bentornato'
+ :'Ciao';
+
+ const title=role==='admin'
+ ?'Bentornato, Coach'
+ :p.first
+ ?prefix+', '+p.first
+ :'Benvenuto in Forge Coaching';
+
+ if(welcome.textContent!==title){
+ welcome.textContent=title;
+ }
+
+ if(roleInfo){
+
+ const subtitle=role==='admin'
+ ?'Profilo amministratore'
+ :role==='premium'
+ ?'Forge Premium'
+ :'La tua area personale';
+
+ if(roleInfo.textContent!==subtitle){
+ roleInfo.textContent=subtitle;
+ }
+
+ }
+
+ const local=readLocal();
+
+ const src=typeof local.cover==='string'&&
+ local.cover.startsWith('data:image/')
+ ?local.cover:null;
+
+ if(src!==lastCover){
+
+ lastCover=src;
+ cover.hidden=true;
+
+ if(src){
+
+ coverImage.src=src;
+
+ }else{
+
+ coverImage.removeAttribute('src');
+
+ }
+
+ }
+
+ const photo=readAvatar();
+
+ const initials=role==='admin'
+ ?'5%'
+ :((p.first[0]||'F')+
+ (p.last[0]||'')).toUpperCase();
+
+ const avatarState=photo||initials;
+
+ if(lastAvatar!==avatarState){
+
+ lastAvatar=avatarState;
+ avatar.replaceChildren();
+
+ if(photo){
+
+ const img=make('img');
+ img.src=photo;
+ img.alt='Foto profilo';
+
+ avatar.append(img);
+
+ }else{
+
+ avatar.textContent=initials;
+
+ }
+
+ }
+
+}
+
+/* ICONE DEL MENU */
+
+function iconFor(name){
+
+ const n=name.toLowerCase();
+
+ if(/training|allenamento/.test(n))return 'training';
+ if(/nutrition|aliment/.test(n))return 'nutrition';
+ if(/hydration|idratazione/.test(n))return 'water';
+ if(/weight|peso/.test(n))return 'weight';
+ if(/progress/.test(n))return 'progress';
+ if(/prenot|calendar/.test(n))return 'calendar';
+ if(/video/.test(n))return 'video';
+ if(/premium/.test(n))return 'premium';
+ if(/studio/.test(n))return 'studio';
+ if(/feedback/.test(n))return 'feedback';
+ if(/pacchett|lezioni/.test(n))return 'packages';
+ if(/shop/.test(n))return 'shop';
+
+ return 'profile';
+
+}
+
+function decorateMenu(){
+
+ document.querySelectorAll('button[data-section]')
+ .forEach(b=>{
+
+ if(b.dataset.f29==='1'&&b.querySelector('svg')){
+ return;
+ }
+
+ const name=b.dataset.section;
+
+ let label=b.textContent.trim();
+
+ if(name==='Allenamento'){
+ label='Forge Training';
+ }
+
+ if(name==='Progress Evolution'){
+ label='Forge Progress';
+ }
+
+ const span=make('span',label);
+
+ b.innerHTML=svg(iconFor(name));
+ b.append(span);
+
+ b.classList.add('f29-section');
+ b.dataset.f29='1';
+
+ });
+
+}
+
+refreshHome();
+decorateMenu();
+
+setInterval(()=>{
+
+ refreshHome();
+ decorateMenu();
+
+},1000);
+
+window.addEventListener('storage',refreshHome);
+
+console.info('FORGE V29 HOME & PERSONAL ACCOUNT ACTIVE');
+
+})();
+</script>
+<!-- END FORGE V29 -->
