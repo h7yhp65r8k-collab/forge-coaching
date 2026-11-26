@@ -14520,3 +14520,721 @@ console.info("Forge Training V20 caricato");
 })();
 </script>
 <!-- END FORGE TRAINING V20 -->
+
+<!-- FORGE TRAINING V21 -->
+<style>
+#forge21-video video{
+ width:100%;
+ border-radius:12px;
+ background:#000;
+}
+#forge21-video .item{
+ padding:12px;
+}
+#forge21-video input[type=file]{
+ font-size:13px;
+}
+#forgeTrainingEntry{
+ display:none!important;
+}
+#forge21-train #forgeTrainingLive{
+ display:block!important;
+}
+#forge21-train #ftPanel{
+ position:static!important;
+ padding:8px 0!important;
+}
+#forge21-train #ftPanel[hidden]{
+ display:none!important;
+}
+#forge21-video .danger{
+ background:#301b1d;
+ color:#ffaaaa;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.ForgeTrainingV21)return;
+window.ForgeTrainingV21=true;
+
+const $=id=>document.getElementById(id);
+const bucket="forge-exercise-videos";
+
+function E(tag,text,parent,cls){
+ const n=document.createElement(tag);
+ if(text)n.textContent=text;
+ if(cls)n.className=cls;
+ if(parent)parent.append(n);
+ return n;
+}
+
+function B(parent,label,fn,cls){
+ const b=E("button",label,parent,cls);
+ b.type="button";
+ b.onclick=async()=>{
+ b.disabled=true;
+ try{
+ await fn();
+ }catch(e){
+ alert(e.message||String(e));
+ }finally{
+ b.disabled=false;
+ }
+ };
+ return b;
+}
+
+async function auth(){
+ const r=await db.auth.getUser();
+ if(r.error)throw r.error;
+ if(!r.data.user)
+ throw Error("Accedi a Forge Coaching.");
+ return r.data.user;
+}
+
+function mountTraining(){
+
+ const group=$("f18-train");
+ if(!group)return;
+
+ const target=group.querySelector(
+ ":scope > .f18-content"
+ );
+ if(!target)return;
+
+ let box=$("forge21-train");
+
+ if(!box){
+ box=E("div","",target);
+ box.id="forge21-train";
+
+ E("p",
+ "Apri la tua scheda e registra l'allenamento.",
+ box,"small");
+
+ B(box,"Apri scheda e timer",()=>{
+ const launch=$("ftLaunch");
+
+ if(!launch)
+ throw Error("Motore allenamento non disponibile.");
+
+ launch.click();
+ });
+
+ if(!group.dataset.f21){
+ group.dataset.f21="1";
+
+ group.addEventListener("toggle",()=>{
+ if(group.open){
+ const launch=$("ftLaunch");
+ const panel=$("ftPanel");
+
+ if(launch&&panel&&panel.hidden)
+ launch.click();
+ }
+ });
+ }
+ }
+
+ const live=$("forgeTrainingLive");
+
+ if(live&&live.parentElement!==box){
+ box.append(live);
+ }
+
+ const panel=$("ftPanel");
+
+ if(panel)
+ panel.classList.remove("f18-hidden");
+
+ const content=$("ftContent");
+
+ if(content){
+ content.querySelectorAll("p").forEach(p=>{
+ if(p.textContent.trim()===
+ "Nessun programma disponibile."){
+ p.textContent=
+ "Non hai ancora una scheda disponibile. "+
+ "Crea una scheda oppure attendi "+
+ "l'assegnazione del coach.";
+ }
+ });
+ }
+}
+
+async function videoPanel(root){
+
+ if(root.dataset.loaded)return;
+ root.dataset.loaded="1";
+
+ const me=await auth();
+
+ const admin=role==="admin";
+
+ root.replaceChildren();
+
+ E("h3","Galleria video Forge",root);
+
+ E("p",
+ admin?
+ "Registra, carica e pubblica le tue esecuzioni.":
+ "Guarda le esecuzioni registrate dal coach.",
+ root,"small");
+
+ const search=E("input","",root);
+ search.placeholder="Cerca esercizio...";
+ search.type="search";
+
+ const results=E("div","",root);
+ const gallery=E("div","",root);
+
+ let selected=null;
+ let uploadBox=null;
+ let chosen=null;
+
+ if(admin){
+
+ uploadBox=E("div","",root,"item");
+
+ E("h3","Carica video personale",uploadBox);
+
+ chosen=E("p",
+ "Cerca e seleziona un esercizio.",
+ uploadBox,"small");
+
+ const title=E("input","",uploadBox);
+ title.placeholder="Titolo video";
+
+ const notes=E("textarea","",uploadBox);
+ notes.placeholder="Indicazioni tecniche facoltative";
+
+ E("label","Registra con iPhone",uploadBox);
+
+ const camera=E("input","",uploadBox);
+ camera.type="file";
+ camera.accept="video/*";
+ camera.setAttribute("capture","environment");
+
+ E("label","Oppure scegli dalla galleria",uploadBox);
+
+ const file=E("input","",uploadBox);
+ file.type="file";
+ file.accept="video/*";
+
+ const preview=E("video","",uploadBox);
+ preview.controls=true;
+ preview.playsInline=true;
+ preview.hidden=true;
+
+ let selectedFile=null;
+ let previewURL=null;
+
+ const status=E("p","",uploadBox,"small");
+
+ function choose(f){
+
+ if(!f)return;
+
+ if(f.size>52428800){
+ selectedFile=null;
+ preview.hidden=true;
+ status.textContent=
+ "Video troppo grande: massimo 50 MB.";
+ return;
+ }
+
+ if(previewURL)
+ URL.revokeObjectURL(previewURL);
+
+ selectedFile=f;
+ previewURL=URL.createObjectURL(f);
+ preview.src=previewURL;
+ preview.hidden=false;
+
+ status.textContent=
+ "Video selezionato: "+
+ (f.size/1048576).toFixed(1)+" MB";
+ }
+
+ camera.onchange=()=>{
+ file.value="";
+ choose(camera.files[0]);
+ };
+
+ file.onchange=()=>{
+ camera.value="";
+ choose(file.files[0]);
+ };
+
+ const publish=E("select","",uploadBox);
+
+ [
+ ["false","Salva come bozza"],
+ ["true","Pubblica per i clienti"]
+ ].forEach(([v,t])=>{
+ const o=E("option",t,publish);
+ o.value=v;
+ });
+
+ B(uploadBox,"Carica video",async()=>{
+
+ if(!selected?.id)
+ throw Error("Seleziona prima un esercizio.");
+
+ if(!selectedFile)
+ throw Error("Seleziona o registra un video.");
+
+ const name=title.value.trim();
+
+ if(!name)
+ throw Error("Inserisci il titolo.");
+
+ const f=selectedFile;
+
+ const types={
+ "video/mp4":"mp4",
+ "video/quicktime":"mov",
+ "video/webm":"webm"
+ };
+
+ let mime=f.type;
+
+ if(!mime){
+ const ext=f.name.split(".").pop()
+ .toLowerCase();
+
+ mime={
+ mp4:"video/mp4",
+ mov:"video/quicktime",
+ webm:"video/webm"
+ }[ext];
+ }
+
+ if(!types[mime])
+ throw Error("Usa un video MP4, MOV o WebM.");
+
+ const id=crypto.randomUUID();
+
+ const path=
+ me.id+"/"+selected.id+"/"+
+ id+"."+types[mime];
+
+ status.textContent=
+ "Caricamento in corso. Non chiudere l'app.";
+
+ const record={
+ id:id,
+ exercise_id:selected.id,
+ title:name,
+ description:notes.value.trim()||null,
+ source_type:"upload",
+ storage_bucket:bucket,
+ storage_path:path,
+ original_filename:f.name,
+ file_size_bytes:f.size,
+ mime_type:mime,
+ uploaded_by:me.id,
+ published:false,
+ language_code:"it"
+ };
+
+ const insert=await db
+ .from("exercise_videos")
+ .insert(record);
+
+ if(insert.error){
+ status.textContent="Registrazione non riuscita.";
+ throw insert.error;
+ }
+
+ const uploaded=await db.storage
+ .from(bucket)
+ .upload(path,f,{
+ contentType:mime,
+ upsert:false
+ });
+
+ if(uploaded.error){
+
+ await db.from("exercise_videos")
+ .update({
+ archived_at:new Date().toISOString()
+ })
+ .eq("id",id);
+
+ status.textContent=
+ "Caricamento non riuscito.";
+ throw uploaded.error;
+ }
+
+ if(publish.value==="true"){
+
+ const p=await db
+ .from("exercise_videos")
+ .update({
+ published:true,
+ published_at:new Date().toISOString()
+ })
+ .eq("id",id)
+ .select("id");
+
+ if(p.error||!p.data?.length){
+ status.textContent=
+ "Video caricato come bozza. "+
+ "Pubblicazione non riuscita.";
+ await loadGallery();
+ return;
+ }
+ }
+
+ status.textContent=
+ publish.value==="true"?
+ "Video caricato e pubblicato!":
+ "Video salvato come bozza!";
+
+ selectedFile=null;
+ camera.value="";
+ file.value="";
+ preview.pause();
+ preview.removeAttribute("src");
+ preview.load();
+ preview.hidden=true;
+
+ if(previewURL){
+ URL.revokeObjectURL(previewURL);
+ previewURL=null;
+ }
+
+ await loadGallery();
+
+ });
+
+ uploadBox.selectExercise=a=>{
+ selected=a;
+
+ const name=
+ a.exercise_name||a.name||a.title;
+
+ chosen.textContent=
+ "Esercizio selezionato: "+name;
+
+ title.value=name;
+
+ uploadBox.scrollIntoView({
+ behavior:"smooth",
+ block:"start"
+ });
+ };
+
+ }
+
+ async function loadGallery(){
+
+ gallery.replaceChildren(
+ E("h3","Video disponibili")
+ );
+
+ let q=db.from("exercise_videos")
+ .select(
+ "id,exercise_id,title,description,"+
+ "storage_path,storage_bucket,"+
+ "published,external_url"
+ )
+ .is("archived_at",null)
+ .order("created_at",{ascending:false})
+ .limit(500);
+
+ if(!admin)
+ q=q.eq("published",true);
+
+ const r=await q;
+
+ if(r.error)throw r.error;
+
+ const term=search.value.trim().toLowerCase();
+
+ const rows=(r.data||[]).filter(v=>
+ (!term||v.title.toLowerCase().includes(term))
+ &&(v.storage_path||v.external_url)
+ );
+
+ if(!rows.length){
+ E("p",
+ "Nessun video disponibile per questa ricerca.",
+ gallery,"small");
+ }
+
+ for(const v of rows){
+
+ const card=E("div","",gallery,"item");
+
+ E("strong",v.title,card);
+
+ if(v.description)
+ E("p",v.description,card,"small");
+
+ if(admin)
+ E("p",
+ v.published?"Pubblicato":"Bozza",
+ card,"small");
+
+ B(card,"▶ Guarda video",async()=>{
+
+ let url;
+
+ if(v.storage_path&&
+ v.storage_bucket===bucket){
+
+ const signed=await db.storage
+ .from(bucket)
+ .createSignedUrl(v.storage_path,300);
+
+ if(signed.error)throw signed.error;
+
+ url=signed.data.signedUrl;
+
+ }else if(v.external_url){
+
+ const external=new URL(v.external_url);
+
+ if(external.protocol!=="https:")
+ throw Error("Link video non valido.");
+
+ window.open(
+ external.href,
+ "_blank",
+ "noopener,noreferrer"
+ );
+
+ return;
+
+ }else{
+ throw Error("Video non ancora caricato.");
+ }
+
+ let player=card.querySelector("video");
+
+ if(!player){
+ player=E("video","",card);
+ player.controls=true;
+ player.playsInline=true;
+ player.preload="metadata";
+ }
+
+ player.src=url;
+
+ });
+
+ if(admin){
+
+ B(card,
+ v.published?
+ "Ritira pubblicazione":
+ "Pubblica video",
+ async()=>{
+
+ const r=await db
+ .from("exercise_videos")
+ .update({
+ published:!v.published,
+ published_at:!v.published?
+ new Date().toISOString():null
+ })
+ .eq("id",v.id)
+ .select("id");
+
+ if(r.error)throw r.error;
+
+ if(!r.data?.length)
+ throw Error("Modifica non autorizzata.");
+
+ await loadGallery();
+
+ },"secondary");
+
+ B(card,"Archivia video",async()=>{
+
+ if(!confirm("Archiviare questo video?"))
+ return;
+
+ const r=await db
+ .from("exercise_videos")
+ .update({
+ published:false,
+ archived_at:new Date().toISOString()
+ })
+ .eq("id",v.id)
+ .select("id");
+
+ if(r.error)throw r.error;
+
+ if(!r.data?.length)
+ throw Error("Archiviazione non autorizzata.");
+
+ await loadGallery();
+
+ },"danger");
+
+ }
+
+ }
+
+ }
+
+ let request=0;
+
+ async function searchExercises(){
+
+ const n=++request;
+
+ results.replaceChildren();
+
+ if(!admin)return;
+
+ const term=search.value.trim();
+
+ if(term.length<2)return;
+
+ const r=await db.rpc(
+ "forge_training_v8_search_exercises",{
+ p_search:term,
+ p_limit:25
+ });
+
+ if(n!==request)return;
+
+ if(r.error)throw r.error;
+
+ for(const a of r.data||[]){
+
+ const label=
+ a.exercise_name||a.name||a.title;
+
+ if(!a.id||!label)continue;
+
+ B(results,label,()=>{
+
+ uploadBox.selectExercise(a);
+ results.replaceChildren();
+
+ },"secondary");
+
+ }
+
+ if(!results.children.length)
+ E("p","Nessun esercizio trovato.",
+ results,"small");
+
+ }
+
+ B(root,"Cerca e aggiorna",async()=>{
+
+ await searchExercises();
+ await loadGallery();
+
+ },"secondary");
+
+ search.onkeydown=e=>{
+ if(e.key==="Enter"){
+ e.preventDefault();
+ Promise.all([
+ searchExercises(),
+ loadGallery()
+ ]).catch(e=>alert(e.message));
+ }
+ };
+
+ await loadGallery();
+
+}
+
+function mountVideo(){
+
+ const group=$("f18-video");
+ const heading=$("sectionTitle");
+ const section=$("sectionContent");
+
+ let target=null;
+
+ if(group){
+
+ target=group.querySelector(
+ ":scope > .f18-content"
+ );
+
+ }else if(heading?.textContent.trim()
+ ==="Video esercizi"){
+
+ target=section;
+
+ }
+
+ if(!target)return;
+
+ let box=target.querySelector(
+ "#forge21-video"
+ );
+
+ if(!box){
+
+ box=E("div","",target);
+ box.id="forge21-video";
+
+ B(box,"Apri galleria video",async()=>{
+ try{
+ await videoPanel(box);
+ }catch(e){
+ delete box.dataset.loaded;
+ throw e;
+ }
+ });
+
+ }
+
+ Array.from(target.children).forEach(n=>{
+ if(n!==box&&!n.hidden)
+ n.hidden=true;
+ });
+
+}
+
+let queued=false;
+
+function schedule(){
+
+ if(queued)return;
+ queued=true;
+
+ requestAnimationFrame(()=>{
+
+ queued=false;
+
+ try{
+ mountTraining();
+ mountVideo();
+ }catch(e){
+ console.warn("Forge V21",e);
+ }
+
+ });
+
+}
+
+new MutationObserver(schedule)
+.observe(document.body,{
+ childList:true,
+ subtree:true
+});
+
+document.addEventListener("click",schedule);
+
+schedule();
+
+console.info("FORGE TRAINING V21 caricato");
+
+})();
+</script>
+<!-- END FORGE TRAINING V21 -->
