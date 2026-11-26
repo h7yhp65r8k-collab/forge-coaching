@@ -10043,5 +10043,33 @@ busy=false;
 
 })();
 </script>
+   
+<script>
+(function(){
+  const panels = [
+    document.getElementById("forge-v13"),
+    document.getElementById("forge-training-v14")
+  ].filter(Boolean);
+
+  const previousSection = section;
+
+  section = function(name){
+    previousSection(name);
+
+    if(name === "Allenamento"){
+      const target = document.getElementById("sectionContent");
+      panels.forEach(panel => {
+        panel.style.margin = "12px 0";
+        target.appendChild(panel);
+      });
+    }else{
+      panels.forEach(panel => panel.remove());
+    }
+  };
+
+  panels.forEach(panel => panel.remove());
+})();
+</script>
+
 </body>
 </html>
