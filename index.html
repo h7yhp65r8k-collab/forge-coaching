@@ -15636,3 +15636,632 @@ console.info(
 </script>
 
 <!-- END FORGE TRAINING V22 -->
+
+<!-- FORGE V23 -->
+<style>
+.f23-panel{
+ background:linear-gradient(145deg,#211e18,#111216);
+ border:1px solid #665331;
+ border-radius:20px;
+ padding:16px;
+ margin:12px 0;
+}
+.f23-ring{
+ width:180px;
+ height:180px;
+ border-radius:50%;
+ margin:20px auto;
+ display:grid;
+ place-items:center;
+ background:conic-gradient(#e9c675 var(--progress),#303034 0);
+}
+.f23-ring-inner{
+ width:154px;
+ height:154px;
+ border-radius:50%;
+ background:#141519;
+ display:flex;
+ flex-direction:column;
+ align-items:center;
+ justify-content:center;
+}
+.f23-number{
+ color:#e9c675;
+ font-size:36px;
+ font-weight:800;
+}
+.f23-center{text-align:center}
+.f23-quick{
+ display:grid;
+ grid-template-columns:repeat(4,minmax(0,1fr));
+ gap:5px;
+}
+.f23-quick button{
+ font-size:12px;
+ padding:12px 2px;
+}
+.f23-row{
+ display:flex;
+ gap:8px;
+ align-items:center;
+}
+.f23-row input{flex:1;min-width:0}
+.f23-row button{width:auto}
+.f23-panel details{
+ border-top:1px solid #51442e;
+ margin-top:12px;
+ padding-top:12px;
+}
+.f23-panel summary{
+ color:#e9c675;
+ font-weight:700;
+ cursor:pointer;
+ padding:10px 0;
+}
+.f23-label{
+ font-size:11px;
+ letter-spacing:2px;
+ color:#bca36d;
+}
+.f23-history{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:6px;
+ border-bottom:1px solid #39332a;
+ padding:8px 0;
+ font-size:13px;
+}
+.f23-history button{
+ width:auto;
+ padding:8px;
+ font-size:12px;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.forgeV23Installed)return;
+window.forgeV23Installed=true;
+
+const previous=section;
+const names=[
+ "Forge Hydration",
+ "Forge Weight",
+ "Forge Studio"
+];
+
+const dayOf=value=>
+ new Intl.DateTimeFormat("en-CA",{
+ timeZone:"Europe/Rome",
+ year:"numeric",
+ month:"2-digit",
+ day:"2-digit"
+ }).format(new Date(value));
+
+function panel(){
+ return el("div","","f23-panel");
+}
+
+function details(title){
+ const d=el("details");
+ d.append(el("summary",title));
+ return d;
+}
+
+function stat(root,label,value){
+ const box=el("div","","stat");
+ box.append(
+ el("span",label),
+ el("strong",value)
+ );
+ root.append(box);
+}
+
+function signed(n){
+ return (n>0?"+":"")+fmt(n,2);
+}
+
+async function metric(root,kind){
+
+ const water=kind==="water";
+ const table=water?
+ "forge_water_entries":
+ "forge_weight_entries";
+
+ const field=water?
+ "amount_ml":"weight_kg";
+
+ const account=user.id;
+ const key=(water?
+ "forge_water_goal_":
+ "forge_goal_")+account;
+
+ const request=serial;
+
+ const alive=()=>
+ root.isConnected&&
+ serial===request&&
+ user?.id===account;
+
+ const main=panel();
+ const heading=el("div","MONITORAGGIO PERSONALE","f23-label");
+ const hero=el("div","","f23-center");
+ const status=el("div","","small");
+ const settings=details("⚙ Imposta obiettivo");
+ const goal=input("number");
+
+ goal.min=water?"100":"1";
+ goal.max=water?"10000":"500";
+ goal.step=water?"50":"0.1";
+ goal.value=localStorage.getItem(key)||"";
+
+ const stats=el("div","","stats");
+ const chartPanel=details("Andamento e statistiche");
+ chartPanel.open=true;
+
+ const filters=el("div","","filters");
+
+ const svg=svgNode("svg",{
+ viewBox:"0 0 600 260",
+ id:"forgeMetricSvg"
+ });
+ svg.classList.add("chart");
+
+ const tip=el("p","","small");
+ tip.id="metricTip";
+
+ const history=details("Storico registrazioni");
+ const historyBody=el("div");
+ history.append(historyBody);
+
+ let rows=[];
+ let currentPeriod="day";
+ let busy=false;
+
+ const value=input(
+ "number",
+ water?"Quantità in ml":"Peso in kg"
+ );
+
+ value.min="1";
+ value.max=water?"10000":"500";
+ value.step=water?"1":"0.1";
+
+ async function action(fn){
+ if(busy||!alive())return;
+ busy=true;
+ status.textContent="Salvataggio...";
+ try{
+ await fn();
+ if(!alive())return;
+ await refresh();
+ if(alive()){
+ status.textContent="Aggiornato correttamente.";
+ }
+ }catch(e){
+ if(alive())status.textContent=friendly(e);
+ }finally{
+ busy=false;
+ }
+ }
+
+ async function save(n){
+ if(!Number.isFinite(n)||n<=0||
+ n>Number(value.max)||
+ (water&&!Number.isInteger(n))){
+ status.textContent="Inserisci un valore valido.";
+ return;
+ }
+ await action(async()=>{
+ const {error}=await db.from(table).insert({
+ user_id:account,
+ [field]:n,
+ recorded_at:new Date().toISOString()
+ });
+ if(error)throw error;
+ value.value="";
+ });
+ }
+
+ settings.append(
+ goal,
+ button("Salva obiettivo",()=>{
+ const n=Number(goal.value);
+ if(!Number.isFinite(n)||
+ n<Number(goal.min)||
+ n>Number(goal.max)){
+ status.textContent="Obiettivo non valido.";
+ return;
+ }
+ localStorage.setItem(key,String(n));
+ paint();
+ status.textContent="Obiettivo salvato sul dispositivo.";
+ }),
+ el("p","Obiettivo personale su questo dispositivo.","small")
+ );
+
+ main.append(heading,hero,settings);
+
+ if(water){
+ const quick=el("div","","f23-quick");
+ [250,500,750,1000].forEach(n=>{
+ quick.append(button("+"+n+" ml",()=>save(n)));
+ });
+ main.append(quick);
+ }
+
+ const entry=el("div","","f23-row");
+ entry.append(
+ value,
+ button(water?"+":"Registra",()=>{
+ save(Number(value.value));
+ })
+ );
+
+ main.append(entry,status,stats);
+
+ for(const [p,label] of [
+ ["entry","Singole"],
+ ["day","Giorni"],
+ ["week","Settimane"],
+ ["month","Mesi"]
+ ]){
+ const b=button(label,()=>{
+ currentPeriod=p;
+ paintChart();
+ },"secondary");
+ b.dataset.f23period=p;
+ filters.append(b);
+ }
+
+ chartPanel.append(filters,svg,tip);
+ main.append(chartPanel,history);
+
+ root.append(main);
+
+ function paintChart(){
+ if(!alive())return;
+ filters.querySelectorAll("button").forEach(b=>{
+ b.classList.toggle(
+ "active",
+ b.dataset.f23period===currentPeriod
+ );
+ });
+ drawMetric(
+ groupMetric(rows,kind,currentPeriod),
+ water?"ml":"kg"
+ );
+ }
+
+ function paint(){
+ if(!alive())return;
+
+ hero.replaceChildren();
+ stats.replaceChildren();
+ historyBody.replaceChildren();
+
+ const target=Number(localStorage.getItem(key)||0);
+
+ if(water){
+
+ const today=dayOf(new Date());
+
+ const total=rows.filter(r=>
+ dayOf(r.recorded_at)===today
+ ).reduce((s,r)=>s+Number(r[field]),0);
+
+ const percent=target?
+ Math.round(total/target*100):0;
+
+ const ring=el("div","","f23-ring");
+ ring.style.setProperty(
+ "--progress",
+ Math.min(100,percent)+"%"
+ );
+
+ const inner=el("div","","f23-ring-inner");
+
+ inner.append(
+ el("div",fmt(total/1000,2)+" L","f23-number"),
+ el("div",target?percent+"%":"Imposta obiettivo","small")
+ );
+
+ ring.append(inner);
+
+ hero.append(
+ ring,
+ el("p",target?
+ total>=target?
+ "Obiettivo raggiunto!":
+ "Mancano "+fmt((target-total)/1000,2)+" L":
+ "Imposta il tuo obiettivo giornaliero.")
+ );
+
+ stat(stats,"Oggi",fmt(total/1000,2)+" L");
+ stat(stats,"Obiettivo",target?fmt(target/1000,2)+" L":"—");
+
+ const days=new Map();
+
+ rows.forEach(r=>{
+ const d=dayOf(r.recorded_at);
+ days.set(d,(days.get(d)||0)+Number(r[field]));
+ });
+
+ const sum=[...days.values()].reduce((a,b)=>a+b,0);
+
+ stat(stats,"Media giorni registrati",
+ days.size?fmt(sum/days.size/1000,2)+" L":"—");
+
+ stat(stats,"Giorni al target attuale",
+ target?String([...days.values()].filter(n=>n>=target).length):"—");
+
+ }else{
+
+ const latest=rows.length?Number(rows[0][field]):null;
+
+ const first=rows.length?
+ Number(rows[rows.length-1][field]):null;
+
+ hero.append(
+ el("p","PESO ATTUALE","f23-label"),
+ el("div",latest===null?"—":fmt(latest,1)+" kg","f23-number"),
+ el("p",latest!==null&&target?
+ "Distanza dall'obiettivo: "+
+ fmt(Math.abs(latest-target),2)+" kg":
+ "Monitora la tua evoluzione.","small")
+ );
+
+ stat(stats,"Peso iniziale",first===null?"—":fmt(first,1)+" kg");
+ stat(stats,"Obiettivo",target?fmt(target,1)+" kg":"—");
+ stat(stats,"Variazione",latest===null?"—":signed(latest-first)+" kg");
+
+ const recent=rows.filter(r=>
+ new Date(r.recorded_at).getTime()>=Date.now()-7*86400000
+ );
+
+ stat(stats,"Media ultimi 7 giorni",recent.length?
+ fmt(recent.reduce((s,r)=>s+Number(r[field]),0)/recent.length,2)+" kg":"—");
+
+ }
+
+ paintChart();
+
+ if(!rows.length){
+ historyBody.append(el("p","Nessuna registrazione.","muted"));
+ }
+
+ rows.slice(0,50).forEach(r=>{
+
+ const line=el("div","","f23-history");
+ const text=el("div");
+
+ text.append(
+ el("strong",fmt(r[field],2)+(water?" ml":" kg")),
+ el("div",dt(r.recorded_at),"small")
+ );
+
+ const edit=button("✎",async()=>{
+
+ const answer=prompt(
+ water?"Quantità in ml":"Peso in kg",
+ String(r[field])
+ );
+
+ if(answer===null)return;
+
+ const n=Number(answer.replace(",","."));
+
+ if(!Number.isFinite(n)||n<=0||
+ n>Number(value.max)||
+ (water&&!Number.isInteger(n))){
+ status.textContent="Valore non valido.";
+ return;
+ }
+
+ await action(async()=>{
+ const {data,error}=await db.from(table)
+ .update({[field]:n})
+ .eq("id",r.id)
+ .eq("user_id",account)
+ .select("id");
+
+ if(error)throw error;
+ if(!data?.length)throw Error("Modifica non autorizzata.");
+ });
+
+ },"secondary");
+
+ const remove=button("×",async()=>{
+
+ if(!confirm("Eliminare questa registrazione?"))return;
+
+ await action(async()=>{
+ const {data,error}=await db.from(table)
+ .delete()
+ .eq("id",r.id)
+ .eq("user_id",account)
+ .select("id");
+
+ if(error)throw error;
+ if(!data?.length)throw Error("Eliminazione non autorizzata.");
+ });
+
+ },"secondary");
+
+ line.append(text,edit,remove);
+ historyBody.append(line);
+
+ });
+
+ }
+
+ async function refresh(){
+
+ const {data,error}=await db.from(table)
+ .select("id,user_id,recorded_at,"+field)
+ .eq("user_id",account)
+ .order("recorded_at",{ascending:false})
+ .limit(1000);
+
+ if(error)throw error;
+ if(!alive())return;
+
+ rows=data||[];
+ paint();
+
+ }
+
+ try{
+ await refresh();
+ }catch(e){
+ if(alive())status.textContent=friendly(e);
+ }
+
+}
+
+async function studio(root){
+
+ const request=serial;
+ const account=user.id;
+ const box=panel();
+
+ box.append(
+ el("div","IL TUO SPAZIO PERSONALE","f23-label"),
+ el("h2","Forge Studio"),
+ el("p","Gestisci il tuo profilo e accedi ai tuoi strumenti.","muted")
+ );
+
+ const profile=panel();
+
+ profile.append(
+ el("h3","Il mio account"),
+ el("p",user.email||""),
+ el("p",role==="admin"?"Coach • Amministratore":"Area personale","small"),
+ button("Apri profilo",()=>section("Profilo"),"secondary")
+ );
+
+ box.append(profile);
+
+ const tools=panel();
+ tools.append(el("h3","I tuoi strumenti"));
+
+ [
+ ["Forge Training","Allenamento"],
+ ["Forge Nutrition","Forge Nutrition"],
+ ["Forge Hydration","Forge Hydration"],
+ ["Forge Weight","Forge Weight"],
+ ["Progress Evolution","Progress Evolution"],
+ ["Forge Premium","Forge Premium"]
+ ].forEach(([label,name])=>{
+ tools.append(button(label,()=>section(name),"secondary"));
+ });
+
+ box.append(tools);
+
+ const config=details("Configurazione Studio");
+ const output=el("div");
+
+ config.append(output);
+ box.append(config);
+ root.append(box);
+
+ output.textContent="Caricamento...";
+
+ try{
+
+ const {data,error}=await db.rpc("forge_st_v1_get_studio");
+
+ if(error)throw error;
+
+ if(serial!==request||user?.id!==account)return;
+
+ output.replaceChildren();
+
+ const allowed={
+ theme:"Tema",
+ theme_name:"Tema",
+ display_name:"Nome visualizzato",
+ active:"Attivo",
+ status:"Stato",
+ title:"Titolo",
+ description:"Descrizione"
+ };
+
+ function showData(value,depth=0){
+
+ if(!value||typeof value!=="object"||depth>4)return;
+
+ Object.entries(value).forEach(([k,v])=>{
+
+ if(v&&typeof v==="object"){
+ showData(v,depth+1);
+ }else if(allowed[k]&&v!==null){
+ output.append(el("p",
+ allowed[k]+": "+
+ (typeof v==="boolean"?(v?"Sì":"No"):String(v))
+ ));
+ }
+
+ });
+
+ }
+
+ showData(data);
+
+ if(!output.children.length){
+ output.append(el("p","Nessuna configurazione visualizzabile.","muted"));
+ }
+
+ }catch(e){
+ if(serial===request&&user?.id===account){
+ output.textContent=friendly(e);
+ }
+ }
+
+}
+
+section=function(name){
+
+ if(!names.includes(name)){
+ return previous.apply(this,arguments);
+ }
+
+ if(!user)return;
+
+ serial++;
+ calendarSerial++;
+ active=name;
+
+ $("sectionTitle").textContent=name;
+ $("sectionText").textContent="";
+
+ const root=$("sectionContent");
+ root.replaceChildren();
+
+ $("sectionCard").classList.remove("hidden");
+
+ document.querySelectorAll("[data-section]").forEach(b=>{
+ b.classList.toggle("active",b.dataset.section===name);
+ });
+
+ if(name==="Forge Studio"){
+ studio(root);
+ }else{
+ metric(root,name==="Forge Hydration"?"water":"weight");
+ }
+
+ $("sectionCard").scrollIntoView({
+ behavior:"smooth",
+ block:"start"
+ });
+
+};
+
+console.info("FORGE V23 ACTIVE");
+
+})();
+</script>
+<!-- END FORGE V23 -->
