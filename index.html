@@ -10420,6 +10420,534 @@ attributeFilter:["class"]
 mount();
 
 })();
+</script><script>
+(function(){
+"use strict";
+
+if(document.getElementById("forgeTrainingLive")) return;
+
+let db,uid,sessionId=null;
+let elapsed=0,running=false;
+let timer=null;
+
+const root=document.createElement("section");
+root.id="forgeTrainingLive";
+
+root.innerHTML=`
+<style>
+#forgeTrainingLive{
+color:#fff;font-family:inherit
+}
+#ftLaunch{
+position:fixed;bottom:24px;right:15px;
+z-index:9990;background:#e9c675;
+color:#08090b;border:0;border-radius:14px;
+padding:14px;font-weight:800
+}
+#ftPanel{
+position:fixed;inset:0;z-index:9999;
+background:#08090b;overflow:auto;
+padding:22px 15px 80px
+}
+#ftPanel button{
+background:#191a1f;color:#e9c675;
+border:1px solid #59492f;
+border-radius:10px;padding:12px;
+margin:5px 2px
+}
+#ftPanel input,#ftPanel textarea,
+#ftPanel select{
+width:100%;background:#191a1f;
+color:white;border:1px solid #59492f;
+border-radius:8px;padding:10px;
+margin:5px 0;font-size:16px
+}
+.ftCard{
+background:#191a1f;border:1px solid #59492f;
+border-radius:14px;padding:15px;
+margin:12px 0
+}
+#ftClock{
+font-size:34px;color:#e9c675;
+text-align:center;font-weight:bold
+}
+.ftSet{
+display:grid;
+grid-template-columns:1fr 1fr 1fr auto;
+gap:5px;align-items:center
+}
+</style>
+
+<button id="ftLaunch">FORGE TRAINING</button>
+
+<div id="ftPanel" hidden>
+<button id="ftClose">Chiudi</button>
+<h2 style="color:#e9c675">FORGE TRAINING</h2>
+<div id="ftClock">00:00:00</div>
+<div id="ftMessage"></div>
+<div id="ftContent"></div>
+</div>
+`;
+
+document.body.appendChild(root);
+
+const $=id=>document.getElementById(id);
+const content=$("ftContent");
+
+function message(t){
+$("ftMessage").textContent=t;
+}
+
+function esc(v){
+return String(v??"").replace(/[&<>"']/g,
+c=>({"&":"&amp;","<":"&lt;",
+">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function findDB(){
+const candidates=[
+typeof sb!=="undefined"?sb:null,
+typeof supabaseClient!=="undefined"?supabaseClient:null,
+typeof supabase!=="undefined"?supabase:null,
+typeof client!=="undefined"?client:null,
+typeof supabaseDb!=="undefined"?supabaseDb:null,
+window.sb,window.supabaseClient
+];
+return candidates.find(x=>
+x&&typeof x.rpc==="function"&&x.auth);
+}
+
+async function rpc(name,args={}){
+const r=await db.rpc(name,args);
+if(r.error) throw r.error;
+return r.data;
+}
+
+async function safe(fn){
+try{
+message("");
+await fn();
+}catch(e){
+message(e.message||String(e));
+}
+}
+
+function button(label,fn,parent=content){
+const b=document.createElement("button");
+b.textContent=label;
+b.onclick=async()=>{
+b.disabled=true;
+try{await safe(fn);}
+finally{b.disabled=false;}
+};
+parent.appendChild(b);
+return b;
+}
+
+function clock(){
+const h=Math.floor(elapsed/3600);
+const m=Math.floor(elapsed%3600/60);
+const s=elapsed%60;
+$("ftClock").textContent=
+[h,m,s].map(x=>String(x).padStart(2,"0")).join(":");
+}
+
+function startClock(seconds=0,active=true){
+elapsed=Number(seconds)||0;
+running=active;
+clearInterval(timer);
+clock();
+timer=setInterval(()=>{
+if(running){elapsed++;clock();}
+},1000);
+}
+
+async function home(){
+db=findDB();
+if(!db) throw Error(
+"Client Supabase non individuato nell'index."
+);
+
+const auth=await db.auth.getUser();
+if(auth.error) throw auth.error;
+uid=auth.data.user?.id;
+if(!uid) throw Error("Accedi prima a Forge.");
+
+const current=await rpc("forge_v511_current");
+const active=Array.isArray(current)?current[0]:current;
+
+content.innerHTML="";
+
+if(active?.session_id){
+sessionId=active.session_id;
+startClock(active.elapsed_seconds,
+active.session_status!=="paused");
+
+button("Riprendi allenamento in corso",
+()=>openDay(active.workout_day_id,null,true));
+}
+
+button("Crea programma",createProgram);
+button("Storico allenamenti",history);
+
+const r=await db.from("forge_v4_programs")
+.select("*").order("created_at",{ascending:false});
+
+if(r.error) throw r.error;
+
+for(const p of r.data||[]){
+const card=document.createElement("div");
+card.className="ftCard";
+card.innerHTML=`
+<strong>${esc(p.title)}</strong>
+<p>${esc(p.status)}</p>
+<p>${p.client_id===uid?
+"Allenamento personale":
+"Programma assegnato"}</p>
+`;
+content.appendChild(card);
+button("Apri programma",()=>openProgram(p),card);
+}
+
+if(!r.data?.length){
+content.insertAdjacentHTML("beforeend",
+"<p>Nessun programma disponibile.</p>");
+}
+}
+
+async function createProgram(){
+content.innerHTML=`
+<h3>Nuovo programma</h3>
+<input id="ftTitle" placeholder="Nome programma">
+<textarea id="ftDesc" placeholder="Descrizione"></textarea>
+<select id="ftClient">
+<option value="${esc(uid)}">Personale</option>
+</select>
+`;
+
+const r=await db.from("profiles").select("*");
+
+if(!r.error){
+for(const p of r.data||[]){
+const id=p.user_id||p.id;
+if(!id||id===uid) continue;
+const o=document.createElement("option");
+o.value=id;
+o.textContent=p.full_name||p.name||
+p.email||id;
+$("ftClient").appendChild(o);
+}
+}
+
+button("Salva programma",async()=>{
+const title=$("ftTitle").value.trim();
+if(!title) throw Error("Inserisci il nome.");
+
+await rpc("forge_v4_create_program",{
+p_client_id:$("ftClient").value,
+p_title:title,
+p_description:$("ftDesc").value
+});
+await home();
+});
+
+button("Indietro",home);
+}
+
+async function openProgram(p){
+content.innerHTML=`
+<h3>${esc(p.title)}</h3>
+<p>${esc(p.description)}</p>
+`;
+
+button("Indietro",home);
+
+if(p.owner_id===uid){
+button("Attiva programma",async()=>{
+await rpc("forge_training_v7_activate_program",{
+p_program_id:p.id
+});
+message("Programma attivato.");
+});
+
+button("Aggiungi giornata",async()=>{
+const title=prompt("Nome giornata");
+if(!title) return;
+
+const r=await db.from("forge_v4_workout_days")
+.select("day_number").eq("program_id",p.id);
+
+if(r.error) throw r.error;
+
+const n=Math.max(0,...(r.data||[])
+.map(x=>Number(x.day_number)||0))+1;
+
+await rpc("forge_v4_add_workout_day",{
+p_program_id:p.id,
+p_title:title,
+p_day_number:n
+});
+await openProgram(p);
+});
+}
+
+const r=await db.from("forge_v4_workout_days")
+.select("*").eq("program_id",p.id)
+.order("day_number");
+
+if(r.error) throw r.error;
+
+for(const d of r.data||[]){
+const card=document.createElement("div");
+card.className="ftCard";
+card.innerHTML=`<strong>${esc(d.title)}</strong>`;
+content.appendChild(card);
+
+button("Inizia allenamento",
+()=>openDay(d.id,p.id,false),card);
+
+if(p.owner_id===uid){
+button("Modifica esercizi",
+()=>editDay(d,p),card);
+}
+}
+}
+
+async function editDay(d,p){
+content.innerHTML=`
+<h3>${esc(d.title)}</h3>
+<input id="ftExercise" placeholder="Nome esercizio">
+<input id="ftSets" type="number" min="1"
+value="4" placeholder="Serie">
+<input id="ftReps" value="10" placeholder="Ripetizioni">
+<input id="ftRest" type="number"
+value="90" placeholder="Recupero secondi">
+`;
+
+const r=await db.from("forge_v4_workout_items")
+.select("*").eq("workout_day_id",d.id)
+.order("exercise_order");
+
+if(r.error) throw r.error;
+
+button("Aggiungi esercizio",async()=>{
+const name=$("ftExercise").value.trim();
+if(!name) throw Error("Inserisci esercizio.");
+
+await rpc("forge_v4_add_workout_item",{
+p_workout_day_id:d.id,
+p_exercise_name:name,
+p_exercise_order:Math.max(0,...(r.data||[])
+.map(x=>Number(x.exercise_order)||0))+1,
+p_sets:Number($("ftSets").value),
+p_repetitions:$("ftReps").value,
+p_rest_seconds:Number($("ftRest").value)
+});
+await editDay(d,p);
+});
+
+button("Indietro",()=>openProgram(p));
+
+for(const item of r.data||[]){
+const card=document.createElement("div");
+card.className="ftCard";
+card.textContent=item.exercise_name+
+" — "+item.sets+" × "+item.repetitions;
+content.appendChild(card);
+}
+}
+
+async function openDay(dayId,programId,recover){
+
+const r=await db.from("forge_v4_workout_items")
+.select("*").eq("workout_day_id",dayId)
+.order("exercise_order");
+
+if(r.error) throw r.error;
+if(!r.data?.length)
+throw Error("La giornata non contiene esercizi.");
+
+if(!recover){
+const current=await rpc("forge_v511_current");
+if(current?.length||current?.session_id)
+throw Error("Hai già un allenamento in corso.");
+
+sessionId=await rpc("forge_v511_start",{
+p_program_id:programId,
+p_workout_day_id:dayId
+});
+startClock(0,true);
+}
+
+const logs=await db.from("forge_training_v6_set_logs")
+.select("*").eq("session_id",sessionId);
+
+if(logs.error) throw logs.error;
+
+content.innerHTML="<h3>Allenamento in corso</h3>";
+
+button("Pausa",async()=>{
+await rpc("forge_v511_pause",{
+p_session_id:sessionId
+});
+running=false;
+message("Allenamento in pausa.");
+});
+
+button("Riprendi",async()=>{
+await rpc("forge_v511_resume",{
+p_session_id:sessionId
+});
+running=true;
+message("Allenamento ripreso.");
+});
+
+for(const item of r.data){
+const card=document.createElement("div");
+card.className="ftCard";
+card.innerHTML=`
+<h3>${esc(item.exercise_name)}</h3>
+<p>${esc(item.sets)} serie ×
+${esc(item.repetitions)} ripetizioni</p>
+<small>Ripetizioni / Kg / RIR</small>
+`;
+content.appendChild(card);
+
+for(let i=1;i<=Number(item.sets||1);i++){
+
+const saved=(logs.data||[]).find(x=>
+x.workout_item_id===item.id&&
+Number(x.set_number)===i);
+
+const row=document.createElement("div");
+row.className="ftSet";
+
+row.innerHTML=`
+<input type="number" min="1"
+placeholder="Rep"
+value="${esc(saved?.repetitions||
+parseInt(item.repetitions)||10)}">
+<input type="number" min="0" step="0.25"
+placeholder="Kg"
+value="${esc(saved?.load_kg??item.load_kg??0)}">
+<input type="number" min="0" max="10"
+placeholder="RIR"
+value="${esc(saved?.rir??"")}">
+<button>${saved?"✓":"Salva"}</button>
+`;
+
+card.appendChild(row);
+
+const [rep,kg,rir]=row.querySelectorAll("input");
+const b=row.querySelector("button");
+let savedId=saved?.id||null;
+
+b.onclick=async()=>{
+b.disabled=true;
+
+try{
+await safe(async()=>{
+if(savedId){
+await rpc("forge_training_v6_uncheck_set",{
+p_set_id:savedId
+});
+savedId=null;
+b.textContent="Salva";
+b.style.color="";
+return;
+}
+
+if(Number(rep.value)<=0||
+Number(kg.value)<0)
+throw Error("Controlla ripetizioni e carico.");
+
+savedId=await rpc("forge_training_v6_save_set",{
+p_session_id:sessionId,
+p_workout_item_id:item.id,
+p_set_number:i,
+p_repetitions:Number(rep.value),
+p_load_kg:Number(kg.value),
+p_rir:rir.value===""?null:Number(rir.value),
+p_set_type:"working"
+});
+
+b.textContent="✓";
+b.style.color="#75d69a";
+message("Serie registrata.");
+});
+}finally{
+b.disabled=false;
+}
+};
+}
+}
+
+content.insertAdjacentHTML("beforeend",`
+<div class="ftCard">
+<h3>Feedback finale</h3>
+<select id="ftEffort">
+<option value="">Come è andato?</option>
+<option value="10">10 - Ottimo</option>
+<option value="8">8 - Bene</option>
+<option value="6">6 - Normale</option>
+<option value="4">4 - Difficile</option>
+<option value="2">2 - Male</option>
+</select>
+<textarea id="ftFeedback"
+placeholder="Note sull'allenamento"></textarea>
+</div>
+`);
+
+button("CONCLUDI ALLENAMENTO",async()=>{
+const effort=$("ftEffort").value;
+if(!effort) throw Error("Seleziona il feedback.");
+
+if(!confirm("Concludere l'allenamento?")) return;
+
+await rpc("forge_v511_finish",{
+p_session_id:sessionId,
+p_effort:Number(effort),
+p_feedback:$("ftFeedback").value
+});
+
+running=false;
+clearInterval(timer);
+sessionId=null;
+
+await home();
+message("Allenamento completato e salvato.");
+});
+}
+
+async function history(){
+const data=await rpc("forge_v511_history");
+content.innerHTML="<h3>Storico allenamenti</h3>";
+button("Indietro",home);
+
+for(const s of data||[]){
+const card=document.createElement("div");
+card.className="ftCard";
+card.innerHTML=`
+<strong>${esc(s.status||s.session_status||
+"Allenamento")}</strong>
+<p>${esc(s.started_at?
+new Date(s.started_at).toLocaleString("it-IT"):"")}</p>
+<p>${esc(s.feedback||"")}</p>
+`;
+content.appendChild(card);
+}
+}
+
+$("ftLaunch").onclick=()=>{
+$("ftPanel").hidden=false;
+safe(home);
+};
+
+$("ftClose").onclick=()=>{
+$("ftPanel").hidden=true;
+};
+
+})();
 </script>
 </body>
 </html>
