@@ -10178,6 +10178,248 @@ fixForgeLayout();
 
 })();
 </script>
+<script>
+(function(){
+"use strict";
 
+const panel=document.createElement("div");
+panel.className="card";
+panel.id="forgeMuscleVolume";
+
+let mode="session";
+let request=0;
+
+const fmt=n=>Number(n||0).toLocaleString("it-IT",{
+maximumFractionDigits:1
+});
+
+function make(tag,text){
+const e=document.createElement(tag);
+e.textContent=text||"";
+return e;
+}
+
+const heading=make("h3","Forge Muscle Volume");
+panel.append(heading);
+
+panel.append(make("p",
+"Volume di lavoro per gruppo muscolare"));
+
+const filters=make("div");
+filters.className="filters";
+panel.append(filters);
+
+const output=make("div");
+panel.append(output);
+
+async function load(){
+
+const token=++request;
+output.textContent="Caricamento...";
+
+try{
+
+const client=window.forgeSupabase;
+
+if(!client)throw Error("Supabase non collegato");
+
+const {data:auth,error:authError}=
+await client.auth.getUser();
+
+if(authError||!auth.user)
+throw Error("Accedi al tuo account");
+
+const uid=auth.user.id;
+
+let query=client
+.from("forge_muscle_volume_v1")
+.select("session_id,muscle_group,volume_kg,repetitions,recorded_at")
+.eq("client_id",uid);
+
+if(mode==="session"){
+
+const {data:sessions,error}=
+await client.from("forge_workout_sessions")
+.select("id")
+.eq("client_id",uid)
+.order("started_at",{ascending:false})
+.limit(1);
+
+if(error)throw error;
+
+if(!sessions.length){
+output.textContent="Nessun allenamento registrato.";
+return;
+}
+
+query=query.eq("session_id",sessions[0].id);
+
+}else{
+
+const now=new Date();
+
+now.setHours(0,0,0,0);
+
+if(mode==="week"){
+now.setDate(now.getDate()-
+(now.getDay()+6)%7);
+}else{
+now.setDate(1);
+}
+
+query=query.gte("recorded_at",now.toISOString());
+}
+
+let rows=[];
+let offset=0;
+
+while(true){
+
+const {data,error}=await query
+.order("recorded_at")
+.order("set_id")
+.range(offset,offset+499);
+
+if(error)throw error;
+
+rows.push(...data);
+
+if(data.length<500)break;
+
+offset+=500;
+}
+
+if(token!==request)return;
+
+const groups={};
+
+for(const row of rows){
+
+const name=row.muscle_group||"Da classificare";
+
+if(!groups[name]){
+groups[name]={kg:0,sets:0,reps:0};
+}
+
+groups[name].kg+=Number(row.volume_kg)||0;
+groups[name].sets++;
+groups[name].reps+=Number(row.repetitions)||0;
+}
+
+const list=Object.entries(groups)
+.sort((a,b)=>b[1].kg-a[1].kg);
+
+output.replaceChildren();
+
+if(!list.length){
+output.textContent="Nessuna serie registrata.";
+return;
+}
+
+const max=Math.max(1,...list.map(x=>x[1].kg));
+
+for(const [name,value] of list){
+
+const box=make("div");
+box.className="item";
+
+box.append(make("h3",name));
+
+const kg=make("div",fmt(value.kg)+" kg");
+kg.className="price";
+box.append(kg);
+
+const track=make("div");
+track.style.cssText=
+"height:10px;background:#292a2e;border-radius:8px;overflow:hidden;margin:12px 0";
+
+const bar=make("div");
+
+bar.style.cssText=
+"height:100%;background:linear-gradient(90deg,#96702f,#e9c675);border-radius:8px";
+
+bar.style.width=(value.kg/max*100)+"%";
+
+track.append(bar);
+box.append(track);
+
+box.append(make("p",
+value.sets+" serie • "+
+value.reps+" ripetizioni"));
+
+output.append(box);
+}
+
+}catch(e){
+
+if(token===request)
+output.textContent="Errore: "+e.message;
+
+}
+}
+
+for(const [key,label] of [
+["session","Ultima sessione"],
+["week","Settimana"],
+["month","Mese"]
+]){
+
+const b=make("button",label);
+
+b.onclick=()=>{
+mode=key;
+
+filters.querySelectorAll("button")
+.forEach(x=>x.classList.toggle("active",x===b));
+
+load();
+};
+
+if(key===mode)b.classList.add("active");
+
+filters.append(b);
+}
+
+const refresh=make("button","Aggiorna volume");
+refresh.className="secondary";
+refresh.onclick=load;
+panel.append(refresh);
+
+function mount(){
+
+const root=document.getElementById("sectionContent");
+const title=document.getElementById("sectionTitle");
+const card=document.getElementById("sectionCard");
+
+const opened=root&&title&&card&&
+title.textContent.trim()==="Allenamento"&&
+!card.classList.contains("hidden");
+
+if(opened){
+
+if(panel.parentElement!==root){
+root.append(panel);
+load();
+}
+
+}else if(panel.isConnected){
+
+request++;
+panel.remove();
+
+}
+}
+
+new MutationObserver(mount).observe(document.body,{
+childList:true,
+subtree:true,
+attributes:true,
+attributeFilter:["class"]
+});
+
+mount();
+
+})();
+</script>
 </body>
 </html>
