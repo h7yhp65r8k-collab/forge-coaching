@@ -16265,3 +16265,1576 @@ console.info("FORGE V23 ACTIVE");
 })();
 </script>
 <!-- END FORGE V23 -->
+
+<!-- FORGE PROGRESS V24 -->
+<style>
+#fp24{--fg:#e9c675;color:#eee}
+#fp24 *{box-sizing:border-box}
+#fp24 .fp-panel{
+ background:linear-gradient(145deg,#202025,#111216);
+ border:1px solid #51442e;
+ border-radius:18px;
+ padding:15px;
+ margin:12px 0;
+}
+#fp24 .fp-title{
+ color:var(--fg);
+ font-size:23px;
+ font-weight:850;
+ letter-spacing:2px;
+}
+#fp24 .fp-sub{
+ color:#999;
+ font-size:11px;
+ letter-spacing:2px;
+ margin:7px 0 15px;
+}
+#fp24 .fp-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;
+}
+#fp24 .fp-stat{
+ padding:14px;
+ background:#101114;
+ border:1px solid #3b3429;
+ border-radius:13px;
+}
+#fp24 .fp-stat strong{
+ display:block;
+ color:var(--fg);
+ font-size:23px;
+ margin-top:7px;
+}
+#fp24 .fp-stat span{
+ font-size:12px;
+ color:#aaa;
+}
+#fp24 details{
+ border:1px solid #51442e;
+ border-radius:14px;
+ background:#17181c;
+ margin:10px 0;
+ padding:13px;
+}
+#fp24 summary{
+ color:var(--fg);
+ font-weight:750;
+ cursor:pointer;
+ padding:7px 0;
+}
+#fp24 .fp-scroll{
+ display:flex;
+ overflow-x:auto;
+ gap:9px;
+ padding:10px 0;
+ scroll-snap-type:x mandatory;
+}
+#fp24 .fp-photo{
+ flex:0 0 145px;
+ min-width:0;
+ scroll-snap-align:start;
+ background:#101114;
+ border:1px solid #51442e;
+ border-radius:12px;
+ padding:7px;
+}
+#fp24 .fp-photo img{
+ width:100%;
+ aspect-ratio:3/4;
+ object-fit:contain;
+ background:#08090b;
+ border-radius:8px;
+}
+#fp24 .fp-date{
+ font-size:12px;
+ color:var(--fg);
+ text-align:center;
+ margin:8px 0;
+}
+#fp24 .fp-check{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ padding:8px;
+ border-bottom:1px solid #34302a;
+}
+#fp24 .fp-check input{
+ width:20px;
+ height:20px;
+ margin:0;
+ accent-color:#e9c675;
+}
+#fp24 .fp-table{
+ overflow-x:auto;
+}
+#fp24 table{
+ border-collapse:collapse;
+ width:100%;
+ font-size:12px;
+}
+#fp24 td,#fp24 th{
+ padding:10px;
+ border-bottom:1px solid #40382c;
+ text-align:left;
+ white-space:nowrap;
+}
+#fp24 th{color:var(--fg)}
+#fp24 .fp-guide{
+ font-size:12px;
+ color:#aaa;
+ line-height:1.5;
+ margin-bottom:10px;
+}
+#fp24 .fp-alert{
+ padding:14px;
+ border-radius:12px;
+ border:1px solid #9c7940;
+ background:#2b2316;
+ color:#e9c675;
+ margin:10px 0;
+}
+#fp24 .fp-overdue{
+ border-color:#a65252;
+ background:#301c1c;
+ color:#ffaaaa;
+}
+#fp24 .fp-count{
+ font-size:34px;
+ font-weight:850;
+ color:var(--fg);
+}
+#fp24 input[type=file]{
+ padding:12px 5px;
+ font-size:13px;
+}
+#fp24 button{
+ min-height:44px;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.__forgeProgress24)return;
+window.__forgeProgress24=true;
+
+const previous=section;
+const bucket="forge-progress-private";
+
+const fields=[
+ ["weight","Peso corporeo","kg","Al mattino, a digiuno, nelle stesse condizioni."],
+ ["body_fat","Massa grassa","%","Utilizza sempre lo stesso metodo di rilevazione."],
+ ["height_cm","Altezza","cm","In piedi, senza scarpe."],
+ ["neck_cm","Collo","cm","Appena sotto la laringe."],
+ ["shoulders_cm","Spalle","cm","Attorno alla parte più larga delle spalle."],
+ ["chest","Torace","cm","All'altezza del petto, senza gonfiare il torace."],
+ ["waist","Vita","cm","Tra ultima costola e cresta iliaca."],
+ ["abdomen_cm","Addome","cm","All'altezza dell'ombelico."],
+ ["hips","Fianchi","cm","Nel punto più largo dei glutei."],
+ ["left_arm_cm","Braccio sinistro rilassato","cm","A metà tra spalla e gomito."],
+ ["right_arm_cm","Braccio destro rilassato","cm","A metà tra spalla e gomito."],
+ ["left_arm_flexed_cm","Braccio sinistro contratto","cm","Nel punto di massima circonferenza."],
+ ["right_arm_flexed_cm","Braccio destro contratto","cm","Nel punto di massima circonferenza."],
+ ["left_forearm_cm","Avambraccio sinistro","cm","Nel punto più largo."],
+ ["right_forearm_cm","Avambraccio destro","cm","Nel punto più largo."],
+ ["left_thigh_cm","Coscia sinistra","cm","A metà tra inguine e ginocchio."],
+ ["right_thigh_cm","Coscia destra","cm","A metà tra inguine e ginocchio."],
+ ["left_calf_cm","Polpaccio sinistro","cm","Nel punto più largo."],
+ ["right_calf_cm","Polpaccio destro","cm","Nel punto più largo."]
+];
+
+const angles=[
+ ["front","Frontale"],
+ ["back","Posteriore"],
+ ["left","Laterale sinistra"],
+ ["right","Laterale destra"],
+ ["other","Altra posa"]
+];
+
+function node(tag,text="",cls=""){
+ const e=document.createElement(tag);
+ e.textContent=text;
+ e.className=cls;
+ return e;
+}
+
+function btn(text,fn,secondary=false){
+ const b=node("button",text,secondary?"secondary":"");
+ b.type="button";
+ b.onclick=fn;
+ return b;
+}
+
+function panel(){
+ return node("div","","fp-panel");
+}
+
+function details(title,open=false){
+ const d=node("details");
+ d.open=open;
+ d.append(node("summary",title));
+ return d;
+}
+
+function field(type,placeholder=""){
+ const e=node("input");
+ e.type=type;
+ e.placeholder=placeholder;
+ return e;
+}
+
+function select(options){
+ const s=node("select");
+ options.forEach(([value,label])=>{
+  const o=node("option",label);
+  o.value=value;
+  s.append(o);
+ });
+ return s;
+}
+
+function day(value){
+ if(!value)return "";
+ if(/^\d{4}-\d{2}-\d{2}$/.test(value))return value;
+ return new Intl.DateTimeFormat("en-CA",{
+  timeZone:"Europe/Rome",
+  year:"numeric",
+  month:"2-digit",
+  day:"2-digit"
+ }).format(new Date(value));
+}
+
+function labelDate(value){
+ if(!value)return "—";
+ return new Date(day(value)+"T12:00:00")
+ .toLocaleDateString("it-IT");
+}
+
+function number(value){
+ if(value===null||value===undefined||value==="")return "—";
+ return Number(value).toLocaleString("it-IT",{
+  maximumFractionDigits:2
+ });
+}
+
+function stat(label,value){
+ const box=node("div","","fp-stat");
+ box.append(node("span",label),node("strong",value));
+ return box;
+}
+
+function status(root,text,error=false){
+ root.textContent=text;
+ root.className="status "+(error?"error":"success");
+}
+
+async function result(request){
+ const {data,error}=await request;
+ if(error)throw error;
+ return data;
+}
+
+async function rpc(name,params={}){
+ return result(db.rpc(name,params));
+}
+
+function valueOf(row,key){
+ return row&&row[key]!==null&&row[key]!==undefined
+ ?row[key]:null;
+}
+
+async function render(root){
+
+ const account=user.id;
+ const request=serial;
+ const admin=role==="admin";
+
+ let client=account;
+ let generation=0;
+
+ const shell=node("div");
+ shell.id="fp24";
+
+ const content=node("div");
+
+ shell.append(
+  node("div","FORGE PROGRESS","fp-title"),
+  node("div","CHECK • EVOLUTION • TRANSFORMATION","fp-sub")
+ );
+
+ root.replaceChildren(shell);
+
+ function valid(){
+  return shell.isConnected&&
+   user?.id===account&&
+   serial===request;
+ }
+
+ if(admin){
+
+  const coach=panel();
+  coach.append(node("h3","Area coach"));
+
+  const clients=select([[account,"I miei progressi"]]);
+
+  coach.append(clients);
+  shell.append(coach);
+
+  clients.onchange=()=>{
+   client=clients.value;
+   load();
+  };
+
+  try{
+   const profiles=await result(
+    db.from("profiles").select("*").limit(1000)
+   );
+
+   if(!valid())return;
+
+   (profiles||[]).forEach(p=>{
+    const id=p.user_id||p.id;
+    if(!id||id===account)return;
+
+    const name=p.full_name||
+     p.display_name||
+     [p.first_name,p.last_name].filter(Boolean).join(" ")||
+     p.email;
+
+    if(!name)return;
+
+    const o=node("option",name);
+    o.value=id;
+    clients.append(o);
+   });
+
+  }catch(e){
+   coach.append(node("p","Elenco clienti: "+e.message,"small"));
+  }
+
+ }
+
+ if(!valid())return;
+
+ shell.append(content);
+
+ async function load(){
+
+  const current=++generation;
+  const target=client;
+
+  const alive=()=>valid()&&
+   generation===current&&client===target;
+
+  content.replaceChildren(
+   node("p","Caricamento progressi...","muted")
+  );
+
+  try{
+
+   const [dashboard,measurements,photos,checks]=
+   await Promise.all([
+
+    rpc("forge_progress_v4_dashboard",{
+     p_client_id:target
+    }),
+
+    result(
+     db.from("body_measurements")
+     .select("*")
+     .eq("client_id",target)
+     .order("recorded_at",{ascending:false})
+     .limit(1000)
+    ),
+
+    result(
+     db.from("progress_photos")
+     .select("*")
+     .eq("client_id",target)
+     .eq("archived",false)
+     .order("photo_date",{ascending:false})
+     .order("created_at",{ascending:false})
+     .limit(1000)
+    ),
+
+    result(
+     db.from("forge_client_checkins")
+     .select("*")
+     .eq("client_id",target)
+     .order("checkin_date",{ascending:false})
+     .limit(1000)
+    )
+
+   ]);
+
+   if(!alive())return;
+
+   content.replaceChildren();
+
+   const latest=measurements[0]||{};
+   const first=measurements[measurements.length-1]||{};
+
+   const overview=panel();
+   overview.append(node("h3","La tua evoluzione"));
+
+   const grid=node("div","","fp-grid");
+
+   const delta=latest.weight!=null&&first.weight!=null
+    ?Number(latest.weight)-Number(first.weight):null;
+
+   grid.append(
+    stat("Peso attuale",latest.weight!=null
+     ?number(latest.weight)+" kg":"—"),
+    stat("Variazione peso",delta!==null
+     ?(delta>0?"+":"")+number(delta)+" kg":"—"),
+    stat("Ultima vita",latest.waist!=null
+     ?number(latest.waist)+" cm":"—"),
+    stat("Check registrati",String(checks.length))
+   );
+
+   overview.append(grid);
+   content.append(overview);
+
+   /* PROMEMORIA CHECK */
+
+   const reminder=dashboard?.reminder||{};
+   const reminderBox=panel();
+
+   reminderBox.append(node("h3","Prossimo check"));
+
+   if(reminder.next_check){
+
+    const days=Number(reminder.days_remaining);
+
+    reminderBox.append(
+     node("div",days<0
+      ?Math.abs(days)+" giorni di ritardo"
+      :days===0?"Oggi":days+" giorni","fp-count"),
+
+     node("p","Data prevista: "+
+      labelDate(reminder.next_check),"small")
+    );
+
+    if(days<=3){
+     reminderBox.append(
+      node("div",days<0
+       ?"Il check è scaduto."
+       :days===0
+        ?"È il momento del tuo check."
+        :"Il prossimo check si avvicina.",
+       "fp-alert"+(days<0?" fp-overdue":""))
+     );
+    }
+
+   }else{
+    reminderBox.append(
+     node("p","Registra le prime misure per avviare il conto alla rovescia.")
+    );
+   }
+
+   content.append(reminderBox);
+
+   /* NUOVO CHECK */
+
+   if(target===account||admin){
+
+    const form=details("＋ Registra misure corporee");
+
+    const intro=node("p",
+     "Compila soltanto le misure disponibili. Le altre possono restare vuote.",
+     "small"
+    );
+
+    form.append(intro);
+
+    const inputs={};
+    const formGrid=node("div","","fp-grid");
+
+    fields.forEach(([key,title,unit,guide])=>{
+
+     const wrap=node("div");
+     const label=node("label",title+" ("+unit+")");
+     const inp=field("number",unit);
+
+     inp.min="0.1";
+     inp.max=key==="body_fat"?"99.9":"500";
+     inp.step="0.1";
+     inp.inputMode="decimal";
+
+     inputs[key]=inp;
+
+     wrap.append(label,inp);
+     formGrid.append(wrap);
+
+    });
+
+    form.append(formGrid);
+
+    const method=field("text","Metodo di rilevazione");
+    const notes=node("textarea");
+    notes.placeholder="Note sulle misurazioni";
+
+    const message=node("div");
+
+    const save=btn("Salva misurazioni",async()=>{
+
+     if(!alive())return;
+
+     const data={};
+
+     for(const [key,inp] of Object.entries(inputs)){
+
+      if(inp.value==="")continue;
+
+      const n=Number(inp.value);
+
+      if(!Number.isFinite(n)||n<=0||
+       n>500||(key==="body_fat"&&n>=100)){
+       status(message,"Controlla i valori inseriti.",true);
+       return;
+      }
+
+      data[key]=n;
+
+     }
+
+     if(!Object.keys(data).length){
+      status(message,"Inserisci almeno una misura.",true);
+      return;
+     }
+
+     if(method.value.trim())
+      data.measurement_method=method.value.trim();
+
+     if(notes.value.trim())
+      data.measurement_notes=notes.value.trim();
+
+     save.disabled=true;
+
+     try{
+
+      await rpc("forge_progress_v4_save_measurement",{
+       p_data:data,
+       p_client_id:target
+      });
+
+      if(!alive())return;
+
+      Object.values(inputs).forEach(i=>i.value="");
+
+      alert("Misurazioni salvate.");
+      await load();
+
+     }catch(e){
+      status(message,e.message,true);
+     }finally{
+      save.disabled=false;
+     }
+
+    });
+
+    form.append(method,notes,save,message);
+    content.append(form);
+
+   }
+
+   /* GUIDA ALLE MISURAZIONI */
+
+   const guide=details("Guida alle misurazioni");
+
+   guide.append(node("p",
+    "Utilizza un metro morbido, senza comprimere la pelle. Mantieni sempre gli stessi punti di riferimento.",
+    "small"
+   ));
+
+   fields.forEach(([key,title,unit,text])=>{
+    guide.append(
+     node("strong",title),
+     node("p",text,"fp-guide")
+    );
+   });
+
+   content.append(guide);
+
+   /* FEEDBACK CHECK */
+
+   if(target===account){
+
+    const checkForm=details("＋ Compila check periodico");
+
+    const checkDate=field("date");
+    checkDate.value=todayRome();
+    checkDate.max=todayRome();
+
+    checkForm.append(node("label","Data check"),checkDate);
+
+    const checkFields=[
+     ["body_weight_kg","Peso corporeo (kg)",500,0.1],
+     ["sleep_hours","Ore di sonno",24,0.5],
+     ["energy_score","Energia (1–10)",10,1],
+     ["adherence_score","Aderenza generale (1–10)",10,1],
+     ["stress_score","Stress (1–10)",10,1],
+     ["hunger_score","Fame (1–10)",10,1],
+     ["recovery_score","Recupero (1–10)",10,1],
+     ["mood_score","Umore (1–10)",10,1],
+     ["digestion_score","Digestione (1–10)",10,1],
+     ["motivation_score","Motivazione (1–10)",10,1]
+    ];
+
+    const checkInputs={};
+    const cg=node("div","","fp-grid");
+
+    checkFields.forEach(([key,title,max,step])=>{
+
+     const wrap=node("div");
+     const i=field("number");
+
+     i.min=String(step);
+     i.max=String(max);
+     i.step=String(step);
+
+     checkInputs[key]=i;
+     wrap.append(node("label",title),i);
+     cg.append(wrap);
+
+    });
+
+    checkForm.append(cg);
+
+    const notes=node("textarea");
+    notes.placeholder="Come è andato questo periodo?";
+
+    const message=node("div");
+
+    const save=btn("Salva check",async()=>{
+
+     if(!alive())return;
+
+     const data={};
+
+     for(const [key,i] of Object.entries(checkInputs)){
+
+      if(i.value==="")continue;
+
+      const n=Number(i.value);
+
+      if(!Number.isFinite(n)||
+       n<Number(i.min)||n>Number(i.max)||
+       (key.endsWith("_score")&&!Number.isInteger(n))){
+       status(message,"Controlla i valori del check.",true);
+       return;
+      }
+
+      data[key]=n;
+
+     }
+
+     if(!Object.keys(data).length){
+      status(message,"Inserisci almeno un valore.",true);
+      return;
+     }
+
+     if(!checkDate.value||
+      checkDate.value>todayRome()){
+      status(message,"Data non valida.",true);
+      return;
+     }
+
+     if(notes.value.trim())data.notes=notes.value.trim();
+
+     save.disabled=true;
+
+     try{
+
+      await rpc("forge_progress_v3_save_checkin",{
+       p_data:data,
+       p_date:checkDate.value
+      });
+
+      if(!alive())return;
+
+      alert("Check salvato.");
+      await load();
+
+     }catch(e){
+      status(message,e.message,true);
+     }finally{
+      save.disabled=false;
+     }
+
+    });
+
+    checkForm.append(notes,save,message);
+    content.append(checkForm);
+
+   }
+
+   /* CARICAMENTO FOTO IPHONE */
+
+   if(target===account){
+
+    const upload=details("＋ Carica foto progressi",true);
+
+    const photoDate=field("date");
+    photoDate.value=todayRome();
+    photoDate.max=todayRome();
+
+    const pose=select(angles);
+
+    const file=field("file");
+    file.accept="image/*";
+
+    const photoNotes=node("textarea");
+    photoNotes.placeholder="Note facoltative";
+
+    const message=node("div");
+
+    async function prepareImage(original){
+
+     if(original.size>15*1024*1024)
+      throw Error("La foto supera 15 MB.");
+
+     if(["image/jpeg","image/png","image/webp"]
+      .includes(original.type))return original;
+
+     const url=URL.createObjectURL(original);
+
+     try{
+
+      const img=new Image();
+      img.src=url;
+
+      await img.decode();
+
+      const canvas=document.createElement("canvas");
+      const scale=Math.min(1,1800/
+       Math.max(img.width,img.height));
+
+      canvas.width=Math.round(img.width*scale);
+      canvas.height=Math.round(img.height*scale);
+
+      canvas.getContext("2d").drawImage(
+       img,0,0,canvas.width,canvas.height
+      );
+
+      const blob=await new Promise(resolve=>
+       canvas.toBlob(resolve,"image/jpeg",0.88)
+      );
+
+      if(!blob)throw Error("Conversione non riuscita.");
+
+      return blob;
+
+     }catch(e){
+      throw Error("Formato non leggibile. Seleziona una foto JPEG o PNG.");
+     }finally{
+      URL.revokeObjectURL(url);
+     }
+
+    }
+
+    const save=btn("Carica e salva foto",async()=>{
+
+     if(!alive())return;
+
+     if(!file.files?.[0]){
+      status(message,"Seleziona una foto.",true);
+      return;
+     }
+
+     if(!photoDate.value||
+      photoDate.value>todayRome()){
+      status(message,"Data non valida.",true);
+      return;
+     }
+
+     save.disabled=true;
+     status(message,"Caricamento in corso...");
+
+     let path="";
+     let uploaded=false;
+     let registered=false;
+
+     try{
+
+      const image=await prepareImage(file.files[0]);
+
+      if(!alive())return;
+
+      const ext=image.type==="image/png"?"png":
+       image.type==="image/webp"?"webp":"jpg";
+
+      path=account+"/"+photoDate.value+"/"+
+       pose.value+"-"+crypto.randomUUID()+"."+ext;
+
+      await result(
+       db.storage.from(bucket).upload(path,image,{
+        contentType:image.type,
+        upsert:false
+       })
+      );
+
+      uploaded=true;
+
+      await rpc("forge_progress_v3_register_photo",{
+       p_storage_path:path,
+       p_photo_angle:pose.value,
+       p_photo_date:photoDate.value,
+       p_notes:photoNotes.value.trim()
+      });
+
+      registered=true;
+
+      if(!alive())return;
+
+      alert("Foto salvata nella galleria privata.");
+      await load();
+
+     }catch(e){
+
+      if(uploaded&&!registered){
+
+       const cleanup=await db.storage.from(bucket)
+        .remove([path]);
+
+       if(cleanup.error){
+        status(message,
+         e.message+" — Pulizia del file non riuscita.",
+         true
+        );
+        return;
+       }
+
+      }
+
+      status(message,e.message,true);
+
+     }finally{
+      save.disabled=false;
+     }
+
+    });
+
+    upload.append(
+     node("label","Data della foto"),
+     photoDate,
+     node("label","Posizione"),
+     pose,
+     node("label","Seleziona foto dall'iPhone"),
+     file,
+     photoNotes,
+     save,
+     message
+    );
+
+    content.append(upload);
+
+   }
+
+   /* CONFRONTO MULTIPLO */
+
+   const comparison=details(
+    "Prima e dopo • Confronta fino a 5 check",true
+   );
+
+   const allDates=[...new Set([
+
+    ...measurements.map(m=>day(m.recorded_at)),
+    ...photos.map(p=>day(p.photo_date)),
+    ...checks.map(c=>day(c.checkin_date))
+
+   ])].filter(Boolean).sort().reverse();
+
+   comparison.append(node("p",
+    "Seleziona da 2 a 5 date, anche di settimane o mesi differenti.",
+    "small"
+   ));
+
+   const selected=new Set();
+   const dateList=node("div");
+
+   dateList.style.maxHeight="240px";
+   dateList.style.overflowY="auto";
+
+   const counter=node("p","0 di 5 date selezionate","small");
+
+   const poseFilter=select(angles);
+
+   const comparisonOutput=node("div");
+
+   allDates.forEach(date=>{
+
+    const label=node("label","","fp-check");
+    const cb=field("checkbox");
+
+    const photoCount=photos.filter(p=>
+     day(p.photo_date)===date
+    ).length;
+
+    cb.onchange=()=>{
+
+     if(cb.checked&&selected.size>=5){
+      cb.checked=false;
+      alert("Puoi confrontare al massimo 5 date.");
+      return;
+     }
+
+     if(cb.checked)selected.add(date);
+     else selected.delete(date);
+
+     counter.textContent=selected.size+
+      " di 5 date selezionate";
+
+     comparisonOutput.replaceChildren();
+
+    };
+
+    label.append(
+     cb,
+     node("span",labelDate(date)+
+      (photoCount?" • "+photoCount+" foto":""))
+    );
+
+    dateList.append(label);
+
+   });
+
+   if(!allDates.length){
+    dateList.append(node("p",
+     "Nessun check disponibile.","muted"));
+   }
+
+   comparison.append(dateList,counter,
+    node("label","Posizione fotografica"),poseFilter);
+
+   let compareRun=0;
+
+   poseFilter.onchange=()=>{
+    compareRun++;
+    comparisonOutput.replaceChildren();
+   };
+
+   async function photoCard(photo,date){
+
+    const card=node("div","","fp-photo");
+
+    card.append(node("div",labelDate(date),"fp-date"));
+
+    if(!photo){
+     card.append(node("p","Foto non disponibile","small"));
+     return card;
+    }
+
+    try{
+
+     const data=await result(
+      db.storage.from(photo.bucket_name||bucket)
+       .createSignedUrl(photo.storage_path,900)
+     );
+
+     const img=node("img");
+
+     img.src=data.signedUrl;
+     img.alt="Foto progressi "+labelDate(date);
+     img.loading="lazy";
+
+     img.onerror=()=>{
+      img.replaceWith(node("p",
+       "Foto non visualizzabile.","small"));
+     };
+
+     card.append(img);
+
+    }catch(e){
+     card.append(node("p","Foto non accessibile.","small"));
+    }
+
+    return card;
+
+   }
+
+   const compareButton=btn("Confronta date selezionate",async()=>{
+
+    if(selected.size<2){
+     alert("Seleziona almeno due date.");
+     return;
+    }
+
+    const run=++compareRun;
+    const dates=[...selected].sort();
+    const angle=poseFilter.value;
+
+    compareButton.disabled=true;
+
+    comparisonOutput.replaceChildren(
+     node("p","Preparazione confronto...","small")
+    );
+
+    try{
+
+     const gallery=node("div","","fp-scroll");
+
+     const cards=await Promise.all(dates.map(date=>{
+
+      const photo=photos.find(p=>
+       day(p.photo_date)===date&&p.photo_angle===angle
+      );
+
+      return photoCard(photo,date);
+
+     }));
+
+     if(!alive()||run!==compareRun)return;
+
+     gallery.append(...cards);
+
+     comparisonOutput.replaceChildren(
+      node("h3","Evoluzione fotografica"),
+      gallery
+     );
+
+     const tableWrap=node("div","","fp-table");
+     const table=node("table");
+     const head=node("tr");
+
+     head.append(node("th","Misura"));
+
+     dates.forEach(d=>
+      head.append(node("th",labelDate(d)))
+     );
+
+     head.append(node("th","Variazione"));
+
+     const thead=node("thead");
+     thead.append(head);
+     table.append(thead);
+
+     const tbody=node("tbody");
+
+     const rows=dates.map(date=>
+      measurements.find(m=>day(m.recorded_at)===date)
+     );
+
+     fields.forEach(([key,title,unit])=>{
+
+      const values=rows.map(r=>valueOf(r,key));
+
+      if(values.every(v=>v===null))return;
+
+      const tr=node("tr");
+
+      tr.append(node("td",title));
+
+      values.forEach(v=>{
+       tr.append(node("td",v===null?"—":
+        number(v)+" "+unit));
+      });
+
+      const a=values[0];
+      const b=values[values.length-1];
+
+      const delta=a!==null&&b!==null
+       ?Number(b)-Number(a):null;
+
+      tr.append(node("td",delta===null?"—":
+       (delta>0?"+":"")+number(delta)+" "+unit));
+
+      tbody.append(tr);
+
+     });
+
+     table.append(tbody);
+     tableWrap.append(table);
+
+     comparisonOutput.append(
+      node("h3","Confronto misurazioni"),
+      node("p",
+       "Variazione calcolata tra la prima e l'ultima data selezionata.",
+       "small"),
+      tableWrap
+     );
+
+    }catch(e){
+     status(comparisonOutput,e.message,true);
+    }finally{
+     compareButton.disabled=false;
+    }
+
+   });
+
+   comparison.append(compareButton,comparisonOutput);
+   content.append(comparison);
+
+   /* GALLERIA COMPLETA */
+
+   const gallery=details("Galleria fotografica");
+   const galleryPose=select([
+    ["all","Tutte le posizioni"],...angles
+   ]);
+
+   const galleryOutput=node("div");
+
+   let galleryRun=0;
+
+   async function loadGallery(){
+
+    const run=++galleryRun;
+
+    galleryOutput.replaceChildren(
+     node("p","Caricamento foto...","small")
+    );
+
+    const rows=photos.filter(p=>
+     galleryPose.value==="all"||
+     p.photo_angle===galleryPose.value
+    );
+
+    const grid=node("div","","fp-grid");
+
+    const cards=await Promise.all(
+     rows.slice(0,30).map(async p=>{
+
+      const card=await photoCard(p,p.photo_date);
+
+      card.append(node("p",
+       angles.find(a=>a[0]===p.photo_angle)?.[1]||
+       "Foto","small"));
+
+      if(target===account){
+
+       const archive=btn("Archivia",async()=>{
+
+        if(!alive())return;
+        if(!confirm("Archiviare questa foto?"))return;
+
+        archive.disabled=true;
+
+        try{
+
+         await rpc("forge_progress_v3_archive_photo",{
+          p_photo_id:p.id,
+          p_archived:true
+         });
+
+         if(alive())await load();
+
+        }catch(e){
+         alert(e.message);
+        }finally{
+         archive.disabled=false;
+        }
+
+       },true);
+
+       card.append(archive);
+
+      }
+
+      return card;
+
+     })
+    );
+
+    if(!alive()||run!==galleryRun)return;
+
+    grid.append(...cards);
+    galleryOutput.replaceChildren(grid);
+
+    if(!rows.length){
+     galleryOutput.append(node("p",
+      "Nessuna foto disponibile.","muted"));
+    }
+
+    if(rows.length>30){
+     galleryOutput.append(node("p",
+      "Visualizzate le 30 foto più recenti. Le altre restano disponibili nel confronto per data.",
+      "small"));
+    }
+
+   }
+
+   galleryPose.onchange=loadGallery;
+
+   gallery.ontoggle=()=>{
+    if(gallery.open)loadGallery();
+   };
+
+   gallery.append(galleryPose,galleryOutput);
+   content.append(gallery);
+
+   /* GRAFICI EVOLUZIONE */
+
+   const charts=details("Grafici delle misurazioni");
+
+   const metric=select(fields.map(([k,t,u])=>
+    [k,t+" ("+u+")"]
+   ));
+
+   const range=select([
+    ["30","Ultimi 30 giorni"],
+    ["90","Ultimi 3 mesi"],
+    ["180","Ultimi 6 mesi"],
+    ["365","Ultimo anno"],
+    ["all","Tutto lo storico"]
+   ]);
+
+   const chartOutput=node("div");
+
+   function drawChart(){
+
+    chartOutput.replaceChildren();
+
+    const key=metric.value;
+
+    const cutoff=range.value==="all"?0:
+     Date.now()-Number(range.value)*86400000;
+
+    const rows=measurements.filter(m=>
+     m[key]!=null&&
+     new Date(m.recorded_at).getTime()>=cutoff
+    ).slice().reverse();
+
+    if(!rows.length){
+     chartOutput.append(node("p",
+      "Nessuna misurazione nel periodo.","muted"));
+     return;
+    }
+
+    const values=rows.map(r=>Number(r[key]));
+    const low=Math.min(...values);
+    const high=Math.max(...values);
+
+    const svg=document.createElementNS(
+     "http://www.w3.org/2000/svg","svg"
+    );
+
+    svg.setAttribute("viewBox","0 0 340 200");
+    svg.style.width="100%";
+
+    function shape(tag,attrs){
+
+     const e=document.createElementNS(
+      "http://www.w3.org/2000/svg",tag
+     );
+
+     Object.entries(attrs).forEach(([k,v])=>
+      e.setAttribute(k,String(v))
+     );
+
+     svg.append(e);
+     return e;
+
+    }
+
+    const x=i=>rows.length===1?170:
+     38+i*282/(rows.length-1);
+
+    const y=v=>high===low?95:
+     165-(v-low)/(high-low)*130;
+
+    for(let j=0;j<5;j++){
+
+     const yy=35+j*32.5;
+
+     shape("line",{
+      x1:38,x2:320,y1:yy,y2:yy,
+      stroke:"#39352e"
+     });
+
+    }
+
+    if(rows.length>1){
+
+     shape("polyline",{
+      points:values.map((v,i)=>x(i)+","+y(v)).join(" "),
+      stroke:"#e9c675",
+      "stroke-width":2.5,
+      fill:"none"
+     });
+
+    }
+
+    values.forEach((v,i)=>{
+
+     const dot=shape("circle",{
+      cx:x(i),cy:y(v),r:4,fill:"#e9c675"
+     });
+
+     dot.onclick=()=>{
+
+      chartTip.textContent=
+       labelDate(rows[i].recorded_at)+
+       " • "+number(v);
+
+     };
+
+    });
+
+    const chartTip=node("p",
+     "Tocca un punto per visualizzare la misura.",
+     "small");
+
+    const summary=node("div","","fp-grid");
+
+    summary.append(
+     stat("Iniziale",number(values[0])),
+     stat("Attuale",number(values[values.length-1])),
+     stat("Minimo",number(low)),
+     stat("Massimo",number(high))
+    );
+
+    chartOutput.append(svg,chartTip,summary);
+
+   }
+
+   metric.onchange=drawChart;
+   range.onchange=drawChart;
+
+   charts.append(metric,range,chartOutput);
+   content.append(charts);
+
+   drawChart();
+
+   /* STORICO CHECK */
+
+   const history=details("Storico check e misurazioni");
+
+   allDates.forEach(date=>{
+
+    const item=details(labelDate(date));
+
+    const ms=measurements.filter(m=>
+     day(m.recorded_at)===date
+    );
+
+    const cs=checks.filter(c=>
+     day(c.checkin_date)===date
+    );
+
+    ms.forEach(m=>{
+
+     const box=panel();
+
+     box.append(node("h3","Misurazioni"));
+
+     fields.forEach(([key,title,unit])=>{
+
+      if(m[key]!=null){
+
+       box.append(node("div",
+        title+": "+number(m[key])+" "+unit,
+        "history-item"
+       ));
+
+      }
+
+     });
+
+     if(m.measurement_notes)
+      box.append(node("p",m.measurement_notes,"small"));
+
+     item.append(box);
+
+    });
+
+    cs.forEach(c=>{
+
+     const box=panel();
+
+     box.append(node("h3","Feedback periodico"));
+
+     [
+      ["body_weight_kg","Peso"],
+      ["sleep_hours","Ore di sonno"],
+      ["energy_score","Energia"],
+      ["adherence_score","Aderenza"],
+      ["stress_score","Stress"],
+      ["hunger_score","Fame"],
+      ["recovery_score","Recupero"],
+      ["mood_score","Umore"],
+      ["digestion_score","Digestione"],
+      ["motivation_score","Motivazione"]
+     ].forEach(([key,title])=>{
+
+      if(c[key]!=null)
+       box.append(node("div",
+        title+": "+number(c[key]),"history-item"));
+
+     });
+
+     if(c.notes)box.append(node("p",c.notes));
+
+     if(admin){
+
+      const review=node("textarea");
+      review.placeholder="Feedback del coach";
+
+      const plan=node("textarea");
+      plan.placeholder="Indicazioni per il prossimo periodo";
+
+      const score=field("number","Valutazione 1–10");
+      score.min="1";
+      score.max="10";
+      score.step="1";
+
+      const message=node("div");
+
+      const save=btn("Invia valutazione coach",async()=>{
+
+       if(!alive())return;
+
+       const n=Number(score.value);
+
+       if(!Number.isInteger(n)||n<1||n>10||
+        !review.value.trim()){
+        status(message,"Inserisci valutazione e feedback.",true);
+        return;
+       }
+
+       save.disabled=true;
+
+       try{
+
+        await rpc("forge_progress_v3_review_checkin",{
+         p_checkin_id:c.id,
+         p_score:n,
+         p_feedback:review.value.trim(),
+         p_action_plan:plan.value.trim()
+        });
+
+        status(message,"Valutazione salvata.");
+
+       }catch(e){
+        status(message,e.message,true);
+       }finally{
+        save.disabled=false;
+       }
+
+      });
+
+      box.append(score,review,plan,save,message);
+
+     }
+
+     item.append(box);
+
+    });
+
+    const count=photos.filter(p=>
+     day(p.photo_date)===date
+    ).length;
+
+    item.append(node("p",count+" foto registrate","small"));
+
+    history.append(item);
+
+   });
+
+   if(!allDates.length){
+    history.append(node("p",
+     "Lo storico è ancora vuoto.","muted"));
+   }
+
+   content.append(history);
+
+   /* FEEDBACK COACH */
+
+   const feedback=dashboard?.latest_coach_feedback;
+
+   if(feedback){
+
+    const box=panel();
+
+    box.append(node("h3","Ultimo feedback del coach"));
+
+    if(feedback.feedback)
+     box.append(node("p",feedback.feedback));
+
+    if(feedback.action_plan)
+     box.append(node("p",feedback.action_plan));
+
+    content.append(box);
+
+   }
+
+   content.append(
+    btn("Aggiorna progressi",load,true)
+   );
+
+  }catch(e){
+
+   if(!alive())return;
+
+   content.replaceChildren(
+    node("div",e.message||String(e),"status error"),
+    btn("Riprova",load,true)
+   );
+
+  }
+
+ }
+
+ await load();
+
+}
+
+/* COLLEGAMENTO AL MENU ESISTENTE */
+
+function rename(){
+
+ document.querySelectorAll(
+  '[data-section="Progress Evolution"]'
+ ).forEach(b=>{
+  if(b.textContent.trim()!=="Forge Progress")
+   b.textContent="Forge Progress";
+ });
+
+}
+
+section=function(name){
+
+ if(name!=="Progress Evolution"&&
+  name!=="Forge Progress"){
+
+  return previous.apply(this,arguments);
+
+ }
+
+ if(!user)return;
+
+ serial++;
+ calendarSerial++;
+
+ active="Progress Evolution";
+
+ $("sectionTitle").textContent="Forge Progress";
+ $("sectionText").textContent="";
+
+ $("sectionCard").classList.remove("hidden");
+
+ document.querySelectorAll("[data-section]")
+ .forEach(b=>{
+
+  b.classList.toggle("active",
+   b.dataset.section==="Progress Evolution");
+
+ });
+
+ render($("sectionContent"));
+
+ $("sectionCard").scrollIntoView({
+  behavior:"smooth",
+  block:"start"
+ });
+
+};
+
+rename();
+
+console.info("FORGE PROGRESS V24 ACTIVE");
+
+})();
+</script>
+<!-- END FORGE PROGRESS V24 -->
