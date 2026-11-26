@@ -14136,3 +14136,387 @@ schedule();
 })();
 </script>
 <!-- END FORGE TRAINING V19 -->
+
+<!-- FORGE TRAINING V20 MOBILE EXPERIENCE -->
+<style>
+#forge18-menu{
+  width:100%;
+  min-width:0;
+}
+#forge18-menu details{
+  overflow-wrap:anywhere;
+}
+#forge18-menu summary{
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+#forge17 .f17-row{
+  padding:10px!important;
+  margin:8px 0!important;
+}
+#forge17 .f17-grid{
+  grid-template-columns:
+  repeat(2,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+#forge17 input,
+#forge17 select,
+#forge17 textarea{
+  max-width:100%;
+  min-width:0;
+  font-size:16px!important;
+}
+#forge17 .f17-row label{
+  font-size:12px!important;
+}
+#forge17 .f17-row button{
+  min-height:40px;
+}
+.f20-volume{
+  background:#211d15;
+  border:1px solid #756039;
+  border-radius:10px;
+  padding:12px;
+  margin:10px 0;
+  color:#e9c675;
+  font-size:14px;
+  font-weight:700;
+}
+.f20-danger{
+  background:#301b1d!important;
+  color:#ffaaaa!important;
+  border:1px solid #874d4d!important;
+}
+.f19-emoji button{
+  min-height:85px;
+}
+.f19-emoji button[aria-pressed="true"]{
+  box-shadow:0 0 0 1px #e9c675;
+}
+#forge18-menu .f18-subtitle{
+  font-size:11px!important;
+  line-height:1.4;
+}
+@media(max-width:480px){
+  #forge18-menu .f18-content{
+    padding:8px!important;
+  }
+  #forge17 .f17-row{
+    padding:9px!important;
+  }
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.ForgeTrainingV20)return;
+window.ForgeTrainingV20=true;
+
+const $=id=>document.getElementById(id);
+
+const normalize=s=>String(s||"")
+.trim().replace(/\s+/g," ");
+
+const number=n=>Number(n)
+.toLocaleString("it-IT",{
+maximumFractionDigits:2
+});
+
+function field(row,label){
+const labels=Array.from(
+row.querySelectorAll("label")
+);
+
+const found=labels.find(n=>
+normalize(n.textContent)===label
+);
+
+if(!found)return null;
+
+if(found.htmlFor){
+const target=$(found.htmlFor);
+if(target)return target;
+}
+
+const next=found.nextElementSibling;
+
+if(next&&next.matches(
+"input,select,textarea"
+))return next;
+
+return found.querySelector(
+"input,select,textarea"
+);
+}
+
+function write(node,value){
+if(node.textContent!==value)
+node.textContent=value;
+}
+
+function exerciseVolume(row){
+
+const sets=field(row,"Serie");
+const reps=field(row,"Ripetizioni");
+const load=field(row,"Carico kg");
+
+if(!sets||!reps||!load)return null;
+
+const s=Number(sets.value);
+const r=String(reps.value).trim();
+const k=Number(load.value);
+
+if(!sets.value||!load.value||
+!Number.isInteger(s)||s<1||
+!Number.isFinite(k)||k<0)
+return null;
+
+if(/^\d+$/.test(r)){
+const volume=s*Number(r)*k;
+return [volume,volume];
+}
+
+const range=r.match(
+/^(\d+)\s*[-–]\s*(\d+)$/
+);
+
+if(range&&Number(range[1])<=Number(range[2])){
+return [
+s*Number(range[1])*k,
+s*Number(range[2])*k
+];
+}
+
+return null;
+}
+
+function dailyVolume(){
+
+const editor=$("f18-editor");
+
+if(!editor)return;
+
+const groups=Array.from(
+editor.querySelectorAll("details")
+);
+
+groups.forEach(group=>{
+
+const rows=Array.from(group.children)
+.filter(n=>n.classList.contains("f17-row"));
+
+if(!rows.length)return;
+
+let min=0;
+let max=0;
+let count=0;
+
+rows.forEach(row=>{
+
+const volume=exerciseVolume(row);
+
+if(!volume)return;
+
+min+=volume[0];
+max+=volume[1];
+count++;
+
+});
+
+let output=Array.from(group.children)
+.find(n=>n.classList.contains("f20-volume"));
+
+if(!output){
+output=document.createElement("div");
+output.className="f20-volume";
+group.append(output);
+}
+
+let label="Volume previsto giornata: ";
+
+if(!count){
+label+="inserisci serie, ripetizioni e carico";
+}else{
+label+=number(min);
+
+if(max!==min)
+label+=" – "+number(max);
+
+label+=" kg";
+
+if(count<rows.length)
+label+=" • calcolo parziale";
+}
+
+write(output,label);
+
+});
+
+}
+
+function improveHistory(){
+
+const root=$("f18-performance");
+if(!root)return;
+
+root.querySelectorAll("button")
+.forEach(b=>{
+
+const text=normalize(b.textContent);
+
+if(text==="Escludi intera giornata"){
+write(b,"Escludi giornata dal volume");
+b.classList.add("f20-danger");
+b.title="Mantiene lo storico e consente il ripristino";
+}
+
+if(text==="Escludi allenamento"){
+b.classList.add("f20-danger");
+}
+
+if(text==="Ripristina allenamento"){
+b.title="Reinserisce l'allenamento nelle statistiche";
+}
+
+});
+
+}
+
+const feedbackLabels={
+"2":"😃 Facile",
+"6":"😅 Impegnativo",
+"10":"😡 Difficilissimo"
+};
+
+function prepareFeedback(event){
+
+const target=event.target.closest("button");
+if(!target)return;
+
+if(normalize(target.textContent)
+.toUpperCase()!=="CONCLUDI ALLENAMENTO")
+return;
+
+const effort=$("ftEffort");
+const notes=$("ftFeedback");
+
+if(!effort||!notes)return;
+
+const label=feedbackLabels[effort.value];
+
+if(!label){
+event.preventDefault();
+event.stopImmediatePropagation();
+alert("Seleziona come è andato l'allenamento.");
+return;
+}
+
+const original=notes.value.replace(
+/^Difficoltà:.*(?:\n|$)/,
+""
+).trim();
+
+notes.value="Difficoltà: "+label+
+(original?"\n"+original:"");
+
+}
+
+document.addEventListener(
+"click",prepareFeedback,true
+);
+
+function compact(){
+
+const nav=document.querySelector(
+'#mainNav [data-section="Allenamento"]'
+);
+
+if(nav)write(nav,"Forge Training");
+
+const root=$("forge18-menu");
+if(!root)return;
+
+root.querySelectorAll(".f17-row button")
+.forEach(b=>{
+
+const t=normalize(b.textContent);
+
+if(t==="Elimina esercizio"||
+t==="Elimina giornata"||
+t==="Archivia programma"){
+b.classList.add("f20-danger");
+}
+
+});
+
+const labels={
+"f18-train":"Allenati",
+"f18-editor":"Crea scheda",
+"f18-programs":"Gestione programmi",
+"f18-pdf":"Schede PDF",
+"f18-performance":"Performance e storico",
+"f18-video":"Video esercizi"
+};
+
+Object.entries(labels).forEach(([id,label])=>{
+
+const group=$(id);
+if(!group)return;
+
+const summary=group.querySelector("summary");
+if(!summary)return;
+
+const first=summary.firstChild;
+
+if(first&&first.nodeType===3&&
+normalize(first.nodeValue)!==label){
+first.nodeValue=label;
+}
+
+});
+
+}
+
+let queued=false;
+
+function schedule(){
+
+if(queued)return;
+queued=true;
+
+requestAnimationFrame(()=>{
+
+queued=false;
+
+try{
+compact();
+dailyVolume();
+improveHistory();
+}catch(error){
+console.warn("Forge Training V20:",error);
+}
+
+});
+
+}
+
+const observer=new MutationObserver(schedule);
+
+observer.observe(document.body,{
+childList:true,
+subtree:true
+});
+
+document.addEventListener("input",schedule);
+document.addEventListener("change",schedule);
+document.addEventListener("click",schedule);
+
+schedule();
+
+console.info("Forge Training V20 caricato");
+
+})();
+</script>
+<!-- END FORGE TRAINING V20 -->
