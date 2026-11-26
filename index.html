@@ -13329,3 +13329,570 @@ mount();
 })();
 </script>
 <!-- END FORGE TRAINING MASTER V17 -->
+
+<!-- FORGE TRAINING V18 CLEAN EXPERIENCE -->
+
+<style>
+#forge18-menu{
+display:grid;
+gap:12px;
+margin:14px 0;
+}
+
+#forge18-menu > details{
+background:linear-gradient(145deg,#191a1f,#111216);
+border:1px solid #59492f;
+border-radius:16px;
+padding:15px;
+margin:0;
+}
+
+#forge18-menu > details > summary{
+list-style:none;
+cursor:pointer;
+color:#e9c675;
+font-weight:750;
+font-size:17px;
+}
+
+#forge18-menu > details > summary::-webkit-details-marker{
+display:none;
+}
+
+#forge18-menu > details > summary::after{
+content:"›";
+float:right;
+font-size:23px;
+}
+
+#forge18-menu > details[open] > summary::after{
+content:"⌄";
+}
+
+#forge18-menu .f18-subtitle{
+display:block;
+color:#a4a5ab;
+font-size:12px;
+font-weight:400;
+margin-top:6px;
+padding-right:15px;
+}
+
+#forge18-menu .f18-content{
+margin-top:15px;
+}
+
+#forge18-menu input[type="checkbox"]{
+accent-color:#e9c675;
+}
+
+#forge18-menu .f18-hidden{
+display:none!important;
+}
+
+#forge18-menu .f17-row{
+margin:10px 0;
+}
+
+#forge18-menu button{
+min-height:44px;
+}
+
+#forge18-menu details details{
+margin:10px 0;
+}
+
+#forge18-menu .f18-document{
+border:1px solid #59492f;
+border-radius:12px;
+padding:12px;
+margin:12px 0;
+}
+
+#forge18-menu .f18-description{
+color:#a4a5ab;
+font-size:13px;
+line-height:1.5;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.ForgeCleanV18)return;
+window.ForgeCleanV18=true;
+
+const $=id=>document.getElementById(id);
+
+let running=false;
+let queued=false;
+let currentMenu=null;
+
+function text(n){
+return String(n?.textContent||"")
+.replace(/\s+/g," ")
+.trim();
+}
+
+function norm(s){
+return String(s||"")
+.toLowerCase()
+.replace(/\s+/g," ")
+.trim();
+}
+
+function make(tag,value,cls){
+const n=document.createElement(tag);
+if(value)n.textContent=value;
+if(cls)n.className=cls;
+return n;
+}
+
+function hide(n){
+if(n&&!n.classList.contains("f18-hidden"))
+n.classList.add("f18-hidden");
+}
+
+function reveal(n){
+if(n)n.classList.remove("f18-hidden");
+}
+
+function findSummary(root,label){
+return Array.from(
+root.querySelectorAll("summary")
+).find(n=>norm(text(n))===norm(label));
+}
+
+function findHeading(root,label){
+return Array.from(
+root.querySelectorAll("h2,h3,h4")
+).find(n=>norm(text(n))===norm(label));
+}
+
+function findBlock(root,label){
+const h=findHeading(root,label);
+return h?h.parentElement:null;
+}
+
+function findButton(root,label){
+return Array.from(
+root.querySelectorAll("button")
+).find(n=>norm(text(n))===norm(label));
+}
+
+function createGroup(menu,id,title,description){
+const d=make("details");
+d.id=id;
+
+const summary=make("summary",title);
+summary.append(
+make("span",description,"f18-subtitle")
+);
+
+const content=make("div","","f18-content");
+
+d.append(summary,content);
+menu.append(d);
+
+d.addEventListener("toggle",()=>{
+if(!d.open)return;
+
+Array.from(menu.children).forEach(other=>{
+if(other!==d&&other.tagName==="DETAILS")
+other.open=false;
+});
+});
+
+return content;
+}
+
+function move(node,target){
+if(!node||!target)return;
+if(node===target||node.contains(target))return;
+
+if(node.parentElement!==target)
+target.append(node);
+
+reveal(node);
+}
+
+function createMenu(root){
+const menu=make("div");
+menu.id="forge18-menu";
+
+const train=createGroup(
+menu,
+"f18-train",
+"Allenati",
+"Scheda attiva, timer, serie e carichi"
+);
+
+const editor=createGroup(
+menu,
+"f18-editor",
+"Crea scheda",
+"Allenamento personale o per un cliente"
+);
+
+const programs=createGroup(
+menu,
+"f18-programs",
+"Gestione programmi",
+"Bozze, schede attive e archivio"
+);
+
+const pdf=createGroup(
+menu,
+"f18-pdf",
+"Forge PDF & Smart Import",
+"Importa, consulta, esporta e condividi"
+);
+
+const performance=createGroup(
+menu,
+"f18-performance",
+"Performance e storico",
+"Volume, tonnellaggio e progressione"
+);
+
+const video=createGroup(
+menu,
+"f18-video",
+"Video esercizi",
+"Libreria degli esercizi"
+);
+
+root.prepend(menu);
+
+return {
+menu,train,editor,programs,
+pdf,performance,video
+};
+}
+
+function openInner(group){
+if(group.tagName==="DETAILS")
+group.open=true;
+}
+
+function moveDetails(node,target){
+if(!node)return;
+
+move(node,target);
+
+if(node.tagName==="DETAILS"){
+const summary=node.querySelector(":scope > summary");
+
+if(summary)
+summary.style.display="none";
+
+openInner(node);
+
+if(!node.dataset.f18KeepOpen){
+node.dataset.f18KeepOpen="1";
+
+node.addEventListener("toggle",()=>{
+if(!node.open)node.open=true;
+});
+}
+}
+}
+
+function cleanProgramButtons(root){
+root.querySelectorAll("button").forEach(b=>{
+
+if(text(b)==="Attiva programma"){
+const card=b.closest(".f17-row");
+
+if(card){
+const active=Array.from(
+card.querySelectorAll("p")
+).some(p=>norm(text(p))==="attiva");
+
+if(active)hide(b);
+else reveal(b);
+}
+}
+
+});
+}
+
+function translate(root){
+const translations={
+"Stato: active":"Stato: attivo",
+"Stato: draft":"Stato: bozza",
+"Stato: archived":"Stato: archiviato",
+"Stato: completed":"Stato: completato",
+"Stato: paused":"Stato: in pausa",
+"Stato: in_progress":"Stato: in corso"
+};
+
+root.querySelectorAll("p,span").forEach(n=>{
+if(n.children.length)return;
+
+const value=translations[text(n)];
+
+if(value&&n.textContent!==value)
+n.textContent=value;
+});
+}
+
+function organize(){
+if(running)return;
+running=true;
+
+try{
+
+const root=$("sectionContent");
+const card=$("sectionCard");
+const heading=$("sectionTitle");
+
+const nav=document.querySelector(
+'#mainNav [data-section="Allenamento"]'
+);
+
+if(nav&&text(nav)!=="Forge Training")
+nav.textContent="Forge Training";
+
+if(!root||!card||!heading)return;
+
+if(card.classList.contains("hidden"))return;
+
+if(!["Allenamento","Forge Training"]
+.includes(text(heading)))return;
+
+const v17=$("forge17");
+if(!v17)return;
+
+if(text(heading)!=="Forge Training")
+heading.textContent="Forge Training";
+
+const description=$("sectionText");
+
+if(description&&text(description)!==
+"Allenamento, programmazione e performance.")
+description.textContent=
+"Allenamento, programmazione e performance.";
+
+if(!currentMenu||
+!currentMenu.menu.isConnected){
+
+currentMenu=createMenu(root);
+}
+
+const m=currentMenu;
+
+/* Recupero delle interfacce originali */
+
+const editorSummary=findSummary(
+v17,"Crea scheda • Foglio bianco"
+);
+
+const programsSummary=findSummary(
+v17,"Le mie schede e programmi"
+);
+
+const performanceSummary=findSummary(
+v17,"Performance e storico"
+);
+
+const videoSummary=findSummary(
+v17,"Video esercizi"
+);
+
+const smartSummary=findSummary(
+v17,"Forge Smart Import"
+);
+
+const editorBlock=editorSummary?.parentElement;
+const programsBlock=programsSummary?.parentElement;
+const performanceBlock=performanceSummary?.parentElement;
+const videoBlock=videoSummary?.parentElement;
+const smartBlock=smartSummary?.parentElement;
+
+/* Conserva i nodi V17 nel contenitore originale */
+
+if(v17.parentElement!==m.editor)
+move(v17,m.editor);
+
+if(editorBlock)
+moveDetails(editorBlock,v17);
+
+if(programsBlock){
+moveDetails(programsBlock,m.programs);
+}
+
+if(performanceBlock){
+moveDetails(performanceBlock,m.performance);
+}
+
+if(videoBlock){
+moveDetails(videoBlock,m.video);
+}
+
+if(smartBlock){
+moveDetails(smartBlock,m.pdf);
+}
+
+/* Recupera il motore di allenamento esistente */
+
+const trainingHeading=findHeading(
+root,"FORGE TRAINING"
+);
+
+if(trainingHeading){
+const block=trainingHeading.parentElement;
+
+if(block!==root&&
+block!==card&&
+!block.contains(m.menu)){
+
+move(block,m.train);
+hide(trainingHeading);
+
+Array.from(block.children).forEach(n=>{
+if(text(n)==="Allenamento e performance integrati")
+hide(n);
+});
+}
+}
+
+/* Coach Studio: conserva gestione clienti */
+
+const coach=findBlock(
+root,"Forge Training • Coach Studio"
+);
+
+if(coach&&coach!==root&&
+!coach.contains(m.menu)){
+
+move(coach,m.programs);
+
+const oldCreate=Array.from(
+coach.querySelectorAll("summary")
+).find(n=>text(n).includes("Crea nuova scheda"));
+
+if(oldCreate)
+hide(oldCreate.parentElement);
+
+const coachTitle=findHeading(
+coach,"Forge Training • Coach Studio"
+);
+
+if(coachTitle)
+coachTitle.textContent="Gestione clienti";
+}
+
+/* Unifica consultazione PDF */
+
+const pdfConsult=findBlock(
+root,"Consulta schede PDF"
+);
+
+if(pdfConsult&&
+pdfConsult!==root&&
+!pdfConsult.contains(m.menu)){
+
+move(pdfConsult,m.pdf);
+}
+
+const pdfSummary=findSummary(
+root,"Schede PDF"
+);
+
+if(pdfSummary){
+const oldPDF=pdfSummary.parentElement;
+
+if(!oldPDF.contains(m.menu)){
+move(oldPDF,m.pdf);
+oldPDF.open=false;
+}
+}
+
+/* Mantieni il catalogo come supporto all'editor */
+
+const catalog=findBlock(
+root,"Catalogo esercizi Forge"
+);
+
+if(catalog&&catalog!==root&&
+!catalog.contains(m.menu)){
+
+let catalogDetails=$("f18-catalog");
+
+if(!catalogDetails){
+catalogDetails=make("details");
+catalogDetails.id="f18-catalog";
+
+catalogDetails.append(
+make("summary","Catalogo esercizi")
+);
+
+m.editor.append(catalogDetails);
+}
+
+move(catalog,catalogDetails);
+
+const h=findHeading(
+catalog,"Catalogo esercizi Forge"
+);
+
+hide(h);
+}
+
+/* Rimuovi intestazioni e pulsanti superflui */
+
+cleanProgramButtons(root);
+translate(root);
+
+root.querySelectorAll("pre").forEach(n=>{
+hide(n);
+});
+
+const emptyMessage=Array.from(
+root.querySelectorAll("p")
+).find(n=>text(n)===
+"Questa sezione richiede ancora il collegamento operativo a Supabase.");
+
+hide(emptyMessage);
+
+}finally{
+running=false;
+}
+}
+
+function schedule(){
+if(queued)return;
+queued=true;
+
+requestAnimationFrame(()=>{
+queued=false;
+
+try{
+organize();
+}catch(e){
+console.warn("Forge V18:",e);
+}
+});
+}
+
+const observer=new MutationObserver(schedule);
+
+observer.observe(document.body,{
+childList:true,
+subtree:true,
+attributes:true,
+attributeFilter:["class"]
+});
+
+document.addEventListener("click",()=>{
+schedule();
+});
+
+schedule();
+
+})();
+</script>
+
+<!-- END FORGE TRAINING V18 CLEAN EXPERIENCE -->
