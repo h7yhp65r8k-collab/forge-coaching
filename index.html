@@ -10949,5 +10949,545 @@ $("ftPanel").hidden=true;
 
 })();
 </script>
+
+<script>
+/* FORGE PERFORMANCE REPORT V2 - FRONTEND */
+(function(){
+"use strict";
+
+if(window.forgePerformanceReportV2)return;
+window.forgePerformanceReportV2=true;
+
+const style=document.createElement("style");
+style.textContent=`
+.fpReport{
+background:#191a1f;
+border:1px solid #59492f;
+border-radius:16px;
+padding:14px;
+margin:12px 0;
+color:#fff;
+}
+.fpReport h3,.fpReport h4{
+color:#e9c675;
+}
+.fpGrid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:8px;
+margin:12px 0;
+}
+.fpStat{
+background:#101114;
+border-radius:10px;
+padding:12px;
+overflow-wrap:anywhere;
+}
+.fpStat strong{
+display:block;
+font-size:21px;
+color:#e9c675;
+margin-top:5px;
+}
+.fpLabel{
+font-size:12px;
+color:#a4a5ab;
+}
+.fpBar{
+height:7px;
+background:#343434;
+border-radius:8px;
+overflow:hidden;
+margin:8px 0;
+}
+.fpBar span{
+display:block;
+height:100%;
+background:#e9c675;
+border-radius:8px;
+}
+.fpMuscle{
+padding:12px 0;
+border-bottom:1px solid #59492f;
+}
+.fpReport details{
+padding:10px 0;
+border-bottom:1px solid #59492f;
+}
+.fpReport summary{
+color:#e9c675;
+cursor:pointer;
+padding:8px 0;
+}
+.fpReport button{
+width:100%;
+margin:8px 0;
+}
+.fpSet{
+font-size:13px;
+padding:10px 0;
+border-bottom:1px solid #333;
+}
+.fpEmoji{
+display:grid;
+grid-template-columns:repeat(5,1fr);
+gap:5px;
+margin:12px 0;
+}
+.fpEmoji button{
+min-width:0;
+padding:9px 2px;
+background:#101114!important;
+color:white!important;
+border:1px solid #59492f!important;
+border-radius:10px;
+font-size:25px;
+}
+.fpEmoji button small{
+display:block;
+font-size:10px;
+margin-top:5px;
+}
+.fpEmoji button[aria-pressed="true"]{
+border:2px solid #e9c675!important;
+background:#42351d!important;
+}
+`;
+document.head.append(style);
+
+function node(tag,text,cls){
+const e=document.createElement(tag);
+if(text!==undefined)e.textContent=text;
+if(cls)e.className=cls;
+return e;
+}
+
+function fmt(n){
+return n===null||n===undefined
+?"—"
+:Number(n).toLocaleString("it-IT",{
+maximumFractionDigits:2
+});
+}
+
+function duration(n){
+if(n===null||n===undefined)return "—";
+n=Math.max(0,Number(n)||0);
+return [
+Math.floor(n/3600),
+Math.floor(n%3600/60),
+Math.floor(n%60)
+].map(x=>String(x).padStart(2,"0")).join(":");
+}
+
+function stat(grid,label,value){
+const box=node("div",undefined,"fpStat");
+box.append(
+node("div",label,"fpLabel"),
+node("strong",value)
+);
+grid.append(box);
+}
+
+function btn(label,action){
+const b=node("button",label);
+b.type="button";
+b.onclick=action;
+return b;
+}
+
+function getClient(){
+if(typeof db!=="undefined"&&db.rpc)return db;
+if(typeof sb!=="undefined"&&sb.rpc)return sb;
+if(typeof supabaseClient!=="undefined"
+&&supabaseClient.rpc)return supabaseClient;
+throw Error("Connessione Supabase non disponibile.");
+}
+
+async function rpc(name,args={}){
+const {data,error}=await getClient().rpc(name,args);
+if(error)throw error;
+return typeof data==="string"?JSON.parse(data):data;
+}
+
+function drawReport(root,r){
+
+root.replaceChildren();
+
+const s=r.summary||{};
+const a=r.set_analysis||{};
+
+root.append(node("h3","FORGE PERFORMANCE"));
+
+const grid=node("div",undefined,"fpGrid");
+
+stat(grid,"Tonnellaggio",fmt(s.tonnage_kg)+" kg");
+stat(grid,"Durata",duration(r.duration_seconds));
+stat(grid,"Serie totali",fmt(s.total_sets));
+stat(grid,"Serie allenanti",fmt(a.working_sets));
+stat(grid,"Riscaldamento",fmt(a.warmup_sets));
+stat(grid,"Ripetizioni",fmt(s.total_repetitions));
+stat(grid,"Esercizi",fmt(s.total_exercises));
+stat(grid,"Serie a RIR 0",
+Number(s.rir_recorded_sets)>0
+?fmt(s.failure_sets):"Non rilevato");
+stat(grid,"Rip. in serie a RIR 0",
+Number(s.rir_recorded_sets)>0
+?fmt(s.repetitions_in_failure_sets):"—");
+stat(grid,"RIR medio",fmt(s.average_rir));
+stat(grid,"RPE medio",fmt(s.average_rpe));
+stat(grid,"Carico massimo",
+fmt(s.maximum_load_kg)+" kg");
+stat(grid,"Cedimento su serie con RIR",
+s.failure_percentage==null?"—":
+fmt(s.failure_percentage)+"%");
+stat(grid,"Serie con RIR registrato",
+fmt(s.rir_recorded_sets)+"/"+fmt(s.total_sets));
+
+root.append(grid);
+
+root.append(node("h3","Distribuzione muscolare"));
+
+for(const m of r.muscle_distribution||[]){
+
+const box=node("div",undefined,"fpMuscle");
+
+box.append(
+node("h4",m.muscle_group),
+node("strong",fmt(m.tonnage_kg)+" kg")
+);
+
+const bar=node("div",undefined,"fpBar");
+const fill=node("span");
+fill.style.width=Math.max(0,Math.min(
+100,Number(m.tonnage_percentage)||0
+))+"%";
+bar.append(fill);
+
+box.append(
+bar,
+node("p",fmt(m.tonnage_percentage)+"% del tonnellaggio"),
+node("p",fmt(m.working_sets)+" serie allenanti"),
+node("p",fmt(m.warmup_sets)+" serie riscaldamento"),
+node("p",fmt(m.total_repetitions)+" ripetizioni"),
+node("p","Serie a cedimento: "+
+(Number(m.rir_recorded_sets)>0
+?fmt(m.failure_sets):"Non rilevato")),
+node("p","Tonnellaggio allenante: "+
+fmt(m.working_tonnage_kg)+" kg"),
+node("p","RIR medio: "+fmt(m.average_rir)),
+node("p","RPE medio: "+fmt(m.average_rpe))
+);
+
+root.append(box);
+}
+
+root.append(node("h3","Dettaglio esercizi"));
+
+for(const e of r.exercises||[]){
+
+const d=node("details");
+
+d.append(node("summary",
+e.exercise_name+" • "+fmt(e.tonnage_kg)+" kg"
+));
+
+d.append(node("p",
+fmt(e.total_sets)+" serie • "+
+fmt(e.repetitions)+" ripetizioni"
+));
+
+for(const set of e.sets||[]){
+
+const row=node("div",undefined,"fpSet");
+
+row.append(
+node("strong","Serie "+set.set_number),
+node("p",fmt(set.repetitions)+" rip. × "+
+fmt(set.load_kg)+" kg"),
+node("p","RIR "+fmt(set.rir)+
+" • RPE "+fmt(set.rpe)),
+node("p","Volume: "+
+fmt(set.tonnage_kg)+" kg"),
+node("p","Tipo: "+(set.set_type||"—"))
+);
+
+if(Number(set.rir)===0&&set.rir!=null){
+row.append(node("strong","🔥 Cedimento — RIR 0"));
+}
+
+if(set.notes)row.append(node("p",set.notes));
+
+d.append(row);
+}
+
+root.append(d);
+}
+
+root.append(node("h3","Feedback allenamento"));
+
+root.append(node("p",
+r.perceived_effort==null
+?"Valutazione non registrata"
+:"Valutazione: "+fmt(r.perceived_effort)+"/10"
+));
+
+if(r.feedback)root.append(node("p",r.feedback));
+
+}
+
+async function openHistory(root){
+
+root.replaceChildren(
+node("h3","Storico e performance"),
+node("p","Caricamento...")
+);
+
+try{
+
+const client=getClient();
+const auth=await client.auth.getUser();
+if(auth.error||!auth.data.user)
+throw Error("Accedi nuovamente.");
+
+const account=auth.data.user.id;
+
+const data=await rpc("forge_v511_history");
+
+const sessions=(Array.isArray(data)?data:[])
+.filter(s=>s.status==="completed"&&
+s.client_id===account)
+.sort((a,b)=>new Date(b.finished_at)-
+new Date(a.finished_at));
+
+if(!root.isConnected)return;
+
+root.replaceChildren(
+node("h3","FORGE PERFORMANCE HISTORY")
+);
+
+if(!sessions.length){
+root.append(node("p","Nessun allenamento concluso."));
+return;
+}
+
+const chart=node("div",undefined,"fpReport");
+chart.append(node("h3","Progressione tonnellaggio"));
+
+const graph=node("div");
+chart.append(graph);
+root.append(chart);
+
+const loadGraph=btn("Visualizza ultimi 10 allenamenti",
+async()=>{
+
+loadGraph.disabled=true;
+graph.replaceChildren(node("p","Caricamento..."));
+
+try{
+
+const reports=[];
+
+for(const s of sessions.slice(0,10).reverse()){
+const r=await rpc(
+"forge_performance_v2_session_report",
+{p_session_id:s.id}
+);
+reports.push(r);
+}
+
+graph.replaceChildren();
+
+const max=Math.max(1,...reports.map(
+r=>Number(r.summary?.tonnage_kg)||0
+));
+
+for(const r of reports){
+
+const value=Number(r.summary?.tonnage_kg)||0;
+
+graph.append(node("p",
+new Date(r.started_at).toLocaleString("it-IT")+
+" • "+fmt(value)+" kg"
+));
+
+const bar=node("div",undefined,"fpBar");
+const fill=node("span");
+fill.style.width=(100*value/max)+"%";
+bar.append(fill);
+graph.append(bar);
+}
+
+}catch(e){
+graph.replaceChildren(node("p",e.message));
+}finally{
+loadGraph.disabled=false;
+}
+
+});
+
+chart.append(loadGraph);
+
+for(const s of sessions){
+
+const card=node("div",undefined,"fpReport");
+
+card.append(
+node("h3","✓ Allenamento completato"),
+node("p",new Date(s.started_at)
+.toLocaleString("it-IT")),
+node("p","Durata: "+duration(s.duration_seconds))
+);
+
+const report=node("div");
+report.hidden=true;
+
+const open=btn("Apri report completo",async()=>{
+
+if(!report.hidden){
+report.hidden=true;
+open.textContent="Apri report completo";
+return;
+}
+
+open.disabled=true;
+report.hidden=false;
+report.replaceChildren(node("p","Caricamento..."));
+
+try{
+
+const r=await rpc(
+"forge_performance_v2_session_report",
+{p_session_id:s.id}
+);
+
+drawReport(report,r);
+open.textContent="Chiudi report";
+
+}catch(e){
+report.replaceChildren(node("p",e.message));
+open.textContent="Chiudi report";
+}finally{
+open.disabled=false;
+}
+
+});
+
+card.append(open,report);
+root.append(card);
+}
+
+}catch(e){
+root.replaceChildren(node("p",e.message));
+}
+}
+
+function enhance(){
+
+const panel=document.getElementById("ftPanel");
+if(!panel)return;
+
+const select=document.getElementById("ftEffort");
+
+if(select&&!select.dataset.fpEnhanced){
+
+select.dataset.fpEnhanced="1";
+
+const choices=[
+["😄","Facile","2"],
+["🙂","Moderato","4"],
+["😅","Intenso","6"],
+["🥵","Difficile","8"],
+["😤","Estremo","10"]
+];
+
+select.replaceChildren(new Option(
+"Seleziona intensità",""
+));
+
+const group=node("div",undefined,"fpEmoji");
+
+for(const [emoji,label,value] of choices){
+
+select.append(new Option(label,value));
+
+const b=btn(emoji,()=>{
+
+select.value=value;
+
+for(const other of group.children){
+other.setAttribute("aria-pressed",
+String(other===b));
+}
+
+select.dispatchEvent(new Event("change",{
+bubbles:true
+}));
+
+});
+
+b.append(node("small",label));
+b.setAttribute("aria-pressed","false");
+group.append(b);
+}
+
+select.style.display="none";
+select.before(group);
+
+const feedback=document.getElementById("ftFeedback");
+if(feedback){
+feedback.placeholder="Note, sensazioni e qualità dell'allenamento";
+}
+
+}
+
+for(const heading of panel.querySelectorAll("h3")){
+
+if(heading.textContent.trim()!=="Storico allenamenti")
+continue;
+
+if(heading.dataset.fpEnhanced)continue;
+heading.dataset.fpEnhanced="1";
+
+const parent=heading.parentElement;
+
+for(const old of parent.querySelectorAll(".ftCard")){
+old.remove();
+}
+
+heading.textContent="Storico allenamenti e report";
+
+const root=node("div");
+parent.append(root);
+
+openHistory(root);
+
+}
+
+}
+
+let queued=false;
+
+const observer=new MutationObserver(()=>{
+
+if(queued)return;
+queued=true;
+
+requestAnimationFrame(()=>{
+queued=false;
+enhance();
+});
+
+});
+
+observer.observe(document.body,{
+childList:true,
+subtree:true
+});
+
+enhance();
+
+})();
+</script>
 </body>
 </html>
