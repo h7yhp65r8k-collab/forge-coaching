@@ -17838,3 +17838,50 @@ console.info("FORGE PROGRESS V24 ACTIVE");
 })();
 </script>
 <!-- END FORGE PROGRESS V24 -->
+<!-- FORGE NUTRITION V26 SEARCH -->
+<script>
+(() => {
+  'use strict';
+
+  if(window.forgeNutritionV26Search) return;
+
+  const previousRpc = db.rpc.bind(db);
+
+  db.rpc = function(name, params, options) {
+
+    if(name === 'forge_nutrition_v12_standard_search') {
+      return previousRpc(
+        'forge_nutrition_v7_search',
+        {
+          p_query: params?.p_query || '',
+          p_page: 1,
+          p_limit: 30,
+          p_online: false
+        },
+        options
+      );
+    }
+
+    if(name === 'forge_nutrition_v7_search') {
+      return previousRpc(
+        name,
+        {
+          ...params,
+          p_page: params?.p_page || 1,
+          p_limit: 30,
+          p_online: params?.p_online === true
+        },
+        options
+      );
+    }
+
+    return previousRpc(name, params, options);
+  };
+
+  window.forgeNutritionV26Search = true;
+
+  console.info('FORGE NUTRITION V26 SEARCH ACTIVE');
+
+})();
+</script>
+<!-- END FORGE NUTRITION V26 SEARCH -->
