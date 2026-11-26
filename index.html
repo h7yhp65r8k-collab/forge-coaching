@@ -13896,3 +13896,243 @@ schedule();
 </script>
 
 <!-- END FORGE TRAINING V18 CLEAN EXPERIENCE -->
+
+<!-- FORGE TRAINING V19 COMPACT EXPERIENCE -->
+<style>
+#forge17 .f17-row {
+  padding:12px!important;
+  margin:8px 0!important;
+  border-radius:12px!important;
+}
+#forge17 .f17-row label {
+  font-size:12px;
+  margin-top:5px;
+}
+#forge17 .f17-row input {
+  min-width:0;
+  padding:9px;
+  margin:4px 0;
+  font-size:16px;
+}
+#forge17 .f17-grid {
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+}
+#forge17 .f17-row button {
+  padding:9px;
+  font-size:12px;
+}
+.f19-advanced {
+  margin:8px 0;
+  padding:8px;
+  border:1px solid #59492f;
+  border-radius:10px;
+}
+.f19-advanced summary {
+  color:#e9c675;
+  font-size:13px;
+  cursor:pointer;
+}
+.f19-emoji {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+  margin:12px 0;
+}
+.f19-emoji button {
+  background:#191a1f!important;
+  border:1px solid #756039!important;
+  color:#e9c675!important;
+  padding:12px 3px!important;
+}
+.f19-emoji button[aria-pressed="true"] {
+  background:#392e1c!important;
+  border:2px solid #e9c675!important;
+}
+.f19-emoji span {
+  display:block;
+  font-size:30px;
+  margin-bottom:5px;
+}
+.f19-emoji small {
+  display:block;
+  font-size:11px;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.ForgeCompactV19)return;
+window.ForgeCompactV19=true;
+
+const advancedFields=new Set([
+  "Variante",
+  "Tempo di esecuzione",
+  "Metodo di allenamento",
+  "Progressione",
+  "Istruzioni del coach"
+]);
+
+function compactEditor(){
+
+  document.querySelectorAll(
+    "#forge17 .f17-row"
+  ).forEach(row=>{
+
+    if(row.dataset.f19Compact)return;
+
+    const labels=Array.from(
+      row.children
+    ).filter(n=>
+      n.tagName==="LABEL" &&
+      advancedFields.has(n.textContent.trim())
+    );
+
+    if(!labels.length)return;
+
+    const details=document.createElement("details");
+    details.className="f19-advanced";
+
+    const summary=document.createElement("summary");
+    summary.textContent="Opzioni avanzate";
+    details.append(summary);
+
+    labels[0].before(details);
+
+    labels.forEach(label=>{
+      const field=label.nextElementSibling;
+
+      if(field &&
+        ["INPUT","TEXTAREA","SELECT"].includes(
+          field.tagName
+        )
+      ){
+        details.append(label,field);
+      }
+    });
+
+    row.dataset.f19Compact="1";
+  });
+}
+
+function emojiFeedback(){
+
+  const select=document.getElementById("ftEffort");
+
+  if(!select || select.dataset.f19Emoji)return;
+
+  const previous=select.value;
+
+  select.dataset.f19Emoji="1";
+  select.dataset.fpEnhanced="1";
+
+  const parent=select.parentElement;
+
+  parent.querySelectorAll(
+    ".fpEmoji,.f19-emoji"
+  ).forEach(n=>n.remove());
+
+  const choices=[
+    ["😃","Facile","2"],
+    ["😅","Impegnativo","6"],
+    ["😡","Difficilissimo","10"]
+  ];
+
+  select.replaceChildren(
+    new Option("Seleziona difficoltà","")
+  );
+
+  const group=document.createElement("div");
+  group.className="f19-emoji";
+
+  choices.forEach(([emoji,label,value])=>{
+
+    select.append(new Option(label,value));
+
+    const b=document.createElement("button");
+    b.type="button";
+
+    const face=document.createElement("span");
+    face.textContent=emoji;
+
+    const name=document.createElement("small");
+    name.textContent=label;
+
+    b.append(face,name);
+
+    b.setAttribute(
+      "aria-pressed",
+      String(previous===value)
+    );
+
+    b.onclick=()=>{
+
+      select.value=value;
+
+      group.querySelectorAll("button")
+      .forEach(other=>{
+        other.setAttribute(
+          "aria-pressed",
+          String(other===b)
+        );
+      });
+
+      select.dispatchEvent(
+        new Event("change",{bubbles:true})
+      );
+    };
+
+    group.append(b);
+  });
+
+  if(choices.some(x=>x[2]===previous)){
+    select.value=previous;
+  }
+
+  select.style.display="none";
+  select.before(group);
+
+  const feedback=document.getElementById(
+    "ftFeedback"
+  );
+
+  if(feedback){
+    feedback.placeholder=
+      "Note sull'allenamento (facoltative)";
+  }
+}
+
+let queued=false;
+
+function schedule(){
+
+  if(queued)return;
+  queued=true;
+
+  requestAnimationFrame(()=>{
+    queued=false;
+
+    try{
+      compactEditor();
+      emojiFeedback();
+    }catch(e){
+      console.warn("Forge V19:",e);
+    }
+  });
+}
+
+const observer=new MutationObserver(schedule);
+
+observer.observe(document.body,{
+  childList:true,
+  subtree:true
+});
+
+schedule();
+
+})();
+</script>
+<!-- END FORGE TRAINING V19 -->
