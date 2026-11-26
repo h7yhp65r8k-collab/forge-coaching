@@ -10071,5 +10071,113 @@ busy=false;
 })();
 </script>
 
+<script>
+(function(){
+"use strict";
+
+const ids = [
+  "forge-training-v14",
+  "forge-v13"
+];
+
+const panels = new Map();
+const parking = document.createElement("div");
+
+function fixForgeLayout(){
+
+  const root = document.getElementById("sectionContent");
+  const card = document.getElementById("sectionCard");
+  const title = document.getElementById("sectionTitle");
+
+  const opened = root && card && title &&
+    !card.classList.contains("hidden") &&
+    title.textContent.trim() === "Allenamento";
+
+  ids.forEach(id => {
+
+    const panel = document.getElementById(id)
+      || panels.get(id);
+
+    if(!panel) return;
+
+    panels.set(id,panel);
+
+    const target = opened ? root : parking;
+
+    if(panel.parentElement !== target){
+      target.appendChild(panel);
+    }
+
+  });
+}
+
+const observer = new MutationObserver(fixForgeLayout);
+
+observer.observe(document.body,{
+  childList:true,
+  subtree:true,
+  attributes:true,
+  attributeFilter:["class"]
+});
+
+fixForgeLayout();
+
+})();
+</script>
+
+<script>
+(function(){
+"use strict";
+
+const ids = [
+  "forge-training-v14",
+  "forge-v13"
+];
+
+const panels = new Map();
+const parking = document.createElement("div");
+
+function fixForgeLayout(){
+
+  const root = document.getElementById("sectionContent");
+  const card = document.getElementById("sectionCard");
+  const title = document.getElementById("sectionTitle");
+
+  const opened = root && card && title &&
+    !card.classList.contains("hidden") &&
+    title.textContent.trim() === "Allenamento";
+
+  ids.forEach(id => {
+
+    const panel = document.getElementById(id)
+      || panels.get(id);
+
+    if(!panel) return;
+
+    panels.set(id,panel);
+
+    const target = opened ? root : parking;
+
+    if(panel.parentElement !== target){
+      target.appendChild(panel);
+    }
+
+  });
+}
+
+const observer = new MutationObserver(fixForgeLayout);
+
+observer.observe(document.body,{
+  childList:true,
+  subtree:true,
+  attributes:true,
+  attributeFilter:["class"]
+});
+
+fixForgeLayout();
+
+})();
+</script>
+
 </body>
 </html>
