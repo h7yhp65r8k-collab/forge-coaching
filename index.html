@@ -12064,3 +12064,1268 @@ update();
 })();
 </script>
 <!-- END FORGE TRAINING V16 CLEAN -->
+
+<!-- FORGE TRAINING MASTER V17 -->
+<style>
+#forge16-history,#forge-v13,#forgeMuscleVolume{
+display:none!important;
+}
+#forge17 details{
+border:1px solid #59492f;
+border-radius:14px;
+padding:14px;
+margin:12px 0;
+background:#15161a;
+}
+#forge17 summary{
+color:#e9c675;
+font-weight:750;
+cursor:pointer;
+}
+#forge17 .f17-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:8px;
+}
+#forge17 .f17-row{
+border:1px solid #59492f;
+border-radius:12px;
+padding:12px;
+margin:12px 0;
+}
+#forge17 .f17-danger{
+background:#492525;
+color:#ffc1c1;
+}
+#forge17 .f17-total{
+font-size:23px;
+font-weight:800;
+color:#e9c675;
+}
+#forge17 .f17-bar{
+background:#e9c675;
+height:9px;
+border-radius:8px;
+margin:6px 0 14px;
+}
+</style>
+
+<script>
+(function(){
+"use strict";
+
+if(window.ForgeMasterV17)return;
+window.ForgeMasterV17=true;
+
+const $=id=>document.getElementById(id);
+const c=window.forgeSupabase||db;
+
+let uid=null;
+let accountRole=null;
+let days=[];
+let draftId=null;
+let source="blank";
+let filename=null;
+let linkedDocument=null;
+
+function E(tag,text,parent,cls){
+const n=document.createElement(tag);
+if(text!==undefined)n.textContent=text;
+if(cls)n.className=cls;
+if(parent)parent.append(n);
+return n;
+}
+
+function fmt(n){
+return Number(n||0).toLocaleString("it-IT",{
+maximumFractionDigits:2
+});
+}
+
+async function rpc(name,args={}){
+const r=await c.rpc(name,args);
+if(r.error)throw r.error;
+return r.data;
+}
+
+async function rows(query){
+let out=[];
+for(let i=0;;i+=500){
+const r=await query.range(i,i+499);
+if(r.error)throw r.error;
+out.push(...(r.data||[]));
+if((r.data||[]).length<500)return out;
+}
+}
+
+async function account(){
+const r=await c.auth.getUser();
+if(r.error||!r.data.user)
+throw Error("Accedi nuovamente.");
+const id=r.data.user.id;
+if(uid!==id){
+days=[];
+draftId=null;
+linkedDocument=null;
+}
+uid=id;
+const roles=await c.from("user_roles")
+.select("role").eq("user_id",uid);
+if(roles.error)throw roles.error;
+accountRole=(roles.data||[]).some(
+x=>x.role==="admin"
+)?"admin":"client";
+}
+
+function B(parent,label,fn,cls){
+const b=E("button",label,parent,cls);
+b.type="button";
+b.onclick=async()=>{
+b.disabled=true;
+try{
+await fn();
+}catch(e){
+alert(e.message||String(e));
+}finally{
+b.disabled=false;
+}
+};
+return b;
+}
+
+function field(parent,label,type,value,change){
+E("label",label,parent);
+const n=E("input",undefined,parent);
+n.type=type;
+n.value=value??"";
+if(type==="number")n.step="any";
+n.oninput=()=>change(
+type==="number"?
+(n.value===""?null:Number(n.value)):
+n.value
+);
+return n;
+}
+
+function group(parent,title){
+const d=E("details",undefined,parent);
+E("summary",title,d);
+return d;
+}
+
+function blank(){
+return {
+exercise_name:"",
+sets:3,
+repetitions:"10",
+load_kg:null,
+rir:null,
+rest_seconds:90,
+instructions:"",
+muscle_group:"",
+measurement_type:"reps_load"
+};
+}
+
+const panel=E("div");
+panel.id="forge17";
+
+const editor=group(panel,"Crea scheda • Foglio bianco");
+const programs=group(panel,"Le mie schede e programmi");
+const performance=group(panel,"Performance e storico");
+const videos=group(panel,"Video esercizi");
+
+const title=field(
+editor,"Titolo scheda","text",
+"Nuova scheda",()=>{}
+);
+
+const description=field(
+editor,"Descrizione","text","",()=>{}
+);
+
+const target=E("select",undefined,editor);
+const weeks=field(
+editor,"Durata in settimane","number",
+8,()=>{}
+);
+
+const activate=E("input",undefined,editor);
+activate.type="checkbox";
+activate.checked=true;
+activate.style.width="20px";
+E("span"," Attiva dopo la pubblicazione",editor);
+
+const editorBody=E("div",undefined,editor);
+const draftList=E("div",undefined,editor);
+
+function cleanDays(){
+return days.map((d,i)=>({
+title:d.title||"Giorno "+(i+1),
+description:d.description||"",
+exercises:d.exercises.filter(
+x=>String(x.exercise_name||"").trim()
+)
+})).filter(d=>d.exercises.length);
+}
+
+function validated(){
+const data=cleanDays();
+if(!title.value.trim())
+throw Error("Inserisci il titolo.");
+if(!data.length)
+throw Error("Inserisci almeno un esercizio.");
+
+for(const d of data){
+for(const x of d.exercises){
+if(!Number.isInteger(Number(x.sets))||
+Number(x.sets)<1||Number(x.sets)>100)
+throw Error("Controlla le serie di "+x.exercise_name);
+
+if(x.load_kg!==null&&
+(Number(x.load_kg)<0||Number(x.load_kg)>2000))
+throw Error("Carico non valido.");
+
+if(x.rir!==null&&
+(Number(x.rir)<0||Number(x.rir)>20))
+throw Error("RIR non valido.");
+
+if(x.rest_seconds!==null&&
+(!Number.isInteger(Number(x.rest_seconds))||
+Number(x.rest_seconds)<0||
+Number(x.rest_seconds)>3600))
+throw Error("Recupero non valido.");
+}
+}
+return data;
+}
+
+function renderEditor(){
+editorBody.replaceChildren();
+
+days.forEach((d,di)=>{
+const box=group(
+editorBody,d.title||"Giorno "+(di+1)
+);
+box.open=true;
+
+field(box,"Nome giornata","text",d.title,
+v=>d.title=v);
+
+field(box,"Note giornata","text",
+d.description,v=>d.description=v);
+
+d.exercises.forEach((x,xi)=>{
+const row=E("div",undefined,box,"f17-row");
+
+const name=field(
+row,"Esercizio libero o da catalogo",
+"text",x.exercise_name,v=>{
+x.exercise_name=v;
+delete x.exercise_id;
+delete x.custom_exercise_id;
+}
+);
+
+const results=E("div",undefined,row);
+
+B(row,"Cerca nel catalogo",async()=>{
+const data=await rpc(
+"forge_training_v8_search_exercises",{
+p_search:name.value,
+p_limit:15
+});
+results.replaceChildren();
+
+if(!data.length)
+E("p","Nessun risultato. Usa il nome libero.",results);
+
+data.forEach(a=>{
+const label=a.exercise_name||a.name||a.title;
+if(!label)return;
+
+B(results,label,()=>{
+x.exercise_name=label;
+name.value=label;
+if(a.id)x.exercise_id=a.id;
+x.muscle_group=a.muscle_group||"";
+renderEditor();
+},"secondary");
+});
+},"secondary");
+
+field(row,"Gruppo muscolare","text",
+x.muscle_group,v=>x.muscle_group=v);
+
+field(row,"Variante","text",
+x.variant,v=>x.variant=v);
+
+const grid=E("div",undefined,row,"f17-grid");
+const total=E("div");
+
+function updateTotal(){
+const rep=String(x.repetitions||"").trim();
+
+total.textContent=/^\d+$/.test(rep)?
+"Tonnellaggio previsto: "+
+fmt(Number(x.sets||0)*
+Number(rep)*Number(x.load_kg||0))+" kg":
+"Tonnellaggio effettivo calcolato durante l'allenamento";
+}
+
+field(grid,"Serie","number",x.sets,v=>{
+x.sets=v;updateTotal();
+});
+
+field(grid,"Ripetizioni","text",x.repetitions,v=>{
+x.repetitions=v;updateTotal();
+});
+
+field(grid,"Carico kg","number",x.load_kg,v=>{
+x.load_kg=v;updateTotal();
+});
+
+field(grid,"Recupero sec","number",
+x.rest_seconds,v=>x.rest_seconds=v);
+
+field(grid,"RIR (0 = cedimento)","number",
+x.rir,v=>x.rir=v);
+
+field(row,"Tempo di esecuzione","text",
+x.tempo,v=>x.tempo=v);
+
+field(row,"Metodo di allenamento","text",
+x.training_method,v=>x.training_method=v);
+
+field(row,"Progressione","text",
+x.progression_rule,v=>x.progression_rule=v);
+
+field(row,"Istruzioni del coach","text",
+x.instructions,v=>x.instructions=v);
+
+row.append(total);
+updateTotal();
+
+B(row,"Elimina esercizio",()=>{
+if(!confirm("Rimuovere questo esercizio?"))return;
+d.exercises.splice(xi,1);
+renderEditor();
+},"f17-danger");
+});
+
+B(box,"+ Aggiungi esercizio",()=>{
+d.exercises.push(blank());
+renderEditor();
+});
+
+B(box,"Elimina giornata",()=>{
+if(!confirm("Rimuovere questa giornata dalla bozza?"))
+return;
+days.splice(di,1);
+renderEditor();
+},"f17-danger");
+});
+}
+
+B(editor,"+ Aggiungi giornata",()=>{
+if(days.length>=31)
+throw Error("Massimo 31 giornate.");
+
+days.push({
+title:"Giorno "+(days.length+1),
+exercises:[blank()]
+});
+renderEditor();
+});
+
+B(editor,"Nuova scheda da zero",async()=>{
+if(days.length&&!confirm("Iniziare una nuova bozza?"))
+return;
+
+const model=await rpc(
+"forge_blank_workout_template_v2",{
+p_days:1,p_rows:1
+});
+
+days=model.days;
+draftId=null;
+source="blank";
+filename=null;
+linkedDocument=null;
+title.value="Nuova scheda";
+description.value="";
+renderEditor();
+});
+
+async function saveDraft(){
+await account();
+
+draftId=await rpc(
+"forge_save_workout_draft_v2",{
+p_title:title.value,
+p_content:validated(),
+p_client_id:target.value||null,
+p_source_type:source,
+p_description:description.value||null,
+p_filename:filename,
+p_draft_id:draftId
+});
+return draftId;
+}
+
+B(editor,"Salva bozza",async()=>{
+await saveDraft();
+alert("Bozza salvata.");
+await loadDrafts();
+});
+
+B(editor,"Pubblica scheda interattiva",async()=>{
+if(!confirm("Pubblicare questa scheda?"))return;
+
+const id=await saveDraft();
+
+const program=await rpc(
+"forge_publish_workout_draft_v2",{
+p_draft_id:id,
+p_activate:activate.checked,
+p_duration_weeks:Number(weeks.value)||null
+});
+
+if(linkedDocument){
+await rpc("forge_link_pdf_program_v2",{
+p_document_id:linkedDocument,
+p_program_id:program,
+p_source_type:"pdf_import"
+});
+}
+
+draftId=null;
+days=[];
+linkedDocument=null;
+renderEditor();
+alert("Scheda pubblicata.");
+await loadPrograms();
+await loadDrafts();
+});
+
+async function loadDrafts(){
+draftList.replaceChildren();
+
+const data=await rows(
+c.from("forge_workout_drafts_v2")
+.select("*")
+.eq("owner_id",uid)
+.eq("status","draft")
+.order("created_at",{ascending:false})
+);
+
+E("h3","Bozze salvate",draftList);
+
+data.forEach(d=>{
+B(draftList,d.title,()=>{
+draftId=d.id;
+title.value=d.title;
+description.value=d.description||"";
+target.value=d.client_id||"";
+source=d.source_type||"blank";
+filename=d.source_filename||null;
+linkedDocument=null;
+days=JSON.parse(JSON.stringify(d.content));
+renderEditor();
+},"secondary");
+});
+}
+
+async function loadClients(){
+target.replaceChildren();
+
+const personal=E("option","Allenamento personale",target);
+personal.value="";
+
+const access=await rows(
+c.from("account_access")
+.select("user_id")
+.eq("status","approved")
+.order("user_id")
+);
+
+const profiles=await rows(
+c.from("profiles").select("*").order("id")
+);
+
+access.filter(a=>a.user_id!==uid).forEach(a=>{
+const p=profiles.find(x=>
+x.id===a.user_id||x.user_id===a.user_id
+);
+
+const label=p&&(
+p.full_name||p.name||
+[p.first_name,p.last_name].filter(Boolean).join(" ")||
+p.email
+);
+
+if(!label)return;
+
+const o=E("option",label,target);
+o.value=a.user_id;
+});
+}
+
+/* ESPORTAZIONE PDF */
+
+let pdfLoading=null;
+
+async function pdfLibrary(){
+if(window.jspdf)return window.jspdf.jsPDF;
+
+if(!pdfLoading){
+pdfLoading=new Promise((resolve,reject)=>{
+const s=document.createElement("script");
+s.src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js";
+s.onload=()=>resolve(window.jspdf.jsPDF);
+s.onerror=()=>{
+pdfLoading=null;
+reject(Error("Libreria PDF non disponibile."));
+};
+document.head.append(s);
+});
+}
+return pdfLoading;
+}
+
+async function exportPDF(name,data,notes,share){
+const PDF=await pdfLibrary();
+const doc=new PDF();
+let y=22;
+
+function line(text,size=10,bold=false){
+doc.setFontSize(size);
+doc.setFont("helvetica",bold?"bold":"normal");
+
+const parts=doc.splitTextToSize(
+String(text||""),180
+);
+
+parts.forEach(t=>{
+if(y>278){
+doc.addPage();
+y=20;
+}
+doc.text(t,15,y);
+y+=size*.43+2;
+});
+}
+
+doc.setTextColor(150,112,42);
+line("FORGE COACHING",23,true);
+doc.setTextColor(30,30,30);
+line("Alessandro Nicelli",12,true);
+line(name,18,true);
+if(notes)line(notes);
+
+data.forEach((d,i)=>{
+y+=5;
+doc.setTextColor(150,112,42);
+line(d.title||"Giorno "+(i+1),15,true);
+doc.setTextColor(30,30,30);
+if(d.description)line(d.description);
+
+(d.exercises||[]).forEach((x,j)=>{
+line((j+1)+". "+
+(x.exercise_name||"________________"),12,true);
+
+line(
+"Serie: "+(x.sets??"____")+
+" | Rip.: "+(x.repetitions||"____")+
+" | Kg: "+(x.load_kg??"____")+
+" | Rec.: "+(x.rest_seconds??"____")+" s"+
+" | RIR: "+(x.rir??"____")
+);
+
+if(x.variant)line("Variante: "+x.variant);
+if(x.training_method)line("Metodo: "+x.training_method);
+if(x.tempo)line("Tempo: "+x.tempo);
+if(x.instructions)line(x.instructions);
+if(x.progression_rule)line(x.progression_rule);
+y+=3;
+});
+});
+
+const fileName=(name||"Forge Coaching")
+.replace(/[^\wÀ-ÿ -]/g,"_")+".pdf";
+
+const file=new File(
+[doc.output("blob")],fileName,
+{type:"application/pdf"}
+);
+
+if(share&&navigator.canShare&&
+navigator.canShare({files:[file]})){
+try{
+await navigator.share({files:[file]});
+return;
+}catch(e){
+if(e.name==="AbortError")return;
+}
+}
+doc.save(fileName);
+}
+
+B(editor,"Esporta scheda PDF",()=>{
+return exportPDF(
+title.value,days,description.value,false
+);
+},"secondary");
+
+B(editor,"Condividi scheda PDF",()=>{
+return exportPDF(
+title.value,days,description.value,true
+);
+},"secondary");
+
+B(editor,"Esporta modello bianco",async()=>{
+const model=await rpc(
+"forge_blank_workout_template_v2",{
+p_days:4,p_rows:8
+});
+await exportPDF(
+"Modello scheda Forge",
+model.days,"",true
+);
+},"secondary");
+
+/* SMART IMPORT PDF TESTUALE */
+
+const importBox=group(editor,"Forge Smart Import");
+
+E("p",
+"Importa un PDF testuale, controlla gli esercizi riconosciuti e pubblica la scheda.",
+importBox);
+
+const fileInput=E("input",undefined,importBox);
+fileInput.type="file";
+fileInput.accept="application/pdf";
+
+const extracted=E("textarea",undefined,importBox);
+extracted.rows=8;
+extracted.placeholder=
+"Testo della scheda da verificare";
+
+let pdfReader=null;
+
+async function reader(){
+if(pdfReader)return pdfReader;
+
+pdfReader=await import(
+"https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs"
+);
+
+pdfReader.GlobalWorkerOptions.workerSrc=
+"https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs";
+
+return pdfReader;
+}
+
+B(importBox,"Leggi PDF",async()=>{
+const file=fileInput.files[0];
+if(!file)throw Error("Seleziona un PDF.");
+
+const lib=await reader();
+const pdf=await lib.getDocument({
+data:new Uint8Array(await file.arrayBuffer())
+}).promise;
+
+let text="";
+
+for(let i=1;i<=pdf.numPages;i++){
+const page=await pdf.getPage(i);
+const content=await page.getTextContent();
+let previousY=null;
+
+for(const item of content.items){
+if(!item.str)continue;
+const y=item.transform[5];
+
+if(previousY!==null&&
+Math.abs(y-previousY)>3)text+="\n";
+
+text+=item.str+(item.hasEOL?"\n":" ");
+previousY=y;
+}
+text+="\n";
+}
+
+if(!text.trim())
+throw Error("PDF senza testo leggibile. Inserisci manualmente gli esercizi.");
+
+extracted.value=text;
+filename=file.name;
+});
+
+B(importBox,"Converti in bozza modificabile",()=>{
+if(!extracted.value.trim())
+throw Error("Inserisci o importa il testo.");
+
+if(days.length&&!confirm("Sostituire la bozza aperta?"))
+return;
+
+const result=[];
+let day={title:"Giorno 1",exercises:[]};
+
+for(const raw of extracted.value.split("\n")){
+const line=raw.trim();
+if(!line)continue;
+
+if(/^(giorno|day|allenamento|seduta)\s+[a-z0-9]+/i.test(line)){
+if(day.exercises.length)result.push(day);
+day={title:line,exercises:[]};
+continue;
+}
+
+const match=line.match(
+/^(.+?)\s+(\d+)\s*[x×]\s*(\d+(?:\s*[-–]\s*\d+)?)(.*)$/i
+);
+
+if(match){
+day.exercises.push({
+...blank(),
+exercise_name:match[1].replace(/^\d+[.)]\s*/,""),
+sets:Number(match[2]),
+repetitions:match[3],
+instructions:match[4].trim()
+});
+}
+}
+
+if(day.exercises.length)result.push(day);
+
+if(!result.length)
+throw Error("Nessuna serie riconosciuta. Usa il formato: Panca piana 4x10.");
+
+days=result;
+source="pdf_import";
+draftId=null;
+linkedDocument=null;
+renderEditor();
+
+alert("Bozza importata. Verifica esercizi, serie e carichi prima di pubblicare.");
+});
+
+/* PROGRAMMI ED ESPORTAZIONE */
+
+const programOutput=E("div",undefined,programs);
+
+async function loadPrograms(){
+await account();
+
+programOutput.textContent="Caricamento...";
+
+let q=c.from("forge_v4_programs")
+.select("id,title,description,status,client_id,owner_id")
+.order("created_at",{ascending:false});
+
+if(accountRole==="admin")
+q=q.eq("owner_id",uid);
+else
+q=q.eq("client_id",uid);
+
+const data=await rows(q);
+
+programOutput.replaceChildren();
+
+if(!data.length)
+E("p","Nessuna scheda disponibile.",programOutput);
+
+data.forEach(p=>{
+const box=E("div",undefined,programOutput,"f17-row");
+E("h3",p.title,box);
+
+if(p.description)E("p",p.description,box);
+
+E("p",({
+active:"Attiva",
+draft:"Bozza",
+archived:"Archiviata"
+})[p.status]||"Programma",box);
+
+B(box,"Esporta PDF",async()=>{
+const d=await rpc("forge_export_workout_v2",{
+p_program_id:p.id
+});
+
+await exportPDF(
+d.program.title,d.days,
+d.program.description,false
+);
+},"secondary");
+
+B(box,"Condividi PDF",async()=>{
+const d=await rpc("forge_export_workout_v2",{
+p_program_id:p.id
+});
+
+await exportPDF(
+d.program.title,d.days,
+d.program.description,true
+);
+},"secondary");
+
+if(accountRole==="admin"){
+
+B(box,"Modifica come nuova scheda",async()=>{
+const d=await rpc("forge_export_workout_v2",{
+p_program_id:p.id
+});
+
+if(days.length&&!confirm("Sostituire la bozza aperta?"))
+return;
+
+days=d.days;
+title.value=d.program.title;
+description.value=d.program.description||"";
+target.value=p.client_id||"";
+draftId=null;
+source="blank";
+linkedDocument=null;
+editor.open=true;
+renderEditor();
+editor.scrollIntoView({behavior:"smooth"});
+},"secondary");
+
+B(box,"Attiva programma",async()=>{
+await rpc(
+"forge_training_v7_activate_program",{
+p_program_id:p.id
+});
+await loadPrograms();
+},"secondary");
+
+B(box,"Archivia programma",async()=>{
+if(!confirm("Archiviare questa scheda?"))return;
+await rpc(
+"forge_training_v7_archive_program",{
+p_program_id:p.id
+});
+await loadPrograms();
+},"f17-danger");
+}
+});
+}
+
+B(programs,"Aggiorna programmi",loadPrograms);
+
+/* PERFORMANCE MASTER V2 */
+
+const performanceTarget=E(
+"select",undefined,performance
+);
+
+const filter=E("select",undefined,performance);
+
+[
+["all","Tutto lo storico"],
+["week","Settimana corrente"],
+["month","Mese corrente"]
+].forEach(([v,t])=>{
+const o=E("option",t,filter);
+o.value=v;
+});
+
+const stats=E("div",undefined,performance);
+
+function localDay(date){
+return new Intl.DateTimeFormat("en-CA",{
+timeZone:"Europe/Rome",
+year:"numeric",
+month:"2-digit",
+day:"2-digit"
+}).format(new Date(date));
+}
+
+function periodStart(){
+const now=new Date();
+
+if(filter.value==="month")
+return localDay(now).slice(0,7)+"-01";
+
+if(filter.value==="week"){
+now.setDate(now.getDate()-
+(now.getDay()+6)%7);
+return localDay(now);
+}
+return "1900-01-01";
+}
+
+async function loadPerformance(){
+await account();
+
+const person=accountRole==="admin"?
+(performanceTarget.value||uid):uid;
+
+const start=periodStart();
+
+stats.textContent="Aggiornamento...";
+
+const [daily,muscles,progress,sessions]=
+await Promise.all([
+
+rows(c.from("forge_training_master_daily_v2")
+.select("*")
+.eq("client_id",person)
+.gte("training_date",start)
+.order("training_date",{ascending:false})),
+
+rows(c.from("forge_training_master_muscles_v2")
+.select("*")
+.eq("client_id",person)
+.gte("training_date",start)
+.order("training_date")),
+
+rows(c.from("forge_training_master_progression_v2")
+.select("*")
+.eq("client_id",person)
+.gte("training_date",start)
+.order("training_date")),
+
+rows(c.from("forge_workout_sessions")
+.select("id,started_at,finished_at,forge_excluded_from_stats")
+.eq("client_id",person)
+.not("finished_at","is",null)
+.order("started_at",{ascending:false})
+.order("id"))
+
+]);
+
+stats.replaceChildren();
+
+const sum=(a,k)=>a.reduce(
+(n,x)=>n+Number(x[k]||0),0
+);
+
+E("div",fmt(sum(daily,"total_tonnage_kg"))+
+" kg",stats,"f17-total");
+
+E("p","Tonnellaggio totale",stats);
+E("p","Serie allenanti: "+
+fmt(sum(daily,"working_sets")),stats);
+
+E("p","Ripetizioni: "+
+fmt(sum(daily,"total_repetitions")),stats);
+
+E("p","Allenamenti: "+
+fmt(sum(daily,"total_sessions")),stats);
+
+const graph=group(stats,"Andamento tonnellaggio");
+const max=Math.max(
+1,...daily.map(x=>Number(x.total_tonnage_kg||0))
+);
+
+daily.slice().reverse().forEach(x=>{
+E("p",x.training_date+" • "+
+fmt(x.total_tonnage_kg)+" kg",graph);
+
+const bar=E("div",undefined,graph,"f17-bar");
+bar.style.width=
+(100*Number(x.total_tonnage_kg||0)/max)+"%";
+});
+
+const muscleBox=group(stats,"Volume per gruppo muscolare");
+const grouped={};
+
+muscles.forEach(x=>{
+const key=x.muscle_group||"Da classificare";
+if(!grouped[key])grouped[key]={kg:0,sets:0};
+grouped[key].kg+=Number(x.total_tonnage_kg||0);
+grouped[key].sets+=Number(x.working_sets||0);
+});
+
+const maxMuscle=Math.max(
+1,...Object.values(grouped).map(x=>x.kg)
+);
+
+Object.entries(grouped)
+.sort((a,b)=>b[1].kg-a[1].kg)
+.forEach(([name,x])=>{
+E("p",name+" • "+x.sets+
+" serie • "+fmt(x.kg)+" kg",muscleBox);
+
+const bar=E("div",undefined,muscleBox,"f17-bar");
+bar.style.width=(100*x.kg/maxMuscle)+"%";
+});
+
+const progression=group(stats,"Progressione esercizi");
+const exercises=new Map();
+
+progress.forEach(x=>{
+if(!exercises.has(x.exercise_name))
+exercises.set(x.exercise_name,[]);
+exercises.get(x.exercise_name).push(x);
+});
+
+exercises.forEach((list,name)=>{
+const box=group(progression,name);
+const maxLoad=Math.max(
+1,...list.map(x=>Number(x.maximum_load_kg||0))
+);
+
+list.forEach(x=>{
+E("p",x.training_date+
+" • Carico max "+fmt(x.maximum_load_kg)+
+" kg • Volume "+fmt(x.total_tonnage_kg)+
+" kg",box);
+
+const bar=E("div",undefined,box,"f17-bar");
+bar.style.width=
+(100*Number(x.maximum_load_kg||0)/maxLoad)+"%";
+});
+});
+
+const history=group(stats,"Storico e gestione giornate");
+history.open=true;
+
+const groupedDays=new Map();
+
+sessions.filter(s=>
+localDay(s.started_at)>=start
+).forEach(s=>{
+const date=localDay(s.started_at);
+if(!groupedDays.has(date))groupedDays.set(date,[]);
+groupedDays.get(date).push(s);
+});
+
+async function exclude(s,flag){
+await rpc("forge_exclude_session_v2",{
+p_session_id:s.id,
+p_exclude:flag
+});
+}
+
+groupedDays.forEach((list,date)=>{
+const box=group(history,date);
+
+const included=list.filter(
+s=>!s.forge_excluded_from_stats
+);
+
+if(included.length){
+B(box,"Escludi intera giornata",async()=>{
+if(!confirm("Escludere la giornata dalle statistiche?"))
+return;
+
+try{
+for(const s of included)
+await exclude(s,true);
+}finally{
+await loadPerformance();
+}
+},"f17-danger");
+}
+
+list.forEach(s=>{
+const row=E("div",undefined,box,"f17-row");
+
+E("p",new Date(s.started_at)
+.toLocaleTimeString("it-IT",{
+hour:"2-digit",minute:"2-digit"
+}),row);
+
+E("p",s.forge_excluded_from_stats?
+"Escluso dalle statistiche":"Allenamento concluso",row);
+
+B(row,"Dettaglio allenamento",async()=>{
+const data=await rows(
+c.from("forge_training_v6_set_logs")
+.select("exercise_name,set_number,repetitions,load_kg,rir,set_type")
+.eq("session_id",s.id)
+.eq("client_id",person)
+.order("exercise_name")
+.order("set_number")
+);
+
+const detail=group(row,"Serie registrate");
+detail.open=true;
+
+let total=0;
+
+data.forEach(x=>{
+const kg=Number(x.repetitions||0)*
+Number(x.load_kg||0);
+total+=kg;
+
+E("p",x.exercise_name+
+" • Serie "+x.set_number+
+" • "+x.repetitions+" rip. × "+
+fmt(x.load_kg)+" kg"+
+(x.rir===null?"":" • RIR "+x.rir),
+detail);
+});
+
+E("strong",fmt(total)+" kg",detail);
+});
+
+B(row,s.forge_excluded_from_stats?
+"Ripristina allenamento":
+"Escludi allenamento",async()=>{
+
+if(!confirm("Confermare la modifica allo storico?"))
+return;
+
+await exclude(
+s,!s.forge_excluded_from_stats
+);
+await loadPerformance();
+},s.forge_excluded_from_stats?
+"secondary":"f17-danger");
+});
+});
+}
+
+B(performance,"Aggiorna statistiche",loadPerformance);
+
+filter.onchange=()=>loadPerformance()
+.catch(e=>alert(e.message));
+
+performanceTarget.onchange=()=>loadPerformance()
+.catch(e=>alert(e.message));
+
+/* VIDEO ESERCIZI */
+
+B(videos,"Apri libreria video",()=>{
+section("Video esercizi");
+});
+
+/* INTEGRAZIONE CON ALLENAMENTO ESISTENTE */
+
+let initializedUser=null;
+
+async function initialize(){
+await account();
+
+editor.style.display=
+accountRole==="admin"?"":"none";
+
+performanceTarget.style.display=
+accountRole==="admin"?"":"none";
+
+if(initializedUser!==uid){
+
+if(accountRole==="admin"){
+await loadClients();
+
+performanceTarget.replaceChildren();
+
+for(const option of target.options){
+performanceTarget.append(option.cloneNode(true));
+}
+
+performanceTarget.options[0].textContent=
+"Le mie performance";
+
+await loadDrafts();
+}
+
+initializedUser=uid;
+}
+}
+
+editor.addEventListener("toggle",()=>{
+if(editor.open)
+initialize().catch(e=>alert(e.message));
+});
+
+programs.addEventListener("toggle",()=>{
+if(programs.open)
+loadPrograms().catch(e=>alert(e.message));
+});
+
+performance.addEventListener("toggle",()=>{
+if(performance.open)
+initialize().then(loadPerformance)
+.catch(e=>alert(e.message));
+});
+
+function mount(){
+const root=$("sectionContent");
+const card=$("sectionCard");
+const heading=$("sectionTitle");
+
+const nav=document.querySelector(
+'#mainNav [data-section="Allenamento"]'
+);
+
+if(nav&&nav.textContent.trim()!=="Forge Training")
+nav.textContent="Forge Training";
+
+if(!root||!card||!heading)return;
+
+const opened=
+!card.classList.contains("hidden")&&
+["Allenamento","Forge Training"].includes(
+heading.textContent.trim()
+);
+
+if(!opened){
+if(panel.parentElement)panel.remove();
+return;
+}
+
+if(panel.parentElement!==root){
+root.append(panel);
+initialize().catch(e=>console.warn(e));
+}
+
+const old=$("forge16-history");
+if(old&&old.style.display!=="none")
+old.style.display="none";
+
+const training=$("forge-training-v14");
+
+if(training){
+training.style.position="static";
+training.style.width="100%";
+training.style.maxWidth="100%";
+}
+
+root.querySelectorAll("pre").forEach(n=>{
+if(!panel.contains(n))
+n.style.display="none";
+});
+}
+
+let scheduled=false;
+
+const observer=new MutationObserver(()=>{
+if(scheduled)return;
+scheduled=true;
+requestAnimationFrame(()=>{
+scheduled=false;
+mount();
+});
+});
+
+observer.observe(document.body,{
+childList:true,
+subtree:true,
+attributes:true,
+attributeFilter:["class"]
+});
+
+c.auth.onAuthStateChange((event)=>{
+if(event==="SIGNED_OUT"){
+initializedUser=null;
+uid=null;
+draftId=null;
+days=[];
+linkedDocument=null;
+editorBody.replaceChildren();
+programOutput.replaceChildren();
+stats.replaceChildren();
+draftList.replaceChildren();
+}
+});
+
+mount();
+
+})();
+</script>
+<!-- END FORGE TRAINING MASTER V17 -->
