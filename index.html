@@ -27525,3 +27525,89 @@ console.log('FORGE CHECK V57 ACTIVE');
 })();
 </script>
 <!-- END FORGE CHECK V57 -->
+
+<!-- FORGE MENU V58 -->
+<style>
+#mainNav button.f50-locked,
+#mainNav button[data-f58-hide="1"],
+#mainNav button.hidden {
+ display:none!important;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_MENU_V58)return;
+window.FORGE_MENU_V58=true;
+
+function refreshMenu(){
+
+ const nav=document.getElementById('mainNav');
+ if(!nav)return;
+
+ const isAdmin=
+ typeof user!=='undefined' &&
+ !!user &&
+ typeof role!=='undefined' &&
+ role==='admin';
+
+ nav.querySelectorAll('button').forEach(b=>{
+
+  const name=String(
+   b.dataset.section||b.textContent||''
+  ).trim().toLowerCase();
+
+  const adminOnly=
+   b.id==='forgeV30Clients'||
+   b.id==='f50AdminButton'||
+   name==='i miei clienti'||
+   name==='forge clients'||
+   name==='forge client manager'||
+   name==='gestione accessi';
+
+  const denied=
+   b.dataset.f50Locked==='1'||
+   b.classList.contains('f50-locked');
+
+  if(isAdmin){
+   b.removeAttribute('data-f58-hide');
+   b.classList.remove('f50-locked');
+
+   if(b.dataset.f50Locked==='1'){
+    delete b.dataset.f50Locked;
+    b.removeAttribute('aria-disabled');
+   }
+
+   if(adminOnly){
+    b.classList.remove('hidden');
+   }
+
+   return;
+  }
+
+  if(adminOnly||denied){
+   b.setAttribute('data-f58-hide','1');
+  }else{
+   b.removeAttribute('data-f58-hide');
+  }
+
+ });
+}
+
+setInterval(refreshMenu,500);
+
+window.addEventListener('focus',refreshMenu);
+
+document.addEventListener(
+ 'visibilitychange',refreshMenu
+);
+
+refreshMenu();
+
+console.log('FORGE MENU V58 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE MENU V58 -->
