@@ -27881,3 +27881,191 @@ count().catch(console.warn);
 })();
 </script>
 <!-- END FORGE V61 NOTIFICATIONS -->
+<!-- FORGE MENU FIX V64 -->
+<style>
+#mainNav button[data-f64-visible="1"] {
+ display:flex!important;
+ align-items:center;
+ justify-content:center;
+ opacity:1!important;
+ background:linear-gradient(120deg,#f4dc95,#c49a48)!important;
+ color:#17130d!important;
+ border:1px solid #c49a48!important;
+ border-radius:12px!important;
+ min-height:62px;
+ font-weight:750;
+}
+
+#mainNav button[data-f64-visible="0"] {
+ display:none!important;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_MENU_FIX_V64)return;
+window.FORGE_MENU_FIX_V64=true;
+
+let owner='';
+let permissions=null;
+let lastLoad=0;
+let busy=false;
+
+const modules={
+ 'allenamento':'training',
+ 'forge training':'training',
+ 'forge performance':'training',
+ 'forge nutrition':'nutrition',
+ 'forge hydration':'hydration',
+ 'forge weight':'weight',
+ 'progress evolution':'progress',
+ 'prenotazioni':'calendar',
+ 'forge calendar':'calendar',
+ 'video esercizi':'videos',
+ 'forge premium':'premium',
+ 'forge studio':'studio',
+ 'forge chat':'chat',
+ 'feedback':'feedback',
+ 'pacchetti lezioni':'packages',
+ 'forge shop':'shop',
+ 'profilo':'profile'
+};
+
+function paint(){
+
+ const nav=document.getElementById('mainNav');
+ if(!nav||!user)return;
+
+ const admin=role==='admin';
+
+ nav.querySelectorAll('button').forEach(b=>{
+
+  const name=String(
+   b.dataset.section||b.textContent||''
+  ).trim().toLowerCase();
+
+  const adminOnly=
+   b.id==='forgeV30Clients'||
+   b.id==='f50AdminButton'||
+   [
+    'i miei clienti',
+    'forge clients',
+    'forge client manager',
+    'gestione accessi'
+   ].includes(name);
+
+  const key=modules[name];
+
+  if(!admin&&!adminOnly&&
+     (!key||!permissions||
+      typeof permissions[key]!=='boolean')){
+   b.removeAttribute('data-f64-visible');
+   return;
+  }
+
+  const allowed=admin||
+   (!adminOnly&&permissions?.[key]===true);
+
+  b.dataset.f64Visible=allowed?'1':'0';
+
+  if(allowed){
+   b.removeAttribute('data-f58-hide');
+   b.classList.remove('hidden');
+
+   if(admin){
+    b.classList.remove('f50-locked');
+    delete b.dataset.f50Locked;
+    b.removeAttribute('aria-disabled');
+   }
+  }
+
+ });
+}
+
+async function refresh(force=false){
+
+ if(typeof user==='undefined'||!user||
+ document.getElementById('app')?.classList.contains('hidden')){
+
+  owner='';
+  permissions=null;
+  lastLoad=0;
+
+  document.querySelectorAll('[data-f64-visible]')
+   .forEach(b=>b.removeAttribute('data-f64-visible'));
+
+  return;
+ }
+
+ if(owner!==user.id){
+  owner=user.id;
+  permissions=null;
+  lastLoad=0;
+ }
+
+ if(role==='admin'){
+  paint();
+  return;
+ }
+
+ if(busy)return;
+
+ if(!force&&Date.now()-lastLoad<15000){
+  paint();
+  return;
+ }
+
+ busy=true;
+ const id=user.id;
+
+ try{
+
+  const results=await Promise.all(
+   [...new Set(Object.values(modules))]
+   .map(async key=>{
+
+    const r=await db.rpc(
+     'forge_v47_can_access',
+     {p_module:key}
+    );
+
+    if(r.error)throw r.error;
+
+    return [key,r.data===true];
+
+   })
+  );
+
+  if(!user||user.id!==id)return;
+
+  permissions=Object.fromEntries(results);
+  lastLoad=Date.now();
+
+  paint();
+
+ }catch(e){
+  console.warn('Forge Menu V64:',e.message);
+ }finally{
+  busy=false;
+ }
+}
+
+setInterval(()=>refresh(),1500);
+
+window.addEventListener('focus',()=>{
+ refresh(true);
+});
+
+document.addEventListener('visibilitychange',()=>{
+ if(!document.hidden)refresh(true);
+});
+
+refresh(true);
+
+console.log('FORGE MENU FIX V64 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE MENU FIX V64 -->
