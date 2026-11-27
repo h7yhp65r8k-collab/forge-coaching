@@ -25156,3 +25156,835 @@ console.log('FORGE ACCESS CONTROL V51 ACTIVE');
 })();
 </script>
 <!-- END FORGE ACCESS CONTROL V51 -->
+<!-- FORGE CLIENTS V52 DASHBOARD -->
+<style>
+#forgeV52{
+--fg:#e9c675;
+background:#101014;
+border:1px solid #695632;
+border-radius:20px;
+padding:14px;
+margin:14px 0;
+color:#fff;
+}
+#forgeV52 *{box-sizing:border-box}
+#forgeV52 .v52head{
+display:flex;
+align-items:center;
+gap:13px;
+margin-bottom:14px;
+}
+#forgeV52 .v52avatar{
+width:66px;
+height:66px;
+flex-shrink:0;
+border-radius:50%;
+border:2px solid var(--fg);
+background:#292419;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:24px;
+font-weight:800;
+color:var(--fg);
+overflow:hidden;
+}
+#forgeV52 .v52avatar img{
+width:100%;
+height:100%;
+object-fit:cover;
+}
+#forgeV52 h3{
+color:var(--fg);
+margin:0 0 6px;
+}
+#forgeV52 .v52small{
+font-size:12px;
+color:#aaa;
+}
+#forgeV52 .v52expiry{
+background:linear-gradient(135deg,#292319,#171719);
+border:1px solid #80683c;
+border-radius:15px;
+padding:15px;
+margin-bottom:10px;
+}
+#forgeV52 .v52date{
+font-size:25px;
+font-weight:800;
+color:var(--fg);
+margin:7px 0;
+}
+#forgeV52 .v52grid{
+display:grid;
+grid-template-columns:repeat(2,minmax(0,1fr));
+gap:8px;
+margin:12px 0;
+}
+#forgeV52 .v52tile{
+background:linear-gradient(145deg,#222228,#151518);
+border:1px solid #59492f;
+color:#fff;
+border-radius:14px;
+min-height:88px;
+margin:0;
+padding:10px 5px;
+font-size:12px;
+}
+#forgeV52 .v52tile span{
+display:block;
+font-size:25px;
+margin-bottom:7px;
+}
+#forgeV52 .v52tile.selected{
+border:1px solid var(--fg);
+background:#332b1c;
+color:var(--fg);
+}
+#forgeV52 .v52row{
+background:#1c1d21;
+border:1px solid #403727;
+border-radius:12px;
+padding:12px;
+margin:8px 0;
+overflow-wrap:anywhere;
+}
+#forgeV52 .v52row strong{
+color:var(--fg);
+}
+#forgeV52 .v52photo{
+width:100%;
+max-height:440px;
+object-fit:contain;
+border-radius:12px;
+background:#080809;
+margin-top:10px;
+}
+#forgeV52 .v52output{
+margin-top:12px;
+}
+#forgeV52 .v52green{
+color:#75d69a;
+}
+#forgeV52 .v52error{
+color:#f18b8b;
+font-size:13px;
+}
+#forgeV52 .v52gold{
+background:linear-gradient(120deg,#f4dc95,#c49a48);
+color:#15110b;
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeV52Loaded)return;
+window.forgeV52Loaded=true;
+
+const E=(tag,text='',cls='')=>{
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+};
+
+const admin=()=>
+ typeof user!=='undefined'&&user&&
+ typeof role!=='undefined'&&role==='admin'&&
+ typeof db!=='undefined';
+
+const today=()=>new Intl.DateTimeFormat(
+ 'sv-SE',{timeZone:'Europe/Rome'}
+).format(new Date());
+
+const date=v=>{
+ if(!v)return '—';
+ const d=new Date(
+ String(v).length===10?v+'T12:00:00':v
+ );
+ return Number.isNaN(d.getTime())?
+ String(v):d.toLocaleDateString('it-IT');
+};
+
+const euro=v=>Number(v||0).toLocaleString(
+ 'it-IT',{style:'currency',currency:'EUR'}
+);
+
+async function result(q){
+ const {data,error}=await q;
+ if(error)throw error;
+ return data;
+}
+
+function btn(label,fn,cls=''){
+ const b=E('button',label,cls);
+ b.type='button';
+ b.onclick=async()=>{
+  b.disabled=true;
+  try{await fn();}
+  catch(e){alert(e.message||String(e));}
+  finally{b.disabled=false;}
+ };
+ return b;
+}
+
+function row(root,title,lines){
+ const r=E('div','','v52row');
+ r.append(E('strong',title));
+ lines.filter(Boolean).forEach(t=>{
+  r.append(E('p',String(t),'v52small'));
+ });
+ root.append(r);
+ return r;
+}
+
+function empty(root){
+ root.append(E('p',
+ 'Nessun dato disponibile.','v52small'));
+}
+
+async function mount(card,root){
+
+ if(card.dataset.v52mounted)return;
+ card.dataset.v52mounted='1';
+
+ const owner=user.id;
+ const email=card.querySelector('p')?
+ card.querySelector('p').textContent.trim():'';
+
+ const heading=card.querySelector('h2');
+ const name=heading?.textContent.trim();
+
+ if(!name||!email)return;
+
+ const panel=E('div');
+ panel.id='forgeV52';
+
+ const alive=()=>admin()&&user.id===owner&&
+ panel.isConnected&&card.isConnected&&
+ !document.getElementById('sectionCard')
+ ?.classList.contains('hidden');
+
+ try{
+
+ const profiles=await result(
+ db.from('profiles')
+ .select('id,first_name,last_name,full_name,email,phone,avatar_url,created_at')
+ .eq('email',email)
+ .neq('id',owner)
+ .limit(2)
+ );
+
+ if(!admin()||user.id!==owner||
+ !card.isConnected)return;
+
+ if(profiles?.length!==1){
+  throw Error('Profilo cliente non identificato univocamente.');
+ }
+
+ const p=profiles[0];
+ const id=p.id;
+
+ card.after(panel);
+
+ const header=E('div','','v52head');
+ const avatar=E('div',
+ name.split(/\s+/).slice(0,2)
+ .map(x=>x[0]).join('').toUpperCase(),
+ 'v52avatar');
+
+ if(p.avatar_url&&/^https:\/\//i.test(p.avatar_url)){
+  const img=E('img');
+  img.alt='Foto profilo';
+  img.onload=()=>{
+   if(alive())avatar.replaceChildren(img);
+  };
+  img.src=p.avatar_url;
+ }
+
+ const identity=E('div');
+ const state=E('p','Verifica account...','v52small');
+
+ identity.append(
+ E('h3',name),
+ E('div','FORGE CLIENT PROFILE','v52small'),
+ state
+ );
+
+ header.append(avatar,identity);
+
+ const expiry=E('div','','v52expiry');
+ const grid=E('div','','v52grid');
+ const output=E('div','','v52output');
+
+ panel.append(header,expiry);
+
+ async function refreshAccess(){
+
+  expiry.replaceChildren(
+   E('div','SCADENZA COACHING','v52small'),
+   E('p','Caricamento...')
+  );
+
+  try{
+
+   const [access,plans]=await Promise.all([
+    result(db.rpc('forge_v45_access_status',{
+     p_client_id:id
+    })),
+    result(db.rpc('forge_v51_client_plans',{
+     p_client_id:id
+    }))
+   ]);
+
+   if(!alive())return;
+
+   const labels={
+    coaching_active:'Coaching attivo',
+    coaching_expired:'Coaching scaduto',
+    approved_no_plan:'Approvato senza percorso',
+    pending:'In attesa',
+    suspended:'Sospeso',
+    unlimited:'Accesso illimitato',
+    trial_active:'Prova gratuita attiva',
+    trial_expired:'Prova terminata'
+   };
+
+   state.textContent=
+   labels[access?.mode]||access?.mode||
+   'Stato non disponibile';
+
+   state.className='v52small';
+
+   if(['coaching_active','unlimited',
+   'trial_active'].includes(access?.mode)){
+    state.classList.add('v52green');
+   }
+
+   const list=Array.isArray(plans)?plans:[];
+
+   const plan=list.filter(x=>
+    x.status==='active'&&
+    x.starts_on<=today()&&
+    x.expires_on>today()
+   ).sort((a,b)=>
+    a.expires_on.localeCompare(b.expires_on)
+   )[0];
+
+   expiry.replaceChildren(
+    E('div','SCADENZA COACHING','v52small'),
+    E('div',plan?date(plan.expires_on):
+    'Nessun coaching attivo','v52date')
+   );
+
+   if(plan){
+    expiry.append(
+     E('div',plan.title||'Coaching'),
+     E('p',String(plan.remaining_days??'—')+
+     ' giorni rimanenti','v52green')
+    );
+   }
+
+  }catch(e){
+   if(alive())expiry.replaceChildren(
+    E('p',e.message,'v52error')
+   );
+  }
+ }
+
+ async function manage(){
+
+  if(!alive())return;
+
+  const v51=root.querySelector('#forgeV51');
+
+  if(!v51){
+   alert('Modulo gestione coaching non disponibile.');
+   return;
+  }
+
+  const toggle=v51.querySelector('button');
+  const select=v51.querySelector('select');
+
+  if(!toggle||!select)return;
+
+  const content=select.parentElement;
+
+  if(content.hidden)toggle.click();
+
+  for(let i=0;i<30;i++){
+   if(!alive())return;
+
+   if([...select.options].some(o=>o.value===id)){
+    select.value=id;
+    select.dispatchEvent(new Event('change',{
+     bubbles:true
+    }));
+    v51.scrollIntoView({
+     behavior:'smooth',block:'start'
+    });
+    return;
+   }
+
+   await new Promise(r=>setTimeout(r,150));
+  }
+
+  alert('Seleziona il cliente nella gestione coaching.');
+ }
+
+ panel.append(
+ btn('Gestisci coaching',manage,'v52gold'),
+ grid,output
+ );
+
+ let generation=0;
+
+ async function load(title,fn){
+
+  const run=++generation;
+
+  output.replaceChildren(
+   E('h3',title),
+   E('p','Caricamento...','v52small')
+  );
+
+  const target=E('div');
+
+  try{
+   await fn(target);
+
+   if(!alive()||run!==generation)return;
+
+   output.replaceChildren(
+    E('h3',title),
+    btn('Chiudi dettaglio',()=>{
+     generation++;
+     output.replaceChildren();
+     grid.querySelectorAll('button').forEach(
+      b=>b.classList.remove('selected')
+     );
+    },'secondary'),
+    target
+   );
+
+   output.scrollIntoView({
+    behavior:'smooth',block:'nearest'
+   });
+
+  }catch(e){
+   if(alive()&&run===generation){
+    output.replaceChildren(
+     E('h3',title),
+     E('p','Dati non disponibili: '+e.message,
+     'v52error')
+    );
+   }
+  }
+ }
+
+ function tile(icon,title,fn){
+
+  const b=btn('',async()=>{
+   grid.querySelectorAll('button').forEach(
+    x=>x.classList.remove('selected')
+   );
+   b.classList.add('selected');
+   await load(title,fn);
+  },'v52tile');
+
+  b.append(E('span',icon),
+   document.createTextNode(title));
+
+  grid.append(b);
+ }
+
+ tile('👤','Profilo personale',async r=>{
+  row(r,name,[
+   'Email: '+(p.email||'—'),
+   'Telefono: '+(p.phone||'Non inserito'),
+   'Registrazione: '+date(p.created_at)
+  ]);
+ });
+
+ tile('📸','Foto progressi',async r=>{
+
+  const photos=await result(
+   db.from('progress_photos')
+   .select('*')
+   .eq('client_id',id)
+   .eq('archived',false)
+   .order('photo_date',{ascending:false})
+   .limit(30)
+  );
+
+  if(!photos?.length)return empty(r);
+
+  for(const photo of photos){
+
+   if(!alive())return;
+
+   const box=row(r,date(photo.photo_date),[
+    photo.pose||photo.angle||'Foto progressi',
+    photo.notes||''
+   ]);
+
+   box.append(btn('Visualizza foto',async()=>{
+
+    if(!alive())return;
+
+    const bucket=photo.bucket_name||
+    'forge-progress-private';
+
+    if(![
+     'forge-progress-private',
+     'forge-pe-v1-private'
+    ].includes(bucket)){
+     throw Error('Archivio fotografico non previsto.');
+    }
+
+    const data=await result(
+     db.storage.from(bucket)
+     .createSignedUrl(photo.storage_path,300)
+    );
+
+    if(!alive()||!box.isConnected)return;
+
+    box.querySelector('img')?.remove();
+
+    const img=E('img','','v52photo');
+    img.alt='Foto progressi cliente';
+    img.src=data.signedUrl;
+    box.append(img);
+   },'secondary'));
+  }
+ });
+
+ tile('🏋️','Schede allenamento',async r=>{
+
+  const list=await result(
+   db.from('forge_v4_programs')
+   .select('id,title,description,status')
+   .eq('client_id',id)
+   .eq('owner_id',owner)
+   .order('created_at',{ascending:false})
+   .limit(50)
+  );
+
+  if(!list?.length)return empty(r);
+
+  list.forEach(x=>row(r,x.title,[
+   x.description,
+   'Stato: '+({
+    active:'Attiva',
+    draft:'Bozza',
+    archived:'Archiviata'
+   }[x.status]||x.status)
+  ]));
+ });
+
+ tile('🍽️','Piano alimentare',async r=>{
+
+  const list=await result(
+   db.from('forge_nutrition_plans')
+   .select('*')
+   .eq('client_id',id)
+   .limit(30)
+  );
+
+  if(!list?.length)return empty(r);
+
+  list.forEach(x=>row(r,
+   x.title||x.name||'Piano alimentare',[
+    x.description,
+    x.notes,
+    x.status?'Stato: '+x.status:'',
+    x.calories?'Calorie: '+x.calories+' kcal':''
+   ]
+  ));
+ });
+
+ tile('📏','Misure corporee',async r=>{
+
+  const list=await result(
+   db.from('body_measurements')
+   .select('*')
+   .eq('client_id',id)
+   .order('recorded_at',{ascending:false})
+   .limit(30)
+  );
+
+  if(!list?.length)return empty(r);
+
+  const labels={
+   weight:'Peso',
+   waist:'Vita',
+   chest:'Torace',
+   hips:'Fianchi',
+   thigh:'Coscia',
+   arm:'Braccio',
+   neck:'Collo',
+   shoulders:'Spalle',
+   calf:'Polpaccio'
+  };
+
+  list.forEach(x=>row(r,date(x.recorded_at),
+   Object.entries(labels)
+   .filter(([k])=>x[k]!=null)
+   .map(([k,t])=>t+': '+x[k]+
+   (k==='weight'?' kg':' cm'))
+  ));
+ });
+
+ tile('📈','Progress Evolution',async r=>{
+
+  const list=await result(
+   db.from('forge_client_checkins')
+   .select('*')
+   .eq('client_id',id)
+   .order('checkin_date',{ascending:false})
+   .limit(30)
+  );
+
+  if(!list?.length)return empty(r);
+
+  list.forEach(x=>row(r,date(x.checkin_date),[
+   x.notes||'Check registrato',
+   ...Object.entries(x)
+   .filter(([k,v])=>
+    k.endsWith('_score')&&v!=null
+   )
+   .map(([k,v])=>k.replace('_score','')
+   .replaceAll('_',' ')+': '+v)
+  ]));
+ });
+
+ tile('⚖️','Storico peso',async r=>{
+
+  const list=await result(
+   db.from('forge_weight_entries')
+   .select('weight_kg,recorded_at')
+   .eq('user_id',id)
+   .order('recorded_at',{ascending:false})
+   .limit(60)
+  );
+
+  if(!list?.length)return empty(r);
+
+  row(r,'Ultimo peso',[
+   list[0].weight_kg+' kg',
+   date(list[0].recorded_at)
+  ]);
+
+  list.forEach(x=>row(r,
+   x.weight_kg+' kg',[date(x.recorded_at)]
+  ));
+ });
+
+ tile('💧','Idratazione',async r=>{
+
+  const list=await result(
+   db.from('forge_water_entries')
+   .select('amount_ml,recorded_at')
+   .eq('user_id',id)
+   .order('recorded_at',{ascending:false})
+   .limit(100)
+  );
+
+  if(!list?.length)return empty(r);
+
+  const days={};
+
+  list.forEach(x=>{
+   const d=new Intl.DateTimeFormat(
+    'sv-SE',{timeZone:'Europe/Rome'}
+   ).format(new Date(x.recorded_at));
+
+   days[d]=(days[d]||0)+Number(x.amount_ml);
+  });
+
+  Object.entries(days).forEach(([d,ml])=>
+   row(r,date(d),[
+    (ml/1000).toFixed(2)+' litri'
+   ])
+  );
+ });
+
+ tile('📅','Prenotazioni',async r=>{
+
+  const list=await result(
+   db.from('bookings')
+   .select('booking_date,start_time,end_time,status,session_mode')
+   .eq('client_id',id)
+   .eq('trainer_id',owner)
+   .order('booking_date',{ascending:false})
+   .limit(50)
+  );
+
+  if(!list?.length)return empty(r);
+
+  list.forEach(x=>row(r,date(x.booking_date),[
+   String(x.start_time).slice(0,5)+' – '+
+   String(x.end_time).slice(0,5),
+   x.session_mode==='online'?
+   'Online':'In presenza',
+   ({
+    pending:'In attesa',
+    confirmed:'Confermata',
+    approved:'Approvata',
+    cancelled:'Annullata',
+    completed:'Completata',
+    rejected:'Rifiutata'
+   })[x.status]||x.status
+  ]));
+ });
+
+ tile('💳','Pacchetti e pagamenti',async r=>{
+
+  const [packages,orders]=await Promise.all([
+   result(db.from('forge_lesson_package_summary')
+   .select('*').eq('client_id',id)),
+   result(db.from('forge_shop_orders')
+   .select('package_title,price_eur,payment_status,created_at')
+   .eq('client_id',id)
+   .order('created_at',{ascending:false})
+   .limit(50))
+  ]);
+
+  r.append(E('h3','Pacchetti'));
+
+  if(!packages?.length)empty(r);
+
+  (packages||[]).forEach(x=>row(r,
+   x.title||'Pacchetto',[
+    'Lezioni totali: '+x.total_sessions,
+    'Utilizzate: '+x.used_sessions,
+    'Rimanenti: '+x.remaining_sessions
+   ]
+  ));
+
+  r.append(E('h3','Pagamenti'));
+
+  if(!orders?.length)empty(r);
+
+  (orders||[]).forEach(x=>row(r,
+   x.package_title||'Ordine',[
+    euro(x.price_eur),
+    ({
+     confirmed:'Confermato',
+     pending:'In attesa',
+     rejected:'Rifiutato',
+     refunded:'Rimborsato'
+    })[x.payment_status]||x.payment_status,
+    date(x.created_at)
+   ]
+  ));
+ });
+
+ tile('💬','Forge Chat',async r=>{
+
+  const chat=[...card.querySelectorAll('button')]
+  .find(b=>b.textContent.trim()==='Apri Forge Chat');
+
+  if(!chat){
+   r.append(E('p','Chat non disponibile.'));
+   return;
+  }
+
+  r.append(btn('Apri conversazione',()=>{
+   if(alive())chat.click();
+  },'v52gold'));
+ });
+
+ tile('🔐','Accessi e scadenze',async r=>{
+
+  const list=await result(
+   db.rpc('forge_v51_client_plans',{
+    p_client_id:id
+   })
+  );
+
+  if(!list?.length)empty(r);
+
+  (list||[]).forEach(x=>row(r,x.title,[
+   'Inizio: '+date(x.starts_on),
+   'Scadenza: '+date(x.expires_on),
+   'Giorni rimanenti: '+x.remaining_days,
+   'Stato: '+x.status
+  ]));
+
+  r.append(btn('Modifica accessi e scadenze',
+   manage,'v52gold'));
+
+  r.append(btn('Aggiorna stato coaching',
+   refreshAccess,'secondary'));
+ });
+
+ panel.append(btn(
+  'Aggiorna dashboard',
+  refreshAccess,'secondary'
+ ));
+
+ await refreshAccess();
+
+ }catch(e){
+
+  if(card.isConnected&&admin()&&user.id===owner){
+   card.after(panel);
+   panel.replaceChildren(
+    E('p','Forge V52: '+e.message,'v52error')
+   );
+  }
+
+ }
+}
+
+function refresh(){
+
+ const existing=document.getElementById('forgeV52');
+
+ if(!admin()){
+  existing?.remove();
+  return;
+ }
+
+ const root=document.getElementById('sectionContent');
+ const title=document.getElementById('sectionTitle');
+ const sectionCard=document.getElementById('sectionCard');
+
+ if(!root||!title||!sectionCard||
+ sectionCard.classList.contains('hidden')){
+  if(existing){
+   existing.querySelectorAll('img.v52photo')
+   .forEach(img=>img.remove());
+  }
+  return;
+ }
+
+ if(!['i miei clienti','forge clients',
+ 'forge client manager'].includes(
+ title.textContent.trim().toLowerCase()
+ ))return;
+
+ const back=[...root.querySelectorAll('button')]
+ .find(b=>b.textContent.includes('Tutti i clienti'));
+
+ if(!back)return;
+
+ const card=[...root.querySelectorAll('.f30-panel')]
+ .find(x=>x.querySelector('h2'));
+
+ if(!card||existing)return;
+
+ mount(card,root);
+}
+
+setInterval(refresh,800);
+refresh();
+
+console.log('FORGE CLIENTS V52 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE CLIENTS V52 -->
