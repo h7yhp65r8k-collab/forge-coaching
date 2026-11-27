@@ -26278,3 +26278,626 @@ console.log('FORGE ACCESS CONTROL V55.2 ACTIVE');
 })();
 </script>
 <!-- END FORGE ACCESS CONTROL V55.2 -->
+<!-- FORGE CLIENTS V56 SMART DASHBOARD -->
+<style>
+#forgeV52{
+ padding:12px!important;
+ border-radius:16px!important;
+ background:#101014!important;
+}
+#forgeV52 .v52head{
+ gap:12px!important;
+ margin-bottom:12px!important;
+}
+#forgeV52 .v52avatar{
+ width:56px!important;
+ height:56px!important;
+ min-width:56px!important;
+ font-size:20px!important;
+}
+#forgeV52 .v52head h3{
+ font-size:19px!important;
+ margin:0 0 5px!important;
+}
+#forgeV52 .v52grid{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:7px!important;
+}
+#forgeV52 .v52tile{
+ min-height:65px!important;
+ padding:9px!important;
+ font-size:12px!important;
+ border-radius:12px!important;
+}
+#forgeV52 .v52tile span{
+ font-size:19px!important;
+ margin-bottom:4px!important;
+}
+#forgeV52 .v52expiry{
+ display:none!important;
+}
+.f56-hidden{
+ display:none!important;
+}
+.f56-summary{
+ padding:14px;
+ margin:10px 0;
+ border:1px solid #796238;
+ border-radius:14px;
+ background:linear-gradient(135deg,#211d15,#111114);
+}
+.f56-label{
+ font-size:10px;
+ letter-spacing:1.4px;
+ color:#b9b3a6;
+ margin-bottom:7px;
+}
+.f56-title{
+ font-size:17px;
+ font-weight:800;
+ margin:4px 0;
+}
+.f56-metrics{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px;
+ margin:12px 0;
+}
+.f56-metric{
+ background:#101014;
+ border:1px solid #403727;
+ border-radius:10px;
+ padding:10px;
+}
+.f56-metric small{
+ display:block;
+ color:#aaa;
+ font-size:11px;
+}
+.f56-metric strong{
+ display:block;
+ font-size:19px;
+ margin-top:5px;
+}
+.f56-progress{
+ height:6px;
+ background:#36363b;
+ border-radius:10px;
+ overflow:hidden;
+ margin:10px 0;
+}
+.f56-progress div{
+ height:100%;
+ border-radius:10px;
+}
+.f56-actions{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:7px;
+ margin-top:12px;
+}
+.f56-actions button{
+ padding:11px 6px!important;
+ font-size:12px!important;
+ margin:0!important;
+ border-radius:10px!important;
+ min-height:42px;
+}
+.f56-danger{
+ color:#ff7979!important;
+ border:1px solid #a84a4a!important;
+ background:#281719!important;
+}
+.f56-list-status{
+ display:block;
+ font-size:11px!important;
+ font-weight:700;
+ margin-top:5px;
+ white-space:normal!important;
+}
+.f56-account{
+ margin-top:12px;
+ border-top:1px solid #403727;
+ padding-top:10px;
+}
+.f56-account summary{
+ font-size:12px;
+ color:#b9b3a6;
+ cursor:pointer;
+}
+.f56-editor{
+ padding:12px;
+ background:#19191e;
+ border:1px solid #796238;
+ border-radius:12px;
+ margin-top:10px;
+}
+.f56-editor input{
+ width:100%;
+ margin:8px 0;
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeV56Loaded)return;
+window.forgeV56Loaded=true;
+
+const cache=new Map();
+const pending=new Map();
+const mounted=new WeakSet();
+
+const E=(tag,text='',cls='')=>{
+ const e=document.createElement(tag);
+ e.textContent=text;
+ e.className=cls;
+ return e;
+};
+
+const admin=()=>typeof user!=='undefined'
+ &&user
+ &&typeof role!=='undefined'
+ &&role==='admin'
+ &&typeof db!=='undefined';
+
+const today=()=>new Intl.DateTimeFormat(
+ 'sv-SE',{timeZone:'Europe/Rome'}
+).format(new Date());
+
+const days=(a,b)=>Math.round(
+ (Date.parse(b)-Date.parse(a))/86400000
+);
+
+const fmt=v=>v?
+ v.slice(0,10).split('-').reverse().join('/')
+ :'—';
+
+const plus=(d,n)=>{
+ const x=new Date(d+'T12:00:00Z');
+ x.setUTCDate(x.getUTCDate()+n);
+ return x.toISOString().slice(0,10);
+};
+
+async function rpc(name,args){
+ const {data,error}=await db.rpc(name,args);
+ if(error)throw error;
+ return data;
+}
+
+function button(label,fn,cls=''){
+ const b=E('button',label,cls);
+ b.type='button';
+ b.onclick=async()=>{
+  b.disabled=true;
+  try{await fn();}
+  catch(e){alert(e.message||String(e));}
+  finally{b.disabled=false;}
+ };
+ return b;
+}
+
+async function load(email,force=false){
+ const owner=user.id;
+ const key=owner+':'+email;
+
+ if(!force&&cache.has(key)){
+  const c=cache.get(key);
+  if(Date.now()-c.time<20000)return c;
+ }
+
+ if(pending.has(key))return pending.get(key);
+
+ const task=(async()=>{
+  const {data,error}=await db.from('profiles')
+   .select('id,email')
+   .eq('email',email)
+   .neq('id',owner)
+   .limit(2);
+
+  if(error)throw error;
+  if(data?.length!==1)
+   throw Error('Profilo non identificato');
+
+  const id=data[0].id;
+
+  const [plans,access]=await Promise.all([
+   rpc('forge_v51_client_plans',{
+    p_client_id:id
+   }),
+   rpc('forge_v45_access_status',{
+    p_client_id:id
+   })
+  ]);
+
+  const value={
+   id,owner,email,access,
+   plans:Array.isArray(plans)?plans:[],
+   time:Date.now()
+  };
+
+  if(admin()&&user.id===owner)
+   cache.set(key,value);
+
+  return value;
+ })();
+
+ pending.set(key,task);
+
+ try{return await task;}
+ finally{pending.delete(key);}
+}
+
+function status(data){
+ const t=today();
+ const list=data.plans;
+
+ const active=list.filter(p=>
+  p.status==='active'&&
+  p.starts_on<=t&&p.expires_on>t
+ ).sort((a,b)=>
+  a.expires_on.localeCompare(b.expires_on)
+ )[0];
+
+ if(active){
+  const n=days(t,active.expires_on);
+  return {
+   plan:active,active:true,n,
+   title:n<=3?'Scadenza imminente':
+    n<=7?'Coaching in scadenza':
+    'Coaching attivo',
+   color:n<=3?'#ed91b8':
+    n<=7?'#e9c675':'#75d69a'
+  };
+ }
+
+ const future=list.filter(p=>
+  p.status==='active'&&p.starts_on>t
+ ).sort((a,b)=>
+  a.starts_on.localeCompare(b.starts_on)
+ )[0];
+
+ if(future)return{
+  plan:future,n:days(t,future.expires_on),
+  title:'Coaching programmato',
+  color:'#e9c675'
+ };
+
+ const last=[...list].sort((a,b)=>
+  b.expires_on.localeCompare(a.expires_on)
+ )[0];
+
+ if(last)return{
+  plan:last,n:0,
+  title:last.status==='cancelled'?
+   'Coaching terminato':'Coaching scaduto',
+  color:'#ff7979'
+ };
+
+ return{
+  plan:null,n:0,
+  title:'Nessun coaching assegnato',
+  color:'#a4a5ab'
+ };
+}
+
+function metric(label,value,color){
+ const box=E('div','','f56-metric');
+ const v=E('strong',value);
+ v.style.color=color;
+ box.append(E('small',label),v);
+ return box;
+}
+
+async function dashboard(panel,card,email){
+
+ if(mounted.has(panel))return;
+ mounted.add(panel);
+
+ const owner=user.id;
+ const alive=()=>admin()&&user.id===owner
+  &&panel.isConnected&&card.isConnected;
+
+ const summary=E('div','','f56-summary');
+
+ const expiry=panel.querySelector('.v52expiry');
+ if(!expiry){
+  mounted.delete(panel);
+  return;
+ }
+
+ expiry.after(summary);
+
+ const oldManage=[...panel.querySelectorAll('button')]
+  .find(b=>b.textContent.trim()==='Gestisci coaching');
+
+ const account=E('details','','f56-account');
+ account.append(E('summary','Gestione account'));
+
+ const accountButtons=[...card.querySelectorAll('button')]
+  .filter(b=>/^(Sospendi|Rifiuta|Approva|Riattiva|Apri Forge Chat)$/i
+   .test(b.textContent.trim()));
+
+ accountButtons.forEach(b=>{
+  account.append(button(
+   b.textContent.trim(),()=>b.click()
+  ));
+ });
+
+ panel.append(account);
+
+ async function render(force=false){
+
+  summary.replaceChildren(
+   E('div','PERCORSO COACHING','f56-label'),
+   E('p','Caricamento...')
+  );
+
+  try{
+
+   const data=await load(email,force);
+   if(!alive())return;
+
+   const s=status(data);
+   const p=s.plan;
+
+   summary.replaceChildren(
+    E('div','PERCORSO COACHING','f56-label')
+   );
+
+   const title=E('div',s.title,'f56-title');
+   title.style.color=s.color;
+   summary.append(title);
+
+   if(p){
+    summary.append(E('small',p.title||'Coaching'));
+
+    const metrics=E('div','','f56-metrics');
+
+    metrics.append(
+     metric('Scadenza',fmt(p.expires_on),s.color),
+     metric('Giorni rimanenti',
+      String(Math.max(0,s.n)),s.color)
+    );
+
+    summary.append(metrics);
+
+    summary.append(E('small',
+     'Inizio: '+fmt(p.starts_on)
+    ));
+
+    if(s.active){
+     const total=Math.max(1,
+      days(p.starts_on,p.expires_on));
+
+     const percent=Math.max(0,Math.min(100,
+      Math.round((total-s.n)/total*100)));
+
+     const track=E('div','','f56-progress');
+     const bar=E('div');
+     bar.style.width=percent+'%';
+     bar.style.background=s.color;
+     track.append(bar);
+
+     summary.append(track,
+      E('small',percent+'% del percorso')
+     );
+    }
+   }
+
+   const actions=E('div','','f56-actions');
+
+   if(oldManage){
+    actions.append(button(
+     p?'Gestisci coaching':'Assegna coaching',
+     ()=>oldManage.click(),'v52gold'
+    ));
+   }
+
+   if(p&&p.status==='active'){
+
+    function editor(proroga){
+
+     summary.querySelector('.f56-editor')?.remove();
+
+     const box=E('div','','f56-editor');
+
+     box.append(E('strong',
+      proroga?'Proroga coaching':'Modifica scadenza'
+     ));
+
+     const input=E('input');
+     input.type='date';
+     input.value=p.expires_on;
+     box.append(input);
+
+     if(proroga){
+      const quick=E('div','','f56-actions');
+
+      [7,14,30,42].forEach(n=>{
+       quick.append(button('+'+n+' giorni',()=>{
+        input.value=plus(
+         p.expires_on>today()?
+          p.expires_on:today(),n
+        );
+       }));
+      });
+
+      box.append(quick);
+     }
+
+     box.append(button('Salva scadenza',async()=>{
+
+      if(!alive())return;
+
+      if(!input.value||input.value<=p.starts_on)
+       throw Error('Data non valida');
+
+      if(!confirm('Nuova scadenza: '+
+       fmt(input.value)+'?'))return;
+
+      const ok=await rpc('forge_v51_update_expiry',{
+       p_subscription_id:p.id,
+       p_expires_on:input.value
+      });
+
+      if(!ok)throw Error('Modifica non riuscita');
+
+      await render(true);
+
+     },'v52gold'));
+
+     box.append(button('Annulla',()=>box.remove()));
+
+     summary.append(box);
+    }
+
+    actions.append(
+     button('Proroga',()=>editor(true)),
+     button('Modifica scadenza',()=>editor(false)),
+     button('Termina coaching',async()=>{
+
+      if(!alive())return;
+
+      if(!confirm(
+       'Terminare questo percorso? I dati saranno conservati.'
+      ))return;
+
+      const ok=await rpc(
+       'forge_v56_terminate_coaching',{
+        p_subscription_id:p.id
+       }
+      );
+
+      if(!ok)throw Error('Operazione non riuscita');
+
+      await render(true);
+
+     },'f56-danger')
+    );
+   }
+
+   summary.append(actions);
+
+   summary.append(button(
+    'Aggiorna scadenza',()=>render(true)
+   ));
+
+   if(oldManage)oldManage.classList.add('f56-hidden');
+
+   card.classList.add('f56-hidden');
+
+  }catch(e){
+   if(!alive())return;
+   card.classList.remove('f56-hidden');
+   oldManage?.classList.remove('f56-hidden');
+
+   summary.replaceChildren(
+    E('p','Dati non disponibili: '+e.message),
+    button('Riprova',()=>render(true))
+   );
+  }
+ }
+
+ await render();
+}
+
+async function listStatus(row){
+
+ const info=row.querySelector('.f30-info');
+ if(!info)return;
+
+ const email=[...info.querySelectorAll('small')]
+  .map(e=>e.textContent.trim())
+  .find(t=>t.includes('@'));
+
+ if(!email)return;
+
+ let label=info.querySelector('.f56-list-status');
+
+ if(!label){
+  label=E('small','Verifica coaching...',
+   'f56-list-status');
+  info.append(label);
+ }
+
+ if(label.dataset.loading==='1')return;
+
+ if(Date.now()-Number(label.dataset.updated||0)
+  <20000)return;
+
+ label.dataset.loading='1';
+
+ const owner=user.id;
+
+ try{
+  const data=await load(email);
+  if(!admin()||user.id!==owner||!row.isConnected)return;
+
+  const s=status(data);
+
+  label.style.color=s.color;
+
+  label.textContent=s.plan?
+   s.title+' · '+fmt(s.plan.expires_on)+
+   ' · '+Math.max(0,s.n)+' gg':
+   s.title;
+
+ }catch(e){
+  label.textContent='Scadenza non disponibile';
+  label.style.color='#a4a5ab';
+ }finally{
+  label.dataset.loading='0';
+  label.dataset.updated=String(Date.now());
+ }
+}
+
+function refresh(){
+
+ if(!admin()){
+  cache.clear();
+  return;
+ }
+
+ const root=document.getElementById('sectionContent');
+ const title=document.getElementById('sectionTitle');
+ const section=document.getElementById('sectionCard');
+
+ if(!root||!title||!section||
+ section.classList.contains('hidden'))return;
+
+ if(!/^(forge clients|i miei clienti|forge client manager)$/i
+ .test(title.textContent.trim()))return;
+
+ const panel=root.querySelector('#forgeV52');
+
+ if(panel&&panel.querySelector('.v52grid')){
+
+  const card=panel.previousElementSibling;
+
+  if(card&&card.classList.contains('f30-panel')){
+   const email=card.querySelector('p')
+    ?.textContent.trim();
+
+   if(email&&email.includes('@'))
+    dashboard(panel,card,email);
+  }
+
+ }else{
+
+  root.querySelectorAll('.f30-client')
+   .forEach(row=>listStatus(row));
+
+ }
+}
+
+setInterval(refresh,1000);
+refresh();
+
+console.log('FORGE CLIENTS V56 SMART DASHBOARD ACTIVE');
+
+})();
+</script>
+<!-- END FORGE CLIENTS V56 -->
