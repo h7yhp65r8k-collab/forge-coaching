@@ -20425,3 +20425,760 @@ console.info('FORGE V30 CLIENT MANAGER & CHAT ACTIVE');
 </script>
 
 <!-- END FORGE V30 -->
+
+<!-- FORGE V31 PREMIUM CLIENTS & CHAT -->
+<style>
+#sectionCard.f31-screen{
+ background:#0d0e11!important;
+ border:1px solid #30291e!important;
+ border-radius:22px!important;
+ padding:14px!important;
+}
+.f31-screen #sectionTitle{
+ color:#e9c675!important;
+ font-size:25px!important;
+ letter-spacing:1px;
+ font-weight:900;
+}
+.f31-screen #sectionContent{
+ display:flex;
+ flex-direction:column;
+ gap:12px;
+}
+.f31-screen .stats{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ gap:9px!important;
+}
+.f31-screen .stat{
+ background:linear-gradient(145deg,#202126,#15161a)!important;
+ border:1px solid #393329!important;
+ border-radius:16px!important;
+ padding:14px!important;
+}
+.f31-screen .stat strong{
+ color:#e9c675!important;
+ font-size:29px!important;
+ display:block;
+ margin-top:6px;
+}
+.f31-screen .stat span{
+ font-size:12px!important;
+ color:#a8a9ae!important;
+}
+.f31-screen .f30-client{
+ background:#191a1f!important;
+ border:1px solid #34302a!important;
+ border-radius:17px!important;
+ padding:14px!important;
+ margin:8px 0!important;
+ flex-wrap:wrap;
+}
+.f31-screen .f30-avatar{
+ width:49px;
+ height:49px;
+ border:1px solid #8c7242;
+ background:linear-gradient(145deg,#413622,#201c15);
+ font-size:17px;
+}
+.f31-screen .f30-info strong{
+ color:#f4f4f5!important;
+ font-size:16px!important;
+}
+.f31-screen .f30-info small{
+ font-size:12px!important;
+ line-height:1.4;
+}
+.f31-screen .f30-client button{
+ background:#27241d!important;
+ color:#e9c675!important;
+ border:1px solid #57472d!important;
+ border-radius:12px!important;
+ min-height:40px;
+ font-size:13px!important;
+}
+.f31-screen .f30-panel{
+ background:#191a1f!important;
+ border:1px solid #34302a!important;
+ border-radius:20px!important;
+ padding:16px!important;
+}
+.f31-screen input[type="search"]{
+ background:#191a1f!important;
+ border:1px solid #393329!important;
+ border-radius:15px!important;
+ padding:15px!important;
+ font-size:14px!important;
+}
+.f31-subtitle{
+ color:#96979e;
+ font-size:12px;
+ letter-spacing:.5px;
+ margin:0 0 5px;
+}
+.f31-filters{
+ display:flex;
+ gap:7px;
+ overflow-x:auto;
+ padding:4px 0;
+ scrollbar-width:none;
+}
+.f31-filters button{
+ flex:0 0 auto;
+ width:auto!important;
+ padding:9px 13px!important;
+ border-radius:22px!important;
+ background:#202126!important;
+ color:#bdbdc3!important;
+ border:1px solid #343434!important;
+ font-size:12px!important;
+ min-height:35px!important;
+}
+.f31-filters button.selected{
+ background:#e9c675!important;
+ color:#111!important;
+ border-color:#e9c675!important;
+}
+.f31-empty{
+ padding:30px 14px;
+ text-align:center;
+ background:#17181c;
+ border:1px dashed #51452f;
+ border-radius:18px;
+ color:#a4a5ab;
+ font-size:13px;
+}
+.f31-empty svg{
+ display:block;
+ margin:0 auto 14px;
+ color:#e9c675;
+}
+.f31-empty strong{
+ display:block;
+ color:#e9c675;
+ font-size:16px;
+ margin-bottom:8px;
+}
+.f31-status{
+ color:#75d69a!important;
+}
+.f31-status.pending{
+ color:#e9c675!important;
+}
+.f31-status.suspended{
+ color:#e89783!important;
+}
+.f31-package{
+ flex:0 0 100%;
+ padding-top:10px;
+ border-top:1px solid #333238;
+}
+.f31-package-label{
+ display:flex;
+ justify-content:space-between;
+ color:#aaa;
+ font-size:11px;
+ margin-bottom:7px;
+}
+.f31-package-label strong{
+ color:#e9c675;
+}
+.f31-track{
+ height:5px;
+ background:#33343a;
+ border-radius:8px;
+ overflow:hidden;
+}
+.f31-track div{
+ height:100%;
+ border-radius:8px;
+ background:#e9c675;
+}
+.f31-screen .f30-messages{
+ height:clamp(260px,48dvh,600px)!important;
+ background:#101114!important;
+ border-radius:16px;
+ padding:16px 10px!important;
+ gap:13px!important;
+}
+.f31-screen .f30-bubble{
+ background:#292b31!important;
+ border-radius:17px 17px 17px 4px!important;
+ font-size:14px!important;
+ line-height:1.5;
+ padding:12px 14px!important;
+}
+.f31-screen .f30-bubble.mine{
+ background:linear-gradient(135deg,#f0d58f,#c5a052)!important;
+ color:#17130d!important;
+ border-radius:17px 17px 4px 17px!important;
+}
+.f31-screen .f30-compose{
+ margin-top:12px;
+ align-items:center!important;
+}
+.f31-screen .f30-compose textarea{
+ background:#24252a!important;
+ border:1px solid #3b3c43!important;
+ border-radius:22px!important;
+ padding:13px!important;
+ font-size:16px!important;
+}
+.f31-screen .f30-compose button{
+ width:46px!important;
+ height:46px!important;
+ border-radius:50%!important;
+ background:#e9c675!important;
+ color:#111!important;
+ display:grid!important;
+ place-items:center;
+ padding:0!important;
+}
+.f31-chat-head{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ margin-bottom:14px;
+}
+.f31-chat-head h3{
+ margin:0!important;
+ color:#f4f4f5!important;
+}
+.f31-chat-head small{
+ color:#a4a5ab;
+ font-size:11px;
+}
+.f31-profile-head{
+ text-align:center;
+ padding:12px 0;
+}
+.f31-profile-head .f30-avatar{
+ width:78px!important;
+ height:78px!important;
+ margin:0 auto 14px;
+ font-size:25px;
+ border:2px solid #e9c675;
+}
+.f31-profile-head h2{
+ color:#f4f4f5!important;
+ margin:6px 0!important;
+}
+.f31-preview{
+ font-size:12px;
+ color:#a4a5ab;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ max-width:100%;
+ margin-top:6px;
+}
+.f31-time{
+ font-size:10px;
+ color:#a4a5ab;
+}
+.f31-screen .f30-badge{
+ background:#e9c675!important;
+ color:#111!important;
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeV31)return;
+window.forgeV31=true;
+
+const CHAT='forge_chat_v28_messages';
+
+const icons={
+ users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-4M16 3a4 4 0 0 1 0 8"/>',
+ chat:'<path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5H3l2-5a8.5 8.5 0 1 1 16-3.5Z"/>',
+ send:'<path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ check:'<path d="m5 12 4 4L19 6"/>',
+ search:'<circle cx="10" cy="10" r="6"/><path d="m15 15 6 6"/>'
+};
+
+function svg(name,size=24){
+ return '<svg xmlns="http://www.w3.org/2000/svg" width="'+size+'" height="'+size+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+icons[name]+'</svg>';
+}
+
+function el(tag,text='',cls=''){
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+}
+
+function owner(){
+ return typeof user!=='undefined'&&user?user.id:null;
+}
+
+function admin(){
+ return typeof role!=='undefined'&&role==='admin';
+}
+
+function decorateIcons(){
+ [
+  ['forgeV30Clients','users'],
+  ['forgeV30Chat','chat']
+ ].forEach(([id,icon])=>{
+  const b=document.getElementById(id);
+  if(!b)return;
+
+  const old=b.querySelector('svg');
+
+  if(old&&old.dataset.f31===icon)return;
+
+  const holder=document.createElement('span');
+  holder.innerHTML=svg(icon,28);
+
+  const fresh=holder.firstElementChild;
+  fresh.dataset.f31=icon;
+
+  if(old)old.replaceWith(fresh);
+  else b.prepend(fresh);
+ });
+}
+
+let cacheOwner=null;
+let cacheTime=0;
+let clientData=[];
+let packages=[];
+let messages=[];
+let packagesOK=false;
+let messagesOK=false;
+let loading=null;
+
+async function loadData(){
+ const id=owner();
+
+ if(!id||!admin())return;
+
+ if(cacheOwner!==id){
+  cacheOwner=id;
+  cacheTime=0;
+  clientData=[];
+  packages=[];
+  messages=[];
+  packagesOK=false;
+  messagesOK=false;
+ }
+
+ if(Date.now()-cacheTime<15000)return;
+ if(loading)return loading;
+
+ loading=(async()=>{
+  try{
+   const results=await Promise.allSettled([
+    db.from('profiles')
+     .select('id,first_name,last_name,full_name,email')
+     .neq('id',id)
+     .limit(1000),
+
+    db.from('forge_lesson_package_summary')
+     .select('*')
+     .limit(1000),
+
+    db.from(CHAT)
+     .select('client_id,body,created_at,read_at,sender_id')
+     .eq('coach_id',id)
+     .order('created_at',{ascending:false})
+     .limit(1000)
+   ]);
+
+   if(owner()!==id||!admin())return;
+
+   const a=results[0].value;
+   const b=results[1].value;
+   const c=results[2].value;
+
+   clientData=a&&!a.error?a.data||[]:[];
+   packagesOK=!!b&&!b.error;
+   messagesOK=!!c&&!c.error;
+   packages=packagesOK?b.data||[]:[];
+   messages=messagesOK?c.data||[]:[];
+
+   cacheTime=Date.now();
+  }catch(e){
+   console.warn('Forge V31:',e);
+  }
+ })();
+
+ try{
+  await loading;
+ }finally{
+  loading=null;
+ }
+}
+
+function findClient(card){
+ const info=card.querySelector('.f30-info');
+ if(!info)return null;
+
+ const name=info.querySelector('strong')?.textContent;
+ const email=info.querySelector('small')?.textContent;
+
+ if(email){
+  const exact=clientData.filter(p=>p.email===email);
+  if(exact.length===1)return exact[0];
+ }
+
+ const matches=clientData.filter(p=>{
+  const full=[p.first_name,p.last_name]
+   .filter(Boolean).join(' ')||
+   p.full_name||p.email;
+
+  return full===name;
+ });
+
+ return matches.length===1?matches[0]:null;
+}
+
+function decorateCard(card,isChat){
+ const info=card.querySelector('.f30-info');
+ if(!info)return;
+
+ const status=[...info.querySelectorAll('small')]
+  .find(n=>/^(Approvato|In attesa|Sospeso|Rifiutato)$/.test(n.textContent));
+
+ if(status){
+  status.classList.add('f31-status');
+
+  if(status.textContent==='In attesa')
+   status.classList.add('pending');
+
+  if(/Sospeso|Rifiutato/.test(status.textContent))
+   status.classList.add('suspended');
+ }
+
+ const p=findClient(card);
+
+ if(!p)return;
+
+ if(isChat&&messagesOK){
+  const m=messages.find(x=>x.client_id===p.id);
+
+  let preview=info.querySelector('.f31-preview');
+
+  if(!preview){
+   preview=el('div','','f31-preview');
+   info.append(preview);
+  }
+
+  preview.textContent=m
+   ?m.body
+   :'Inizia una conversazione';
+
+  if(m){
+   let time=info.querySelector('.f31-time');
+
+   if(!time){
+    time=el('div','','f31-time');
+    info.append(time);
+   }
+
+   time.textContent=new Date(m.created_at)
+    .toLocaleString('it-IT',{
+     day:'2-digit',
+     month:'2-digit',
+     hour:'2-digit',
+     minute:'2-digit'
+    });
+  }
+
+ }else if(!isChat&&packagesOK){
+
+  const rows=packages.filter(x=>
+   x.client_id===p.id&&
+   Number(x.remaining_sessions)>0&&
+   (!x.status||x.status==='active')
+  );
+
+  const remaining=rows.reduce(
+   (n,x)=>n+Number(x.remaining_sessions||0),0
+  );
+
+  const total=rows.reduce(
+   (n,x)=>n+Number(
+    x.total_sessions||
+    (Number(x.used_sessions||0)+
+     Number(x.remaining_sessions||0))
+   ),0
+  );
+
+  let box=card.querySelector('.f31-package');
+
+  if(!box){
+   box=el('div','','f31-package');
+   card.append(box);
+  }
+
+  box.replaceChildren();
+
+  const label=el('div','','f31-package-label');
+
+  label.append(
+   el('span','Lezioni disponibili'),
+   el('strong',rows.length?remaining+'/'+total:'—')
+  );
+
+  box.append(label);
+
+  if(total>0){
+   const track=el('div','','f31-track');
+   const fill=el('div');
+
+   fill.style.width=
+    Math.min(100,remaining/total*100)+'%';
+
+   if(remaining<=1)
+    fill.style.background='#e89783';
+
+   track.append(fill);
+   box.append(track);
+  }
+ }
+}
+
+function installFilters(root,isChat){
+ const search=root.querySelector('input[type="search"]');
+
+ if(!search)return;
+
+ let filters=root.querySelector('.f31-filters');
+
+ if(!filters){
+  filters=el('div','','f31-filters');
+  filters.dataset.value='Tutti';
+
+  const names=isChat
+   ?['Tutti','Non letti']
+   :['Tutti','Attivi','In attesa','Sospesi'];
+
+  names.forEach(name=>{
+   const b=el('button',name);
+
+   b.type='button';
+
+   if(name==='Tutti')
+    b.classList.add('selected');
+
+   b.onclick=()=>{
+    filters.dataset.value=name;
+
+    filters.querySelectorAll('button')
+     .forEach(x=>x.classList.toggle(
+      'selected',x===b
+     ));
+
+    applyFilters(root,filters);
+   };
+
+   filters.append(b);
+  });
+
+  search.after(filters);
+ }
+
+ applyFilters(root,filters);
+}
+
+function applyFilters(root,filters){
+ const value=filters.dataset.value;
+
+ root.querySelectorAll('.f30-client')
+ .forEach(card=>{
+  const info=card.querySelector('.f30-info');
+  const labels=info?[...info.querySelectorAll('small')]
+   .map(x=>x.textContent):[];
+
+  let show=true;
+
+  if(value==='Attivi')
+   show=labels.includes('Approvato');
+
+  if(value==='In attesa')
+   show=labels.includes('In attesa');
+
+  if(value==='Sospesi')
+   show=labels.includes('Sospeso');
+
+  if(value==='Non letti'){
+   const p=findClient(card);
+
+   show=messagesOK&&!!p&&messages.some(m=>
+    m.client_id===p.id&&
+    m.sender_id!==owner()&&
+    !m.read_at
+   );
+  }
+
+  card.style.display=show?'':'none';
+ });
+}
+
+function decorateEmpty(root,isChat){
+ const p=[...root.querySelectorAll('p')]
+  .find(n=>n.textContent.trim()==='Nessun cliente trovato.');
+
+ if(!p)return;
+
+ const empty=el('div','','f31-empty');
+ const icon=document.createElement('span');
+
+ icon.innerHTML=svg(isChat?'chat':'users',38);
+
+ empty.append(
+  icon,
+  el('strong',isChat
+   ?'Nessuna conversazione disponibile'
+   :'Nessun cliente trovato'),
+  el('div',isChat
+   ?'Qui compariranno i clienti con cui puoi comunicare.'
+   :'I clienti registrati compariranno in questa area.')
+ );
+
+ p.replaceWith(empty);
+}
+
+function decorateConversation(root){
+ const compose=root.querySelector('.f30-compose');
+ const panel=compose?.closest('.f30-panel');
+
+ if(!panel)return;
+
+ const send=compose.querySelector('button');
+
+ if(send&&!send.dataset.f31){
+  send.dataset.f31='1';
+  send.setAttribute('aria-label','Invia messaggio');
+  send.innerHTML=svg('send',21);
+ }
+
+ if(!panel.querySelector('.f31-chat-head')){
+  const title=panel.querySelector('h3');
+  const subtitle=title?.nextElementSibling;
+
+  if(!title)return;
+
+  const head=el('div','','f31-chat-head');
+
+  const avatar=el(
+   'div',
+   title.textContent.split(/\s+/)
+    .slice(0,2)
+    .map(x=>x[0]||'')
+    .join('').toUpperCase(),
+   'f30-avatar'
+  );
+
+  const info=el('div');
+
+  title.before(head);
+  info.append(title);
+
+  info.append(el(
+   'small',
+   'Conversazione privata Forge'
+  ));
+
+  if(subtitle&&subtitle.tagName==='P')
+   subtitle.remove();
+
+  head.append(avatar,info);
+ }
+}
+
+function decorateProfile(root){
+ const panel=root.querySelector('.f30-panel');
+ const avatar=panel?.querySelector('.f30-avatar');
+ const title=panel?.querySelector('h2');
+
+ if(!panel||!avatar||!title)return;
+
+ if(panel.querySelector('.f31-profile-head'))
+  return;
+
+ const head=el('div','','f31-profile-head');
+
+ avatar.before(head);
+ head.append(avatar,title);
+}
+
+let busy=false;
+
+async function refresh(){
+ decorateIcons();
+
+ const card=document.getElementById('sectionCard');
+ const root=document.getElementById('sectionContent');
+ const title=document.getElementById('sectionTitle');
+
+ if(!card||!root||!title)return;
+
+ const isChat=title.textContent.trim()==='Forge Chat';
+ const isClients=title.textContent.trim()==='I miei clienti';
+
+ card.classList.toggle(
+  'f31-screen',isChat||isClients
+ );
+
+ if(!isChat&&!isClients)return;
+ if(card.classList.contains('hidden')||!owner())return;
+
+ if(isChat)decorateConversation(root);
+ if(isClients)decorateProfile(root);
+
+ const search=root.querySelector('input[type="search"]');
+
+ if(!search)return;
+
+ if(!root.querySelector('.f31-subtitle')){
+  root.prepend(el(
+   'div',
+   isChat
+    ?'FORGE CHAT • PRIVATE MESSAGING'
+    :'FORGE CLIENTS • COACH MANAGEMENT',
+   'f31-subtitle'
+  ));
+ }
+
+ decorateEmpty(root,isChat);
+
+ if(busy)return;
+ busy=true;
+
+ try{
+  const id=owner();
+
+  await loadData();
+
+  if(owner()!==id||!admin())return;
+
+  if(title.textContent.trim()!==
+   (isChat?'Forge Chat':'I miei clienti'))
+   return;
+
+  root.querySelectorAll('.f30-client')
+   .forEach(card=>decorateCard(card,isChat));
+
+  installFilters(root,isChat);
+
+ }finally{
+  busy=false;
+ }
+}
+
+setInterval(()=>{
+ refresh().catch(console.warn);
+},1000);
+
+refresh().catch(console.warn);
+
+console.info('FORGE V31 PREMIUM REDESIGN ACTIVE');
+
+})();
+</script>
+<!-- END FORGE V31 -->
