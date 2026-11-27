@@ -22483,3 +22483,1429 @@ console.info(
 })();
 </script>
 <!-- END FORGE V39 -->
+
+<!-- FORGE STUDIO V40 ULTIMATE -->
+<style>
+#fs40{
+ --fs-accent:var(--gold);
+ display:grid;
+ gap:10px;
+ width:100%;
+ box-sizing:border-box;
+}
+#fs40 *{
+ box-sizing:border-box;
+}
+#fs40 .fs-hero{
+ background:radial-gradient(ellipse at top,
+ var(--line),var(--bg) 85%);
+ border:1px solid var(--gold);
+ border-radius:19px;
+ padding:20px 12px;
+ text-align:center;
+}
+#fs40 .fs-brand{
+ color:var(--gold);
+ font-size:10px;
+ letter-spacing:3px;
+}
+#fs40 .fs-title{
+ color:var(--gold);
+ font-size:26px;
+ font-weight:900;
+ letter-spacing:2px;
+ margin:8px 0;
+}
+#fs40 .fs-subtitle{
+ font-size:12px;
+ color:var(--muted);
+}
+#fs40 .fs-stats{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ margin-top:18px;
+}
+#fs40 .fs-stats strong{
+ display:block;
+ font-size:25px;
+ color:var(--gold);
+}
+#fs40 .fs-stats small{
+ font-size:9px;
+ letter-spacing:1px;
+ color:var(--muted);
+}
+#fs40 details{
+ background:var(--panel);
+ border:1px solid var(--line);
+ border-radius:15px;
+ overflow:hidden;
+ margin:0;
+}
+#fs40 summary{
+ list-style:none;
+ cursor:pointer;
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:15px 12px;
+}
+#fs40 summary::-webkit-details-marker{
+ display:none;
+}
+#fs40 summary:after{
+ content:'⌄';
+ color:var(--gold);
+ font-size:21px;
+ margin-left:auto;
+}
+#fs40 details[open] summary:after{
+ content:'⌃';
+}
+#fs40 .fs-icon{
+ font-size:22px;
+ width:29px;
+ text-align:center;
+ color:var(--gold);
+}
+#fs40 .fs-heading{
+ color:var(--gold);
+ font-size:14px;
+ font-weight:700;
+}
+#fs40 .fs-description{
+ display:block;
+ color:var(--muted);
+ font-size:11px;
+ margin-top:4px;
+}
+#fs40 .fs-content{
+ padding:0 12px 14px;
+}
+#fs40 .fs-grid{
+ display:grid;
+ grid-template-columns:repeat(3,minmax(0,1fr));
+ gap:7px;
+}
+#fs40 .fs-effects{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:7px;
+}
+#fs40 button{
+ margin:0;
+ border-radius:10px;
+ min-height:39px;
+ font-size:12px;
+}
+#fs40 .fs-choice{
+ min-height:65px;
+ padding:7px 3px;
+ background:var(--bg);
+ color:var(--gold);
+ border:1px solid var(--line);
+ font-size:10px;
+}
+#fs40 .fs-choice.selected{
+ outline:2px solid var(--gold);
+ outline-offset:-2px;
+}
+#fs40 .fs-swatch{
+ display:block;
+ width:23px;
+ height:23px;
+ border-radius:50%;
+ margin:0 auto 6px;
+}
+#fs40 .fs-preview{
+ border:1px solid var(--line);
+ border-radius:15px;
+ background:var(--panel);
+ padding:12px;
+}
+#fs40 .fs-preview-head{
+ display:flex;
+ justify-content:space-between;
+ color:var(--gold);
+ font-size:12px;
+ font-weight:700;
+ margin-bottom:10px;
+}
+#fs40 .fs-live{
+ color:#72d9a0;
+ font-size:10px;
+}
+#fs40 .fs-mini{
+ background:var(--bg);
+ border:1px solid var(--line);
+ border-radius:12px;
+ padding:13px;
+ position:relative;
+ overflow:hidden;
+}
+#fs40 .fs-mini-title{
+ color:var(--gold);
+ font-size:15px;
+ font-weight:800;
+ margin-bottom:10px;
+}
+#fs40 .fs-mini-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:6px;
+}
+#fs40 .fs-mini-grid div{
+ background:var(--panel);
+ border:1px solid var(--line);
+ color:var(--gold);
+ border-radius:8px;
+ padding:12px 4px;
+ font-size:10px;
+ text-align:center;
+}
+#fs40 .fs-label{
+ display:block;
+ font-size:12px;
+ color:var(--gold);
+ margin:14px 0 8px;
+}
+#fs40 input[type=range]{
+ width:100%;
+ accent-color:var(--gold);
+}
+#fs40 input[type=color]{
+ width:100%;
+ height:45px;
+ border:1px solid var(--line);
+ border-radius:9px;
+}
+#fs40 .fs-actions{
+ display:grid;
+ gap:8px;
+ margin-top:10px;
+}
+#fs40 .fs-save{
+ background:var(--gold);
+ color:#08090b;
+ font-weight:800;
+ padding:14px;
+ width:100%;
+}
+#fs40 .fs-status{
+ color:var(--muted);
+ font-size:11px;
+ text-align:center;
+ min-height:16px;
+}
+#fs40 .fs-image-card{
+ border:0;
+ padding:0;
+ margin:0 0 10px;
+ background:transparent;
+}
+#fs40 .fs-image-card img{
+ max-width:100%;
+ max-height:180px;
+ object-fit:cover;
+ border-radius:10px;
+}
+#fs40 .fs-preset{
+ display:grid;
+ grid-template-columns:1fr auto;
+ gap:6px;
+ margin-top:7px;
+}
+#fs40Canvas{
+ position:fixed;
+ inset:0;
+ width:100%;
+ height:100%;
+ pointer-events:none;
+ z-index:9990;
+}
+@media(prefers-reduced-motion:reduce){
+ #fs40Canvas{display:none!important}
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeStudioV40)return;
+window.forgeStudioV40=true;
+
+const themes=[
+ ['gold','Forge Gold','#e9c675','#08090b','#191a1f'],
+ ['silver','Titanium','#d3d8e0','#090b10','#191e25'],
+ ['red','Dark Red','#ed7777','#100809','#241719'],
+ ['blue','Midnight Blue','#78baff','#080e18','#15202e'],
+ ['emerald','Emerald','#37e6a1','#05130e','#10271e'],
+ ['purple','Royal Purple','#b68aff','#10091b','#211535'],
+ ['ice','Arctic Ice','#a8edff','#07131c','#142b39'],
+ ['orange','Inferno','#ff833b','#170b05','#30180d'],
+ ['pink','Neon Pink','#ff65bc','#170914','#32152b'],
+ ['cyan','Cyber Cyan','#00f5ff','#041417','#10292d'],
+ ['lime','Toxic Lime','#c0ff45','#101608','#222d13'],
+ ['ruby','Ruby','#ff315b','#18060d','#30121d'],
+ ['bronze','Bronze','#d69b65','#150e09','#2b1d13'],
+ ['copper','Copper','#e69b79','#160c09','#321b15'],
+ ['white','Ghost White','#f4f4f4','#101010','#242424'],
+ ['graphite','Graphite','#a9abb2','#08090a','#222327'],
+ ['ocean','Deep Ocean','#4b92ff','#050d20','#11213c'],
+ ['lavender','Lavender','#d4b7ff','#150e21','#291d3c'],
+ ['rose','Rose Gold','#e8adad','#190e12','#322027'],
+ ['sunset','Sunset','#ffad75','#20100e','#3b201a'],
+ ['matrix','Matrix','#32ff70','#020d05','#0b2111'],
+ ['sand','Desert','#e7c7a0','#18130c','#30271c'],
+ ['navy','Navy Elite','#819bdf','#080e1c','#182238'],
+ ['violet','Electric Violet','#ad54ff','#10051d','#28123f'],
+ ['amber','Amber','#ffbf35','#181005','#30220e'],
+ ['mint','Mint','#91ffd4','#071710','#153126'],
+ ['coral','Coral','#ff887d','#1a0c0c','#351c1c'],
+ ['sapphire','Sapphire','#567dff','#080b20','#192344'],
+ ['platinum','Platinum','#e4e9f2','#11151a','#272e36'],
+ ['obsidian','Obsidian 5%','#b9a06a','#030303','#101010']
+];
+
+const effects=[
+ ['none','Nessun effetto','○'],
+ ['gold','Golden Dust','✦'],
+ ['stars','Galaxy Stars','✧'],
+ ['fire','Hellfire','🔥'],
+ ['snow','Frozen Storm','❄'],
+ ['rain','Digital Rain','☂'],
+ ['matrix','Matrix Code','01'],
+ ['lightning','Electric Energy','⚡'],
+ ['aurora','Northern Lights','🌌'],
+ ['neon','Neon Pulse','◉'],
+ ['meteor','Meteor Shower','☄'],
+ ['bubbles','Crystal Bubbles','○'],
+ ['confetti','Elite Confetti','✦'],
+ ['embers','Burning Ashes','🔥'],
+ ['diamonds','Diamond Dust','◇'],
+ ['waves','Energy Waves','≈'],
+ ['vortex','Cosmic Vortex','◎'],
+ ['hearts','Rose Energy','♡'],
+ ['glitch','Cyber Glitch','▥'],
+ ['spark','Forge 5% Sparks','✴'],
+ ['rings','Quantum Rings','◉']
+];
+
+const defaults={
+ theme:'gold',
+ color:'',
+ effect:'none',
+ intensity:35,
+ brightness:100,
+ motion:true
+};
+
+const get=id=>document.getElementById(id);
+const css=document.documentElement.style;
+const reduced=matchMedia(
+ '(prefers-reduced-motion: reduce)'
+);
+
+let draft={...defaults};
+let presets=[];
+let currentAccount=null;
+let mounted=null;
+let canvas=null;
+let ctx=null;
+let frame=0;
+let particles=[];
+let lastFrame=0;
+let w=0,h=0;
+
+function account(){
+ return typeof user!=='undefined'&&user?
+ user.id:null;
+}
+
+function storageKey(){
+ return 'forge_studio_v40_'+account();
+}
+
+function legacy(){
+ try{
+  return JSON.parse(
+   localStorage.getItem(
+    'forge_personalization_v27_'+account()
+   )||'{}'
+  );
+ }catch(e){return {}}
+}
+
+function load(){
+ const old=legacy();
+
+ try{
+  const data=JSON.parse(
+   localStorage.getItem(storageKey())||'{}'
+  );
+
+  draft={
+   ...defaults,
+   theme:old.theme||'gold',
+   color:old.color||'',
+   ...(data.settings||{})
+  };
+
+  presets=Array.isArray(data.presets)?
+   data.presets:[];
+
+ }catch(e){
+  draft={...defaults};
+  presets=[];
+ }
+}
+
+function status(text){
+ const n=get('fs40Status');
+ if(n)n.textContent=text;
+}
+
+function save(){
+ if(!account())return false;
+
+ try{
+  localStorage.setItem(
+   storageKey(),
+   JSON.stringify({
+    settings:draft,
+    presets:presets
+   })
+  );
+
+  status('✓ Personalizzazione salvata');
+  return true;
+
+ }catch(e){
+  status('Salvataggio non riuscito.');
+  return false;
+ }
+}
+
+function node(tag,text='',cls=''){
+ const n=document.createElement(tag);
+ n.textContent=text;
+ if(cls)n.className=cls;
+ return n;
+}
+
+function button(text,fn,cls='secondary'){
+ const b=node('button',text,cls);
+ b.type='button';
+ b.onclick=fn;
+ return b;
+}
+
+function sectionBox(icon,title,description){
+ const d=node('details');
+ const s=node('summary');
+
+ const labels=node('div');
+
+ labels.append(
+  node('div',title,'fs-heading'),
+  node('span',description,'fs-description')
+ );
+
+ s.append(
+  node('span',icon,'fs-icon'),
+  labels
+ );
+
+ const content=node('div','','fs-content');
+
+ d.append(s,content);
+
+ return {box:d,content};
+}
+
+function theme(){
+ return themes.find(
+  t=>t[0]===draft.theme
+ )||themes[0];
+}
+
+function adjust(hex,amount){
+ if(!/^#[0-9a-f]{6}$/i.test(hex)){
+  return hex;
+ }
+
+ const n=parseInt(hex.slice(1),16);
+ const f=amount/100;
+
+ const r=Math.min(255,
+  Math.round((n>>16)*f));
+
+ const g=Math.min(255,
+  Math.round(((n>>8)&255)*f));
+
+ const b=Math.min(255,
+  Math.round((n&255)*f));
+
+ return '#'+[r,g,b].map(
+  v=>v.toString(16).padStart(2,'0')
+ ).join('');
+}
+
+function applyTheme(){
+ if(!account())return;
+
+ const t=theme();
+
+ const accent=adjust(
+  draft.color||t[2],
+  draft.brightness
+ );
+
+ css.setProperty('--gold',accent);
+ css.setProperty('--bg',t[3]);
+ css.setProperty('--panel',t[4]);
+ css.setProperty('--line',accent+'55');
+
+ document.documentElement.dataset.forgeStudio40=
+  draft.theme;
+
+ const preview=get('fs40PreviewTitle');
+
+ if(preview){
+  preview.textContent=
+   role==='admin'?
+   'Bentornato, Coach':
+   'La tua Forge Coaching';
+ }
+}
+
+function resize(){
+ if(!canvas||!ctx)return;
+
+ const dpr=Math.min(
+  window.devicePixelRatio||1,2
+ );
+
+ w=innerWidth;
+ h=innerHeight;
+
+ canvas.width=w*dpr;
+ canvas.height=h*dpr;
+
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+
+function stopEffect(){
+ cancelAnimationFrame(frame);
+ frame=0;
+
+ if(canvas)canvas.remove();
+
+ canvas=null;
+ ctx=null;
+ particles=[];
+}
+
+function particle(){
+ return {
+  x:Math.random()*w,
+  y:Math.random()*h,
+  r:1+Math.random()*3,
+  speed:.3+Math.random()*1.7,
+  a:.2+Math.random()*.7,
+  phase:Math.random()*Math.PI*2,
+  hue:Math.random()*360
+ };
+}
+
+function draw(time){
+ if(!ctx||!canvas)return;
+
+ if(time-lastFrame<33){
+  frame=requestAnimationFrame(draw);
+  return;
+ }
+
+ lastFrame=time;
+
+ const effect=draft.effect;
+ const power=draft.intensity/100;
+
+ ctx.clearRect(0,0,w,h);
+
+ const accent=draft.color||theme()[2];
+
+ const colors={
+  gold:'#e9c675',
+  stars:'#ffffff',
+  fire:'#ff682d',
+  snow:'#e6faff',
+  rain:'#72aaff',
+  matrix:'#32ff70',
+  lightning:'#9fcaff',
+  aurora:'#6cffb0',
+  neon:accent,
+  meteor:'#e3d9ff',
+  bubbles:'#83edff',
+  embers:'#ff8845',
+  diamonds:'#dcf8ff',
+  waves:accent,
+  vortex:'#b68aff',
+  hearts:'#ff83b7',
+  glitch:'#00eaff',
+  spark:'#ffd477',
+  rings:accent
+ };
+
+ const color=colors[effect]||accent;
+ const count=Math.round(8+power*48);
+
+ while(particles.length<count){
+  particles.push(particle());
+ }
+
+ particles.length=count;
+
+ ctx.fillStyle=color;
+ ctx.strokeStyle=color;
+ ctx.lineWidth=1;
+
+ if(effect==='aurora'||effect==='waves'){
+
+  for(let j=0;j<3;j++){
+
+   ctx.beginPath();
+   ctx.globalAlpha=.06+power*.12;
+   ctx.lineWidth=effect==='aurora'?22:2;
+
+   for(let x=0;x<=w;x+=8){
+
+    const y=h*(.2+j*.25)+
+     Math.sin(x*.012+time*.0007+j)*45;
+
+    if(x===0)ctx.moveTo(x,y);
+    else ctx.lineTo(x,y);
+   }
+
+   ctx.stroke();
+  }
+
+ }else if(effect==='neon'){
+
+  ctx.globalAlpha=
+   (.12+Math.sin(time*.002)*.08)*power;
+
+  ctx.lineWidth=7;
+  ctx.strokeRect(4,4,w-8,h-8);
+
+ }else if(effect==='lightning'){
+
+  ctx.globalAlpha=.12*power;
+  ctx.lineWidth=2;
+
+  for(let j=0;j<3;j++){
+   ctx.beginPath();
+
+   let x=w*(.2+j*.3);
+
+   ctx.moveTo(x,0);
+
+   for(let y=0;y<h;y+=35){
+    x+=Math.sin(
+     y*.08+j+time*.001
+    )*25;
+
+    ctx.lineTo(x,y);
+   }
+
+   ctx.stroke();
+  }
+
+ }else{
+
+  for(const p of particles){
+
+   ctx.globalAlpha=
+    p.a*(.15+power*.65);
+
+   ctx.fillStyle=effect==='confetti'?
+    'hsl('+p.hue+',90%,65%)':color;
+
+   ctx.strokeStyle=ctx.fillStyle;
+
+   if(effect==='vortex'){
+
+    p.phase+=.008*p.speed;
+
+    const radius=35+p.r*40;
+
+    p.x=w/2+
+     Math.cos(p.phase)*radius;
+
+    p.y=h/2+
+     Math.sin(p.phase)*radius*1.5;
+
+   }else if([
+    'fire','embers','bubbles',
+    'hearts','spark'
+   ].includes(effect)){
+
+    p.y-=p.speed;
+    p.x+=Math.sin(
+     time*.001+p.phase
+    )*.5;
+
+   }else{
+
+    p.y+=p.speed*
+     (effect==='rain'?4:1);
+
+    p.x+=Math.sin(
+     time*.0008+p.phase
+    )*.4;
+   }
+
+   if(p.y>h+20)p.y=-20;
+   if(p.y<-20)p.y=h+20;
+   if(p.x>w+20)p.x=-20;
+   if(p.x<-20)p.x=w+20;
+
+   if(effect==='matrix'){
+
+    ctx.font='12px monospace';
+
+    ctx.fillText(
+     Math.floor(time/180+p.phase)%2?
+     '1':'0',p.x,p.y
+    );
+
+   }else if(
+    effect==='rain'||effect==='meteor'
+   ){
+
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+    ctx.lineTo(p.x-7,p.y-18);
+    ctx.stroke();
+
+   }else if(effect==='diamonds'){
+
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y-p.r*2);
+    ctx.lineTo(p.x+p.r,p.y);
+    ctx.lineTo(p.x,p.y+p.r*2);
+    ctx.lineTo(p.x-p.r,p.y);
+    ctx.closePath();
+    ctx.stroke();
+
+   }else if(effect==='hearts'){
+
+    ctx.font='15px sans-serif';
+    ctx.fillText('♡',p.x,p.y);
+
+   }else if(
+    effect==='glitch'||
+    effect==='confetti'
+   ){
+
+    ctx.fillRect(
+     p.x,p.y,p.r*3,p.r
+    );
+
+   }else if(
+    effect==='stars'||
+    effect==='spark'
+   ){
+
+    ctx.beginPath();
+    ctx.moveTo(p.x-p.r*2,p.y);
+    ctx.lineTo(p.x+p.r*2,p.y);
+    ctx.moveTo(p.x,p.y-p.r*2);
+    ctx.lineTo(p.x,p.y+p.r*2);
+    ctx.stroke();
+
+   }else{
+
+    ctx.beginPath();
+
+    ctx.arc(
+     p.x,p.y,
+     effect==='rings'?p.r*5:
+     effect==='bubbles'?p.r*3:p.r,
+     0,Math.PI*2
+    );
+
+    if(
+     effect==='rings'||
+     effect==='bubbles'
+    )ctx.stroke();
+
+    else ctx.fill();
+   }
+  }
+ }
+
+ ctx.globalAlpha=1;
+ frame=requestAnimationFrame(draw);
+}
+
+function startEffect(){
+
+ if(
+  !account()||
+  !draft.motion||
+  draft.effect==='none'||
+  reduced.matches||
+  document.hidden
+ ){
+  stopEffect();
+  return;
+ }
+
+ if(canvas)return;
+
+ canvas=document.createElement('canvas');
+ canvas.id='fs40Canvas';
+ canvas.setAttribute('aria-hidden','true');
+
+ document.body.append(canvas);
+
+ ctx=canvas.getContext('2d');
+
+ if(!ctx){
+  stopEffect();
+  return;
+ }
+
+ resize();
+
+ frame=requestAnimationFrame(draw);
+}
+
+function apply(){
+ applyTheme();
+ startEffect();
+}
+
+function refreshSelections(){
+
+ document.querySelectorAll(
+  '#fs40 [data-fs-theme]'
+ ).forEach(b=>{
+
+  b.classList.toggle(
+   'selected',
+   b.dataset.fsTheme===draft.theme
+  );
+
+ });
+
+ document.querySelectorAll(
+  '#fs40 [data-fs-effect]'
+ ).forEach(b=>{
+
+  b.classList.toggle(
+   'selected',
+   b.dataset.fsEffect===draft.effect
+  );
+
+ });
+
+ const c=get('fs40Color');
+ if(c)c.value=draft.color||theme()[2];
+
+ const i=get('fs40Intensity');
+ if(i)i.value=draft.intensity;
+
+ const il=get('fs40IntensityLabel');
+ if(il)il.textContent=
+  'Intensità: '+draft.intensity+'%';
+
+ const b=get('fs40Brightness');
+ if(b)b.value=draft.brightness;
+
+ const bl=get('fs40BrightnessLabel');
+ if(bl)bl.textContent=
+  'Luminosità: '+draft.brightness+'%';
+
+ const m=get('fs40Motion');
+ if(m)m.textContent=draft.motion?
+  'Disattiva animazioni':
+  'Attiva animazioni';
+}
+
+function update(change){
+ draft={...draft,...change};
+ apply();
+ refreshSelections();
+ status('Anteprima attiva · Salva per confermare');
+}
+
+function slider(
+ parent,id,label,min,max,value,change
+){
+
+ const l=node('label',label,'fs-label');
+
+ l.id=id+'Label';
+
+ const s=document.createElement('input');
+
+ s.id=id;
+ s.type='range';
+ s.min=min;
+ s.max=max;
+ s.value=value;
+
+ s.oninput=()=>{
+  change(Number(s.value));
+ };
+
+ parent.append(l,s);
+}
+
+function renderPresets(){
+
+ const root=get('fs40Presets');
+
+ if(!root)return;
+
+ root.replaceChildren();
+
+ if(!presets.length){
+
+  root.append(
+   node('p',
+    'Nessuna combinazione salvata.',
+    'fs-description'
+   )
+  );
+
+ }
+
+ presets.forEach((p,i)=>{
+
+  const r=node('div','','fs-preset');
+
+  r.append(
+
+   button(p.name,()=>{
+
+    update({
+     ...defaults,
+     ...p.settings
+    });
+
+   }),
+
+   button('✕',()=>{
+
+    if(!confirm(
+     'Eliminare questa combinazione?'
+    ))return;
+
+    presets.splice(i,1);
+    save();
+    renderPresets();
+
+   })
+
+  );
+
+  root.append(r);
+
+ });
+}
+
+function build(root,old){
+
+ if(get('fs40'))return;
+
+ const existing=[...root.children];
+
+ const studio=node('div');
+ studio.id='fs40';
+
+ const hero=node('div','','fs-hero');
+
+ hero.append(
+  node('div',
+   '5% • PERSONAL EXPERIENCE',
+   'fs-brand'
+  ),
+  node('div',
+   'FORGE STUDIO',
+   'fs-title'
+  ),
+  node('div',
+   'La tua app. La tua identità.',
+   'fs-subtitle'
+  )
+ );
+
+ const stats=node('div','','fs-stats');
+
+ [
+  ['30','TEMI'],
+  ['20','EFFETTI'],
+  ['∞','COMBINAZIONI']
+ ].forEach(([number,label])=>{
+
+  const item=node('div');
+
+  item.append(
+   node('strong',number),
+   node('small',label)
+  );
+
+  stats.append(item);
+ });
+
+ hero.append(stats);
+ studio.append(hero);
+
+ const preview=node('div','','fs-preview');
+
+ const previewHead=node(
+  'div','','fs-preview-head'
+ );
+
+ previewHead.append(
+  node('span','Anteprima in tempo reale'),
+  node('span','● LIVE','fs-live')
+ );
+
+ const mini=node('div','','fs-mini');
+
+ const miniTitle=node(
+  'div','','fs-mini-title'
+ );
+
+ miniTitle.id='fs40PreviewTitle';
+
+ const miniGrid=node(
+  'div','','fs-mini-grid'
+ );
+
+ [
+  'Forge Training',
+  'Forge Nutrition',
+  'Forge Hydration',
+  'Forge Weight'
+ ].forEach(t=>{
+
+  miniGrid.append(node('div',t));
+
+ });
+
+ mini.append(miniTitle,miniGrid);
+ preview.append(previewHead,mini);
+ studio.append(preview);
+
+ // THEME COLLECTION
+
+ const collection=sectionBox(
+  '◈',
+  'Theme Collection',
+  '30 temi esclusivi'
+ );
+
+ const themeGrid=node('div','','fs-grid');
+
+ themes.forEach(t=>{
+
+  const b=button(
+   t[1],
+   ()=>update({
+    theme:t[0],
+    color:''
+   }),
+   'fs-choice'
+  );
+
+  b.dataset.fsTheme=t[0];
+
+  b.style.background=t[4];
+  b.style.color=t[2];
+  b.style.borderColor=t[2]+'77';
+
+  const swatch=node(
+   'span','','fs-swatch'
+  );
+
+  swatch.style.background=t[2];
+
+  b.prepend(swatch);
+  themeGrid.append(b);
+
+ });
+
+ collection.content.append(themeGrid);
+ studio.append(collection.box);
+
+ // SPECIAL EFFECTS
+
+ const fx=sectionBox(
+  '✦',
+  'Special Effects',
+  '20 effetti dinamici e animazioni'
+ );
+
+ const effectGrid=node(
+  'div','','fs-effects'
+ );
+
+ effects.forEach(e=>{
+
+  const b=button(
+   e[2]+' '+e[1],
+   ()=>update({
+    effect:e[0],
+    motion:true
+   }),
+   'fs-choice'
+  );
+
+  b.dataset.fsEffect=e[0];
+
+  effectGrid.append(b);
+
+ });
+
+ fx.content.append(effectGrid);
+ studio.append(fx.box);
+
+ // WALLPAPER
+
+ const wallpaper=sectionBox(
+  '▧',
+  'Wallpaper & Cover',
+  'Foto personali e copertina Home'
+ );
+
+ // PERSONAL IDENTITY
+
+ const identity=sectionBox(
+  '◉',
+  'Personal Identity',
+  'Logo e colore esclusivo'
+ );
+
+ const color=document.createElement('input');
+
+ color.id='fs40Color';
+ color.type='color';
+
+ color.oninput=()=>{
+  update({color:color.value});
+ };
+
+ identity.content.append(
+  node('label',
+   'Colore personalizzato',
+   'fs-label'
+  ),
+  color
+ );
+
+ // PRESERVA I CONTROLLI IMMAGINE V27
+
+ existing.forEach(card=>{
+
+  if(card===old)return;
+
+  const heading=card.querySelector('h3');
+
+  const title=heading?
+   heading.textContent.trim():'';
+
+  if(title==='Copertina Home'){
+
+   card.classList.add('fs-image-card');
+   wallpaper.content.append(card);
+
+  }else if(title==='Logo Forge Coaching'){
+
+   card.classList.add('fs-image-card');
+   identity.content.append(card);
+
+  }else if(title==='Ripristino'){
+
+   card.hidden=true;
+
+  }
+
+ });
+
+ old.hidden=true;
+
+ studio.append(
+  wallpaper.box,
+  identity.box
+ );
+
+ // ADVANCED SETTINGS
+
+ const advanced=sectionBox(
+  '⚙',
+  'Advanced Settings',
+  'Intensità, luminosità e movimento'
+ );
+
+ slider(
+  advanced.content,
+  'fs40Intensity',
+  'Intensità: '+draft.intensity+'%',
+  5,100,draft.intensity,
+  value=>update({intensity:value})
+ );
+
+ slider(
+  advanced.content,
+  'fs40Brightness',
+  'Luminosità: '+draft.brightness+'%',
+  60,120,draft.brightness,
+  value=>update({brightness:value})
+ );
+
+ const motion=button(
+  'Disattiva animazioni',
+  ()=>update({motion:!draft.motion})
+ );
+
+ motion.id='fs40Motion';
+
+ const motionActions=node(
+  'div','','fs-actions'
+ );
+
+ motionActions.append(motion);
+
+ advanced.content.append(motionActions);
+ studio.append(advanced.box);
+
+ // MY PRESETS
+
+ const personal=sectionBox(
+  '◇',
+  'My Presets',
+  'Le tue combinazioni preferite'
+ );
+
+ const presetName=document.createElement(
+  'input'
+ );
+
+ presetName.type='text';
+ presetName.placeholder=
+  'Nome della combinazione';
+
+ presetName.maxLength=40;
+
+ const presetActions=node(
+  'div','','fs-actions'
+ );
+
+ presetActions.append(
+
+  presetName,
+
+  button(
+   '+ Salva combinazione',
+   ()=>{
+
+    const name=presetName.value.trim();
+
+    if(!name){
+     status('Inserisci un nome.');
+     return;
+    }
+
+    if(presets.length>=30){
+     status('Massimo 30 combinazioni.');
+     return;
+    }
+
+    presets.push({
+     name:name,
+     settings:{...draft}
+    });
+
+    presetName.value='';
+
+    save();
+    renderPresets();
+
+   }
+  )
+
+ );
+
+ const presetList=node('div');
+ presetList.id='fs40Presets';
+
+ personal.content.append(
+  presetActions,presetList
+ );
+
+ studio.append(personal.box);
+
+ // SAVE AND RESET
+
+ const saveButton=button(
+  'SALVA PERSONALIZZAZIONE',
+  ()=>save(),
+  'fs-save'
+ );
+
+ const resetButton=button(
+  'Ripristina Forge Gold originale',
+  ()=>{
+
+   if(!confirm(
+    'Ripristinare tema ed effetti originali? Le foto saranno mantenute.'
+   ))return;
+
+   draft={...defaults};
+
+   apply();
+   refreshSelections();
+   save();
+
+  }
+ );
+
+ const message=node(
+  'div',
+  'Preferenze personali per account',
+  'fs-status'
+ );
+
+ message.id='fs40Status';
+
+ studio.append(
+  saveButton,
+  resetButton,
+  message
+ );
+
+ root.prepend(studio);
+
+ renderPresets();
+ refreshSelections();
+ apply();
+
+ mounted=studio;
+}
+
+// INTEGRAZIONE CON FORGE STUDIO V27
+
+function refresh(){
+
+ const id=account();
+
+ if(id!==currentAccount){
+
+  currentAccount=id;
+
+  stopEffect();
+  mounted=null;
+
+  if(id){
+   load();
+   apply();
+  }else{
+
+   draft={...defaults};
+
+   const t=themes[0];
+
+   css.setProperty('--gold',t[2]);
+   css.setProperty('--bg',t[3]);
+   css.setProperty('--panel',t[4]);
+   css.setProperty('--line','#59492f');
+
+   delete document.documentElement
+    .dataset.forgeStudio40;
+  }
+
+ }
+
+ if(!id)return;
+
+ const root=get('sectionContent');
+ const old=get('f27Studio');
+
+ if(
+  active==='Forge Studio'&&
+  root&&old&&
+  !get('fs40')
+ ){
+
+  build(root,old);
+
+ }
+
+ if(
+  active!=='Forge Studio'&&
+  mounted
+ ){
+
+  load();
+  apply();
+  mounted=null;
+
+ }
+
+ // Mantiene il tema dopo modifiche
+ // di copertina o logo V27.
+
+ applyTheme();
+
+}
+
+function safeRefresh(){
+ try{
+  refresh();
+ }catch(e){
+  console.warn('Forge Studio V40:',e);
+ }
+}
+
+window.addEventListener(
+ 'resize',resize
+);
+
+document.addEventListener(
+ 'visibilitychange',
+ ()=>{
+
+  if(document.hidden)stopEffect();
+  else if(account())apply();
+
+ }
+);
+
+if(reduced.addEventListener){
+ reduced.addEventListener(
+  'change',startEffect
+ );
+}
+
+document.addEventListener(
+ 'click',
+ ()=>setTimeout(safeRefresh,100)
+);
+
+setInterval(safeRefresh,900);
+
+safeRefresh();
+
+console.info(
+ 'FORGE STUDIO V40 ULTIMATE ACTIVE'
+);
+
+})();
+</script>
+<!-- END FORGE STUDIO V40 ULTIMATE -->
