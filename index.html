@@ -21182,3 +21182,576 @@ console.info('FORGE V31 PREMIUM REDESIGN ACTIVE');
 })();
 </script>
 <!-- END FORGE V31 -->
+
+<!-- FORGE V32 CLIENTS & CHAT PREMIUM -->
+<style>
+#sectionCard.f32-active{
+ background:#0c0d10!important;
+ border:1px solid #30291d!important;
+ border-radius:22px!important;
+ padding:15px!important;
+}
+
+.f32-active #sectionTitle{
+ color:#e9c675!important;
+ font-size:25px!important;
+ font-weight:850!important;
+ letter-spacing:1px;
+ text-transform:uppercase;
+}
+
+.f32-active #sectionContent{
+ display:flex;
+ flex-direction:column;
+ gap:12px!important;
+}
+
+.f32-active .stats{
+ display:grid!important;
+ grid-template-columns:repeat(4,minmax(0,1fr))!important;
+ gap:6px!important;
+ margin:8px 0!important;
+}
+
+.f32-active .stat{
+ min-width:0!important;
+ padding:10px 3px!important;
+ border-radius:12px!important;
+ text-align:center!important;
+ background:#191a1f!important;
+ border:1px solid #393124!important;
+}
+
+.f32-active .stat span{
+ font-size:10px!important;
+ display:block!important;
+ line-height:1.2!important;
+}
+
+.f32-active .stat strong{
+ display:block!important;
+ font-size:24px!important;
+ color:#e9c675!important;
+ margin-top:5px!important;
+}
+
+.f32-active input[type="search"]{
+ border-radius:14px!important;
+ background:#191a1f!important;
+ border:1px solid #393124!important;
+ min-height:44px!important;
+ font-size:14px!important;
+}
+
+.f32-active .f30-client{
+ background:#17181c!important;
+ border:1px solid #30291d!important;
+ border-radius:15px!important;
+ padding:11px!important;
+ margin:6px 0!important;
+ gap:10px!important;
+}
+
+.f32-active .f30-avatar{
+ width:46px!important;
+ height:46px!important;
+ border:1px solid #9c793b!important;
+ background:#302719!important;
+ color:#e9c675!important;
+}
+
+.f32-active .f30-info strong{
+ font-size:15px!important;
+ color:#f5f5f5!important;
+}
+
+.f32-active .f30-info small{
+ font-size:12px!important;
+ color:#999ba3!important;
+}
+
+.f32-active .f30-client button{
+ border-radius:12px!important;
+ min-height:36px!important;
+ padding:8px!important;
+ font-size:12px!important;
+}
+
+.f32-chat .stats{
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+}
+
+.f32-chat .stat span{
+ font-size:12px!important;
+}
+
+.f32-chat .f32-hide{
+ display:none!important;
+}
+
+.f32-chat .f30-client{
+ background:transparent!important;
+ border:0!important;
+ border-bottom:1px solid #292a30!important;
+ border-radius:0!important;
+ padding:13px 3px!important;
+ margin:0!important;
+}
+
+.f32-chat .f30-client button{
+ width:48px!important;
+ background:#211e17!important;
+ color:#e9c675!important;
+}
+
+.f32-back{
+ display:flex!important;
+ align-items:center;
+ justify-content:flex-start;
+ background:transparent!important;
+ color:#e9c675!important;
+ border:0!important;
+ padding:8px 0!important;
+ font-size:14px!important;
+ width:auto!important;
+}
+
+.f32-active #closeSectionBtn{
+ display:none!important;
+}
+
+.f32-conversation{
+ position:fixed!important;
+ inset:0!important;
+ width:100%!important;
+ height:100dvh!important;
+ max-width:none!important;
+ max-height:none!important;
+ z-index:9990!important;
+ box-sizing:border-box!important;
+ padding-top:calc(env(safe-area-inset-top) + 12px)!important;
+ padding-bottom:calc(env(safe-area-inset-bottom) + 12px)!important;
+ border-radius:0!important;
+ overflow-y:auto!important;
+}
+
+.f32-conversation .f30-panel{
+ background:transparent!important;
+ border:0!important;
+ padding:4px!important;
+ margin:0!important;
+}
+
+.f32-conversation .f30-messages{
+ height:calc(100dvh - 290px)!important;
+ min-height:160px!important;
+ background:#101115!important;
+ border-radius:15px!important;
+ padding:12px!important;
+}
+
+.f32-conversation .f30-bubble{
+ border-radius:17px 17px 17px 4px!important;
+ padding:11px 14px!important;
+ font-size:14px!important;
+ line-height:1.5!important;
+}
+
+.f32-conversation .f30-bubble.mine{
+ background:linear-gradient(135deg,#e9c675,#bc944d)!important;
+ color:#14110c!important;
+ border-radius:17px 17px 4px 17px!important;
+}
+
+.f32-conversation .f30-compose{
+ padding:10px 0!important;
+ gap:8px!important;
+}
+
+.f32-conversation .f30-compose textarea{
+ background:#202126!important;
+ border:1px solid #393124!important;
+ border-radius:20px!important;
+ font-size:16px!important;
+ color:white!important;
+}
+
+.f32-conversation .f30-compose button{
+ background:#e9c675!important;
+ color:#101010!important;
+ border-radius:20px!important;
+ font-weight:800!important;
+}
+
+.f32-preview{
+ display:block;
+ font-size:12px;
+ color:#a4a5ab;
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ margin-top:5px;
+}
+
+.f32-time{
+ font-size:10px;
+ color:#bca36c;
+ margin-top:4px;
+}
+
+.f32-unread{
+ display:inline-block;
+ background:#e9c675;
+ color:#111;
+ border-radius:20px;
+ font-size:11px;
+ padding:3px 7px;
+ margin-left:6px;
+}
+
+.f32-active .f30-panel h3{
+ color:#e9c675!important;
+}
+
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeV32)return;
+window.forgeV32=true;
+
+let busy=false;
+let lastLoad=0;
+let lastList=null;
+let lastOwner=null;
+
+function element(tag,text,cls){
+ const e=document.createElement(tag);
+ e.textContent=text||'';
+ if(cls)e.className=cls;
+ return e;
+}
+
+function normalize(s){
+ return String(s||'').trim().toLowerCase();
+}
+
+function decorate(){
+
+ const card=document.getElementById('sectionCard');
+ const root=document.getElementById('sectionContent');
+ const title=document.getElementById('sectionTitle');
+
+ if(!card||!root||!title)return;
+
+ const name=normalize(title.textContent);
+
+ const chat=name==='forge chat';
+ const clients=/^(i miei clienti|forge clients|forge client manager)$/.test(name);
+
+ const enabled=(chat||clients)&&
+ !card.classList.contains('hidden');
+
+ card.classList.toggle('f32-active',enabled);
+ card.classList.toggle('f32-chat',enabled&&chat);
+
+ const conversation=enabled&&chat&&
+ !!root.querySelector('.f30-messages');
+
+ card.classList.toggle(
+ 'f32-conversation',conversation
+ );
+
+ if(!enabled)return;
+
+ if(clients&&title.textContent!=='Forge Clients'){
+ title.textContent='Forge Clients';
+ }
+
+ let back=card.querySelector('.f32-back');
+
+ if(!back){
+ back=element(
+ 'button','‹  Torna alla home','f32-back'
+ );
+
+ back.type='button';
+
+ back.onclick=()=>{
+ const close=document.getElementById(
+ 'closeSectionBtn'
+ );
+
+ if(close)close.click();
+
+ card.classList.remove(
+ 'f32-conversation','f32-active','f32-chat'
+ );
+ };
+
+ title.before(back);
+ }
+
+ const stats=root.querySelector('.stats');
+
+ if(stats){
+
+ stats.querySelectorAll('.stat').forEach(box=>{
+
+ const label=box.querySelector('span');
+ if(!label)return;
+
+ const text=normalize(label.textContent);
+
+ if(chat){
+
+ const hide=/approvat|attesa|attivi/.test(text);
+
+ box.classList.toggle('f32-hide',hide);
+
+ if(text==='clienti'){
+ label.textContent='Contatti';
+ }
+
+ if(text==='messaggi non letti'){
+ label.textContent='Non letti';
+ }
+
+ }else{
+
+ box.classList.remove('f32-hide');
+
+ if(text==='approvati'){
+ label.textContent='Attivi';
+ }
+
+ if(text==='messaggi non letti'){
+ label.textContent='Messaggi';
+ }
+
+ }
+
+ });
+
+ }
+
+ if(chat&&!conversation){
+
+ const search=root.querySelector(
+ 'input[type="search"]'
+ );
+
+ if(search){
+ search.placeholder='Cerca una conversazione...';
+ }
+
+ const rows=root.querySelectorAll('.f30-client');
+
+ rows.forEach(row=>{
+
+ const button=row.querySelector('button');
+
+ if(button&&button.textContent.trim()==='Chat'){
+ button.textContent='›';
+ button.setAttribute(
+ 'aria-label','Apri conversazione'
+ );
+ }
+
+ });
+
+ }
+
+}
+
+async function previews(){
+
+ if(busy)return;
+
+ const card=document.getElementById('sectionCard');
+ const root=document.getElementById('sectionContent');
+
+ if(!card||!root||
+ !card.classList.contains('f32-chat')||
+ card.classList.contains('hidden')||
+ card.classList.contains('f32-conversation'))return;
+
+ if(typeof user==='undefined'||!user||
+ typeof db==='undefined'||
+ typeof role==='undefined'||role!=='admin')return;
+
+ const rows=[...root.querySelectorAll('.f30-client')];
+
+ if(!rows.length)return;
+
+ const owner=user.id;
+ const first=rows[0];
+
+ if(lastList===first&&lastOwner===owner&&
+ Date.now()-lastLoad<15000)return;
+
+ busy=true;
+
+ try{
+
+ const profiles=await db.from('profiles')
+ .select('id,first_name,last_name,full_name,email')
+ .neq('id',owner)
+ .limit(1000);
+
+ if(profiles.error)throw profiles.error;
+
+ const messages=await db
+ .from('forge_chat_v28_messages')
+ .select('client_id,sender_id,body,created_at,read_at')
+ .eq('coach_id',owner)
+ .order('created_at',{ascending:false})
+ .limit(1000);
+
+ if(messages.error)throw messages.error;
+
+ if(!user||user.id!==owner||
+ !first.isConnected||
+ !card.classList.contains('f32-chat')||
+ card.classList.contains('hidden'))return;
+
+ const latest=new Map();
+ const unread=new Map();
+
+ (messages.data||[]).forEach(m=>{
+
+ if(!latest.has(m.client_id)){
+ latest.set(m.client_id,m);
+ }
+
+ if(m.sender_id!==owner&&!m.read_at){
+ unread.set(
+ m.client_id,
+ (unread.get(m.client_id)||0)+1
+ );
+ }
+
+ });
+
+ rows.forEach(row=>{
+
+ if(!row.isConnected)return;
+
+ const info=row.querySelector('.f30-info');
+ if(!info)return;
+
+ const strong=info.querySelector('strong');
+ if(!strong)return;
+
+ const name=normalize(strong.textContent);
+ const details=normalize(info.textContent);
+
+ const matches=(profiles.data||[]).filter(p=>{
+
+ const full=normalize(
+ [p.first_name,p.last_name]
+ .filter(Boolean).join(' ')||
+ p.full_name||p.email
+ );
+
+ return full===name||
+ (p.email&&details.includes(normalize(p.email)));
+
+ });
+
+ if(matches.length!==1)return;
+
+ const id=matches[0].id;
+ const msg=latest.get(id);
+
+ info.querySelectorAll(
+ '.f32-preview,.f32-time,.f32-unread'
+ ).forEach(e=>e.remove());
+
+ const preview=element(
+ 'div',
+ msg
+ ?(msg.sender_id===owner?'Tu: ':'')+msg.body
+ :'Inizia una conversazione',
+ 'f32-preview'
+ );
+
+ info.append(preview);
+
+ if(msg){
+
+ const date=new Date(msg.created_at);
+
+ const today=date.toDateString()===
+ new Date().toDateString();
+
+ const time=element(
+ 'div',
+ today
+ ?date.toLocaleTimeString('it-IT',{
+ hour:'2-digit',minute:'2-digit'
+ })
+ :date.toLocaleDateString('it-IT',{
+ day:'2-digit',month:'2-digit'
+ }),
+ 'f32-time'
+ );
+
+ info.append(time);
+
+ }
+
+ if(unread.get(id)){
+
+ const badge=element(
+ 'span',
+ String(unread.get(id))+' non letti',
+ 'f32-unread'
+ );
+
+ info.append(badge);
+
+ }
+
+ });
+
+ lastList=first;
+ lastOwner=owner;
+ lastLoad=Date.now();
+
+ }catch(e){
+
+ console.warn('Forge V32 preview:',e.message);
+
+ }finally{
+
+ busy=false;
+
+ }
+
+}
+
+function update(){
+
+ try{
+ decorate();
+ previews();
+ }catch(e){
+ console.warn('Forge V32:',e.message);
+ }
+
+}
+
+update();
+
+setInterval(update,1000);
+
+console.info(
+ 'FORGE V32 PREMIUM CLIENTS & CHAT ACTIVE'
+);
+
+})();
+</script>
+<!-- END FORGE V32 -->
