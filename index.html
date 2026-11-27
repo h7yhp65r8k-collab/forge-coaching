@@ -27611,3 +27611,273 @@ console.log('FORGE MENU V58 ACTIVE');
 })();
 </script>
 <!-- END FORGE MENU V58 -->
+<!-- FORGE V61 NOTIFICATIONS -->
+<style>
+#forgeV61Bell{
+ position:fixed;
+ top:14px;
+ right:14px;
+ z-index:9998;
+ width:48px;
+ height:48px;
+ margin:0;
+ border:1px solid #e9c675;
+ border-radius:50%;
+ background:#171717;
+ color:#e9c675;
+ font-size:22px;
+}
+#forgeV61Badge{
+ position:absolute;
+ top:-5px;
+ right:-5px;
+ min-width:21px;
+ padding:3px;
+ border-radius:20px;
+ background:#bd3333;
+ color:white;
+ font-size:11px;
+}
+#forgeV61Notifications{
+ position:fixed;
+ inset:0;
+ z-index:9999;
+ background:#08090b;
+ color:#eee;
+ padding:20px;
+ overflow:auto;
+}
+.f61-notice{
+ padding:15px;
+ margin:10px 0;
+ background:#191a1f;
+ border:1px solid #59492f;
+ border-radius:14px;
+}
+.f61-unread{
+ border-color:#e9c675;
+}
+.f61-notice strong{
+ color:#e9c675;
+}
+.f61-notice small{
+ color:#aaa;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_V61_NOTIFICATIONS)return;
+window.FORGE_V61_NOTIFICATIONS=true;
+
+const E=(tag,text='')=>{
+ const n=document.createElement(tag);
+ n.textContent=text;
+ return n;
+};
+
+function logged(){
+ return typeof user!=='undefined' &&
+ !!user &&
+ !document.getElementById('app')
+ ?.classList.contains('hidden');
+}
+
+const bell=E('button','🔔');
+bell.id='forgeV61Bell';
+bell.setAttribute('aria-label','Notifiche');
+bell.hidden=true;
+bell.style.display='none';
+
+const badge=E('span','0');
+badge.id='forgeV61Badge';
+badge.hidden=true;
+bell.append(badge);
+
+const panel=E('section');
+panel.id='forgeV61Notifications';
+panel.style.display='none';
+
+document.body.append(bell,panel);
+
+let owner='';
+let loading=false;
+
+async function count(){
+ if(!logged()){
+  owner='';
+  bell.style.display='none';
+  panel.style.display='none';
+  panel.replaceChildren();
+  badge.hidden=true;
+  return;
+ }
+
+ const id=user.id;
+
+ if(owner!==id){
+  owner=id;
+  panel.style.display='none';
+  panel.replaceChildren();
+  badge.hidden=true;
+ }
+
+ bell.hidden=false;
+ bell.style.display='block';
+
+ const r=await db
+ .from('forge_v60_notifications')
+ .select('id',{count:'exact',head:true})
+ .eq('recipient_id',id)
+ .eq('is_read',false);
+
+ if(!logged()||user.id!==id)return;
+ if(r.error)return;
+
+ const n=r.count||0;
+ badge.textContent=n>99?'99+':String(n);
+ badge.hidden=n===0;
+}
+
+async function mark(id){
+ const r=await db.rpc(
+  'forge_v60_mark_read',
+  {p_id:id}
+ );
+
+ if(r.error)throw r.error;
+ await count();
+}
+
+function btn(text,fn){
+ const b=E('button',text);
+
+ b.onclick=async()=>{
+  b.disabled=true;
+  try{
+   await fn();
+  }catch(e){
+   alert(e.message||String(e));
+  }finally{
+   b.disabled=false;
+  }
+ };
+
+ return b;
+}
+
+async function openCenter(){
+ if(!logged()||loading)return;
+
+ loading=true;
+ const id=user.id;
+
+ panel.style.display='block';
+
+ panel.replaceChildren(
+  E('h2','FORGE NOTIFICATIONS'),
+  btn('‹ Torna alla home',()=>{
+   panel.style.display='none';
+  }),
+  btn('Segna tutte come lette',async()=>{
+   await mark(null);
+   await openCenter();
+  }),
+  E('p','Caricamento...')
+ );
+
+ try{
+
+  const r=await db
+  .from('forge_v60_notifications')
+  .select('*')
+  .eq('recipient_id',id)
+  .order('created_at',{ascending:false})
+  .limit(100);
+
+  if(!logged()||user.id!==id)return;
+  if(r.error)throw r.error;
+
+  panel.lastElementChild.remove();
+
+  if(!r.data?.length){
+   panel.append(E('p','Nessuna notifica.'));
+  }
+
+  for(const x of r.data||[]){
+
+   const card=E('div');
+
+   card.className='f61-notice'+
+   (!x.is_read?' f61-unread':'');
+
+   card.append(
+    E('strong',x.title||'Forge Coaching'),
+    E('p',x.message||''),
+    E('small',
+     new Date(x.created_at)
+     .toLocaleString('it-IT')
+    )
+   );
+
+   if(!x.is_read){
+    card.append(
+     btn('Segna come letta',async()=>{
+      await mark(x.id);
+      await openCenter();
+     })
+    );
+   }
+
+   if(x.target_section){
+
+    const nav=[...document.querySelectorAll(
+     '#mainNav button'
+    )].find(b=>
+     String(b.dataset.section||
+     b.textContent).trim().toLowerCase()
+     ===String(x.target_section)
+     .trim().toLowerCase()
+    );
+
+    if(nav&&nav.getClientRects().length&&
+     !nav.disabled&&
+     nav.dataset.f50Locked!=='1'){
+
+     card.append(
+      btn('Apri sezione',async()=>{
+       await mark(x.id);
+       panel.style.display='none';
+       nav.click();
+      })
+     );
+    }
+   }
+
+   panel.append(card);
+  }
+
+ }catch(e){
+  panel.append(E('p',e.message));
+ }finally{
+  loading=false;
+ }
+}
+
+bell.onclick=openCenter;
+
+setInterval(()=>{
+ count().catch(console.warn);
+},5000);
+
+window.addEventListener('focus',()=>{
+ count().catch(console.warn);
+});
+
+count().catch(console.warn);
+
+})();
+</script>
+<!-- END FORGE V61 NOTIFICATIONS -->
