@@ -19634,3 +19634,794 @@ console.info('FORGE V29 HOME & PERSONAL ACCOUNT ACTIVE');
 })();
 </script>
 <!-- END FORGE V29 -->
+
+<!-- FORGE V30 CLIENT MANAGER & PRIVATE CHAT -->
+
+<style>
+.f30-panel{
+ background:#141519;
+ border:1px solid #59492f;
+ border-radius:18px;
+ padding:14px;
+ margin:12px 0;
+}
+.f30-client{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ padding:14px;
+ margin:8px 0;
+ background:#202126;
+ border:1px solid #59492f;
+ border-radius:14px;
+}
+.f30-avatar{
+ width:46px;
+ height:46px;
+ flex-shrink:0;
+ border-radius:50%;
+ background:#302719;
+ color:#e9c675;
+ display:grid;
+ place-items:center;
+ font-weight:800;
+ overflow:hidden;
+}
+.f30-avatar img{
+ width:100%;
+ height:100%;
+ object-fit:cover;
+}
+.f30-info{
+ flex:1;
+ min-width:0;
+ overflow-wrap:anywhere;
+}
+.f30-info strong{
+ color:#e9c675;
+}
+.f30-info small{
+ display:block;
+ color:#aaa;
+ margin-top:4px;
+}
+.f30-messages{
+ height:380px;
+ overflow-y:auto;
+ display:flex;
+ flex-direction:column;
+ gap:10px;
+ padding:12px 4px;
+ overscroll-behavior:contain;
+}
+.f30-bubble{
+ max-width:85%;
+ padding:12px;
+ border-radius:15px;
+ background:#292a30;
+ color:white;
+ align-self:flex-start;
+ overflow-wrap:anywhere;
+ white-space:pre-wrap;
+}
+.f30-bubble.mine{
+ align-self:flex-end;
+ background:linear-gradient(135deg,#e9c675,#b58a40);
+ color:#17130d;
+}
+.f30-bubble small{
+ display:block;
+ text-align:right;
+ font-size:10px;
+ margin-top:6px;
+ opacity:.75;
+}
+.f30-compose{
+ display:flex;
+ align-items:center;
+ gap:8px;
+}
+.f30-compose textarea{
+ flex:1;
+ min-width:0;
+ min-height:48px;
+ resize:vertical;
+}
+.f30-compose button{
+ width:76px;
+ flex-shrink:0;
+}
+.f30-badge{
+ display:inline-block;
+ background:#e9c675;
+ color:#111;
+ border-radius:20px;
+ padding:3px 9px;
+ font-size:12px;
+ font-weight:800;
+}
+.f30-actions{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px;
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgeV30)return;
+window.forgeV30=true;
+
+const CHAT='forge_chat_v28_messages';
+
+let currentClient=null;
+let currentRoot=null;
+let currentOwner=null;
+let chatTimer=null;
+let loadingChat=false;
+let syncedIdentity='';
+let chatVersion=0;
+
+const node=(tag,text='',cls='')=>{
+ const e=document.createElement(tag);
+ e.textContent=text;
+ e.className=cls;
+ return e;
+};
+
+function action(text,fn,cls='secondary'){
+ const b=node('button',text,cls);
+ b.type='button';
+ b.onclick=async()=>{
+  if(b.disabled)return;
+  b.disabled=true;
+  try{
+   await fn();
+  }catch(e){
+   alert(e.message||String(e));
+  }finally{
+   b.disabled=false;
+  }
+ };
+ return b;
+}
+
+async function rpc(name,args={}){
+ const {data,error}=await db.rpc(name,args);
+ if(error)throw error;
+ return data;
+}
+
+function visible(){
+ return user &&
+ !document.getElementById('app').classList.contains('hidden');
+}
+
+function stopChat(){
+ clearInterval(chatTimer);
+ chatTimer=null;
+ currentClient=null;
+ currentRoot=null;
+ currentOwner=null;
+ chatVersion++;
+}
+
+function openPanel(title){
+ stopChat();
+
+ serial++;
+ calendarSerial++;
+ active=title;
+
+ const card=document.getElementById('sectionCard');
+ const root=document.getElementById('sectionContent');
+
+ document.getElementById('sectionTitle').textContent=title;
+ document.getElementById('sectionText').textContent='';
+ root.replaceChildren();
+
+ card.classList.remove('hidden');
+
+ document.querySelectorAll('[data-section]').forEach(b=>{
+  b.classList.toggle('active',b.dataset.section===title);
+ });
+
+ card.scrollIntoView({behavior:'smooth',block:'start'});
+
+ return root;
+}
+
+/* SINCRONIZZAZIONE ANAGRAFICA */
+
+async function syncIdentity(){
+ if(!visible())return;
+
+ const id=user.id;
+ const m=user.user_metadata||{};
+ const first=String(m.first_name||'').trim();
+ const last=String(m.last_name||'').trim();
+
+ if(!first||!last)return;
+
+ const key=id+'|'+first+'|'+last;
+
+ if(syncedIdentity===key)return;
+
+ syncedIdentity=key;
+
+ try{
+  const saved=await rpc('forge_v28_save_identity',{
+   p_first_name:first,
+   p_last_name:last
+  });
+
+  if(saved!==true)throw Error('Anagrafica non sincronizzata');
+
+ }catch(e){
+  if(syncedIdentity===key)syncedIdentity='';
+  console.warn('Forge V30 identity:',e.message);
+ }
+}
+
+/* LETTURA CLIENTI */
+
+async function getClients(){
+ if(role!=='admin')throw Error('Accesso riservato al coach.');
+
+ const result=await db.from('profiles')
+ .select('id,first_name,last_name,full_name,email,avatar_url')
+ .neq('id',user.id)
+ .limit(1000);
+
+ if(result.error)throw result.error;
+
+ const access=await db.from('account_access')
+ .select('user_id,status')
+ .limit(1000);
+
+ if(access.error)throw access.error;
+
+ const map=new Map(
+  (access.data||[]).map(x=>[x.user_id,x.status])
+ );
+
+ return (result.data||[]).map(p=>({
+  ...p,
+  status:map.get(p.id)||'unknown',
+  name:[p.first_name,p.last_name]
+   .filter(Boolean).join(' ')||
+   p.full_name||p.email||'Cliente'
+ })).sort((a,b)=>a.name.localeCompare(b.name,'it'));
+}
+
+function avatar(p){
+ const a=node('div','','f30-avatar');
+
+ a.textContent=p.name.split(/\s+/)
+ .slice(0,2).map(x=>x[0]||'').join('').toUpperCase();
+
+ if(p.avatar_url){
+  const img=node('img');
+  img.alt='Foto profilo';
+  img.src=p.avatar_url;
+  img.onload=()=>a.replaceChildren(img);
+ }
+
+ return a;
+}
+
+const statusLabels={
+ approved:'Approvato',
+ pending:'In attesa',
+ suspended:'Sospeso',
+ rejected:'Rifiutato',
+ unknown:'Stato non disponibile'
+};
+
+/* CLIENT MANAGER */
+
+async function clientManager(chatOnly=false){
+ if(!visible()||role!=='admin')return;
+
+ const title=chatOnly?'Forge Chat':'I miei clienti';
+ const root=openPanel(title);
+ const owner=user.id;
+ const version=chatVersion;
+
+ root.append(node('p','Caricamento clienti...','muted'));
+
+ try{
+  const clients=await getClients();
+
+  if(!visible()||user.id!==owner||
+   active!==title||chatVersion!==version)return;
+
+  const unreadResult=await db.from(CHAT)
+  .select('client_id')
+  .eq('coach_id',owner)
+  .neq('sender_id',owner)
+  .is('read_at',null);
+
+  if(unreadResult.error)throw unreadResult.error;
+
+  if(!visible()||user.id!==owner||
+   active!==title||chatVersion!==version)return;
+
+  const counts={};
+
+  (unreadResult.data||[]).forEach(m=>{
+   counts[m.client_id]=(counts[m.client_id]||0)+1;
+  });
+
+  root.replaceChildren();
+
+  const stats=node('div','','stats');
+
+  [
+   ['Clienti',clients.length],
+   ['Approvati',clients.filter(p=>p.status==='approved').length],
+   ['In attesa',clients.filter(p=>p.status==='pending').length],
+   ['Messaggi non letti',(unreadResult.data||[]).length]
+  ].forEach(([label,value])=>{
+   const box=node('div','','stat');
+   box.append(node('span',label),node('strong',String(value)));
+   stats.append(box);
+  });
+
+  const search=node('input');
+  search.type='search';
+  search.placeholder='Cerca nome, cognome o email';
+
+  const list=node('div');
+
+  root.append(stats,search,list);
+
+  function draw(){
+   list.replaceChildren();
+
+   const q=search.value.trim().toLowerCase();
+
+   const filtered=clients.filter(p=>
+    (!chatOnly||p.status==='approved') &&
+    (p.name+' '+(p.email||'')).toLowerCase().includes(q)
+   );
+
+   if(!filtered.length){
+    list.append(node('p','Nessun cliente trovato.','muted'));
+   }
+
+   filtered.forEach(p=>{
+    const card=node('div','','f30-client');
+    const info=node('div','','f30-info');
+
+    info.append(
+     node('strong',p.name),
+     node('small',p.email||''),
+     node('small',statusLabels[p.status]||p.status)
+    );
+
+    if(counts[p.id]){
+     info.append(node('span',
+      counts[p.id]+' non letti','f30-badge'));
+    }
+
+    const open=action(chatOnly?'Chat':'Apri',()=>{
+     return chatOnly?openChat(p.id,p.name):clientDetail(p);
+    });
+
+    open.style.width='75px';
+
+    card.append(avatar(p),info,open);
+    list.append(card);
+   });
+  }
+
+  search.oninput=draw;
+  draw();
+
+ }catch(e){
+  if(active===title&&chatVersion===version){
+   root.replaceChildren(node('div',e.message,'status error'));
+  }
+ }
+}
+
+async function changeStatus(id,status){
+ if(role!=='admin')throw Error('Non autorizzato.');
+
+ if(!confirm('Confermi il cambio di stato?'))return false;
+
+ const {data,error}=await db.from('account_access')
+ .update({status})
+ .eq('user_id',id)
+ .select('user_id');
+
+ if(error)throw error;
+
+ if(!data?.length)throw Error('Modifica non autorizzata.');
+
+ return true;
+}
+
+async function clientDetail(p){
+ if(!visible()||role!=='admin')return;
+
+ const root=openPanel('I miei clienti');
+
+ const card=node('div','','f30-panel');
+
+ card.append(
+  avatar(p),
+  node('h2',p.name),
+  node('p',p.email||'','muted'),
+  node('p','Account: '+(statusLabels[p.status]||p.status))
+ );
+
+ root.append(
+  action('‹ Tutti i clienti',()=>clientManager()),
+  card
+ );
+
+ const controls=node('div','','f30-actions');
+
+ [
+  ['Approva','approved'],
+  ['Sospendi','suspended'],
+  ['Rifiuta','rejected']
+ ].forEach(([label,status])=>{
+  if(p.status===status)return;
+
+  controls.append(action(label,async()=>{
+   if(await changeStatus(p.id,status)){
+    await clientManager();
+   }
+  }));
+ });
+
+ card.append(controls);
+
+ if(p.status==='approved'){
+  card.append(action('Apri Forge Chat',()=>{
+   return openChat(p.id,p.name);
+  },''));
+ }
+
+ const packages=node('div','','f30-panel');
+ packages.append(node('h3','Pacchetti lezioni'));
+ root.append(packages);
+
+ const version=chatVersion;
+
+ const {data,error}=await db
+ .from('forge_lesson_package_summary')
+ .select('*')
+ .eq('client_id',p.id);
+
+ if(chatVersion!==version||!packages.isConnected)return;
+
+ if(error){
+  packages.append(node('p',error.message,'muted'));
+ }else if(!data?.length){
+  packages.append(node('p','Nessun pacchetto assegnato.','muted'));
+ }else{
+  data.forEach(x=>{
+   const box=node('div','','item');
+   box.append(
+    node('strong',x.title||'Pacchetto'),
+    node('p','Lezioni rimanenti: '+x.remaining_sessions),
+    node('p','Lezioni utilizzate: '+x.used_sessions)
+   );
+   packages.append(box);
+  });
+ }
+}
+
+/* FORGE CHAT PRIVATA */
+
+async function openChat(clientId,name){
+ if(!visible())return;
+
+ const root=openPanel('Forge Chat');
+
+ const owner=user.id;
+
+ currentClient=role==='admin'?clientId:owner;
+ currentOwner=owner;
+ currentRoot=root;
+
+ const id=currentClient;
+ const version=chatVersion;
+
+ if(role==='admin'){
+  root.append(action('‹ Conversazioni',()=>clientManager(true)));
+ }
+
+ const panel=node('div','','f30-panel');
+
+ panel.append(
+  node('h3',role==='admin'?name:'Il tuo coach'),
+  node('p','Conversazione privata','muted')
+ );
+
+ const messages=node('div','','f30-messages');
+ const feedback=node('div','','small');
+
+ const compose=node('div','','f30-compose');
+ const text=node('textarea');
+
+ text.placeholder='Scrivi un messaggio...';
+ text.maxLength=4000;
+ text.rows=2;
+
+ let lastSignature=null;
+ let firstLoad=true;
+
+ function valid(){
+  return visible()&&
+   user.id===owner&&
+   currentOwner===owner&&
+   currentClient===id&&
+   currentRoot===root&&
+   active==='Forge Chat'&&
+   chatVersion===version&&
+   messages.isConnected&&
+   !document.getElementById('sectionCard').classList.contains('hidden');
+ }
+
+ async function refresh(){
+  if(!valid()||loadingChat||document.hidden)return;
+
+  loadingChat=true;
+
+  try{
+   let query=db.from(CHAT)
+   .select('id,coach_id,client_id,sender_id,body,created_at,read_at')
+   .eq('client_id',id);
+
+   if(role==='admin'){
+    query=query.eq('coach_id',owner);
+   }
+
+   const {data,error}=await query
+   .order('created_at',{ascending:false})
+   .limit(200);
+
+   if(error)throw error;
+   if(!valid())return;
+
+   const rows=(data||[]).reverse();
+
+   const signature=JSON.stringify(
+    rows.map(m=>[m.id,m.read_at,m.body])
+   );
+
+   const nearBottom=
+    messages.scrollHeight-messages.scrollTop-
+    messages.clientHeight<90;
+
+   if(signature!==lastSignature){
+    lastSignature=signature;
+
+    messages.replaceChildren();
+
+    if(!rows.length){
+     messages.append(node('p',
+      'Inizia la conversazione.','muted'));
+    }
+
+    rows.forEach(m=>{
+     const mine=m.sender_id===owner;
+
+     const bubble=node('div',m.body,
+      'f30-bubble'+(mine?' mine':''));
+
+     const time=new Date(m.created_at)
+      .toLocaleString('it-IT',{
+       day:'2-digit',
+       month:'2-digit',
+       hour:'2-digit',
+       minute:'2-digit'
+      });
+
+     bubble.append(node('small',
+      time+(mine?(m.read_at?' ✓✓':' ✓'):'')
+     ));
+
+     messages.append(bubble);
+    });
+
+    if(firstLoad||nearBottom){
+     messages.scrollTop=messages.scrollHeight;
+    }
+
+    firstLoad=false;
+   }
+
+   if(rows.some(m=>m.sender_id!==owner&&!m.read_at)){
+    if(valid()){
+     await rpc('forge_v28_mark_chat_read',{
+      p_client_id:id
+     });
+    }
+   }
+
+   if(valid())feedback.textContent='';
+
+  }catch(e){
+   if(valid())feedback.textContent=e.message;
+  }finally{
+   loadingChat=false;
+  }
+ }
+
+ const send=action('Invia',async()=>{
+  if(!valid())return;
+
+  const body=text.value.trim();
+
+  if(!body)return;
+
+  await rpc('forge_v28_send_message',{
+   p_client_id:id,
+   p_body:body
+  });
+
+  if(!valid())return;
+
+  if(text.value.trim()===body)text.value='';
+
+  firstLoad=true;
+  await refresh();
+
+ },'');
+
+ compose.append(text,send);
+
+ panel.append(messages,feedback,compose);
+ root.append(panel);
+
+ await refresh();
+
+ if(valid()){
+  chatTimer=setInterval(()=>{
+   if(!valid()){
+    stopChat();
+    return;
+   }
+
+   refresh();
+  },5000);
+ }
+}
+
+/* MENU PRINCIPALE */
+
+function installMenu(){
+ const nav=document.getElementById('mainNav');
+
+ if(!nav)return;
+
+ function install(id,title,handler){
+  let b=document.getElementById(id);
+
+  if(!b){
+   b=node('button',title);
+   b.id=id;
+   b.dataset.section=title;
+   b.type='button';
+   nav.append(b);
+  }
+
+  b.onclick=handler;
+
+  return b;
+ }
+
+ const clients=install(
+  'forgeV30Clients',
+  'I miei clienti',
+  ()=>clientManager()
+ );
+
+ clients.classList.toggle('hidden',role!=='admin');
+
+ install(
+  'forgeV30Chat',
+  'Forge Chat',
+  ()=>{
+   if(role==='admin'){
+    clientManager(true);
+   }else if(visible()){
+    openChat(user.id,'Il tuo coach');
+   }
+  }
+ );
+}
+
+let badgeBusy=false;
+
+async function refreshBadge(){
+ if(!visible()||badgeBusy)return;
+
+ const owner=user.id;
+ const admin=role==='admin';
+
+ badgeBusy=true;
+
+ try{
+  let q=db.from(CHAT)
+   .select('id',{count:'exact',head:true})
+   .neq('sender_id',owner)
+   .is('read_at',null);
+
+  q=admin?q.eq('coach_id',owner):q.eq('client_id',owner);
+
+  const {count,error}=await q;
+
+  if(error||!visible()||user.id!==owner)return;
+
+  const b=document.getElementById('forgeV30Chat');
+
+  if(!b)return;
+
+  let badge=b.querySelector('.f30-badge');
+
+  if(count>0){
+   if(!badge){
+    badge=node('span','','f30-badge');
+    b.append(badge);
+   }
+
+   badge.textContent=String(count);
+  }else{
+   badge?.remove();
+  }
+
+ }finally{
+  badgeBusy=false;
+ }
+}
+
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button');
+
+ if(!b)return;
+
+ if(
+  b.id==='logoutBtn'||
+  b.id==='closeSectionBtn'||
+  (b.dataset.section&&
+   b.id!=='forgeV30Chat'&&
+   b.id!=='forgeV30Clients')
+ ){
+  stopChat();
+ }
+},true);
+
+installMenu();
+
+setInterval(()=>{
+ installMenu();
+
+ if(!visible()){
+  if(currentRoot)stopChat();
+  syncedIdentity='';
+ }
+},1000);
+
+setInterval(()=>{
+ syncIdentity();
+ refreshBadge().catch(console.warn);
+},10000);
+
+syncIdentity();
+refreshBadge().catch(console.warn);
+
+console.info('FORGE V30 CLIENT MANAGER & CHAT ACTIVE');
+
+})();
+</script>
+
+<!-- END FORGE V30 -->
