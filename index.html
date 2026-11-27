@@ -24698,3 +24698,461 @@ console.info(
 </script>
 
 <!-- FORGE ACCESS CONTROL V50 END -->
+<!-- FORGE ACCESS CONTROL V51 -->
+<style>
+#forgeV51{
+background:#15161a;
+border:1px solid #695632;
+border-radius:18px;
+padding:15px;
+margin:12px 0;
+color:#fff;
+}
+#forgeV51 h3{
+color:#e9c675;
+margin:0 0 12px;
+}
+#forgeV51 input,
+#forgeV51 select,
+#forgeV51 button{
+width:100%;
+box-sizing:border-box;
+min-height:44px;
+border-radius:12px;
+border:1px solid #695632;
+background:#202126;
+color:#fff;
+padding:11px;
+margin:6px 0;
+font-size:16px;
+color-scheme:dark;
+}
+#forgeV51 button{
+color:#e9c675;
+font-weight:700;
+}
+#forgeV51 button:disabled{
+opacity:.5;
+}
+#forgeV51 .gold{
+background:#e9c675;
+color:#111;
+}
+#forgeV51 label{
+display:block;
+color:#aaa;
+font-size:12px;
+margin-top:8px;
+}
+.f51box{
+background:#1e1f23;
+border:1px solid #59492f;
+border-radius:14px;
+padding:12px;
+margin-top:12px;
+}
+.f51days{
+font-size:34px;
+color:#e9c675;
+font-weight:800;
+text-align:center;
+}
+.f51small{
+font-size:12px;
+color:#aaa;
+}
+</style>
+
+<script>
+(()=>{
+if(window.forgeV51Loaded)return;
+window.forgeV51Loaded=true;
+
+const E=(tag,text)=>{
+const n=document.createElement(tag);
+n.textContent=text||'';
+return n;
+};
+
+const today=()=>new Intl.DateTimeFormat(
+'sv-SE',{timeZone:'Europe/Rome'}
+).format(new Date());
+
+function plus(date,days){
+const d=new Date(date+'T12:00:00Z');
+d.setUTCDate(d.getUTCDate()+Number(days));
+return d.toISOString().slice(0,10);
+}
+
+function admin(){
+return typeof user!=='undefined'&&user&&
+typeof role!=='undefined'&&role==='admin'&&
+typeof db!=='undefined';
+}
+
+async function rpc(name,args){
+const {data,error}=await db.rpc(name,args);
+if(error)throw error;
+return data;
+}
+
+function select(options){
+const s=E('select');
+options.forEach(([v,t])=>{
+const o=E('option',t);
+o.value=v;
+s.append(o);
+});
+return s;
+}
+
+function date(value){
+const i=E('input');
+i.type='date';
+i.value=value;
+return i;
+}
+
+function field(root,label,input){
+root.append(E('label',label),input);
+return input;
+}
+
+function btn(text,action,gold=false){
+const b=E('button',text);
+b.type='button';
+if(gold)b.className='gold';
+b.onclick=async()=>{
+b.disabled=true;
+try{await action();}
+catch(e){alert(e.message||String(e));}
+finally{b.disabled=false;}
+};
+return b;
+}
+
+function mount(root){
+if(root.querySelector('#forgeV51'))return;
+
+const panel=E('div');
+panel.id='forgeV51';
+
+const content=E('div');
+content.hidden=true;
+
+const clients=select([
+['','Seleziona cliente']
+]);
+
+const detail=E('div');
+let loaded=false;
+let serial=0;
+const owner=user.id;
+
+const alive=()=>panel.isConnected&&
+admin()&&user.id===owner;
+
+panel.append(
+E('h3','FORGE ACCESS CONTROL'),
+btn('Gestisci percorsi e scadenze',async()=>{
+content.hidden=!content.hidden;
+if(!content.hidden&&!loaded)await load();
+},true),
+content
+);
+
+content.append(
+clients,
+btn('Aggiorna clienti',load),
+detail
+);
+
+root.prepend(panel);
+
+async function load(){
+if(!alive())return;
+const {data,error}=await db
+.from('profiles')
+.select('id,first_name,last_name,full_name,email')
+.neq('id',owner)
+.limit(1000);
+
+if(error)throw error;
+if(!alive())return;
+
+clients.replaceChildren();
+
+const first=E('option','Seleziona cliente');
+first.value='';
+clients.append(first);
+
+(data||[]).forEach(p=>{
+const o=E('option',
+[p.first_name,p.last_name]
+.filter(Boolean).join(' ')||
+p.full_name||p.email||'Cliente'
+);
+o.value=p.id;
+clients.append(o);
+});
+
+loaded=true;
+
+if(data?.length===1){
+clients.value=data[0].id;
+}
+
+await render();
+}
+
+clients.onchange=()=>{
+render().catch(e=>alert(e.message));
+};
+
+async function render(){
+const token=++serial;
+const id=clients.value;
+detail.replaceChildren();
+
+if(!id||!alive())return;
+
+const valid=()=>alive()&&
+serial===token&&clients.value===id;
+
+const [access,plans]=await Promise.all([
+rpc('forge_v45_access_status',{
+p_client_id:id
+}),
+rpc('forge_v51_client_plans',{
+p_client_id:id
+})
+]);
+
+if(!valid())return;
+
+const labels={
+pending:'In attesa di approvazione',
+coaching_active:'Coaching attivo',
+coaching_expired:'Coaching scaduto',
+approved_no_plan:'Approvato senza percorso',
+suspended:'Sospeso',
+unlimited:'Accesso illimitato',
+trial_active:'Prova gratuita attiva',
+trial_expired:'Prova terminata'
+};
+
+detail.append(E('p',
+labels[access.mode]||access.mode
+));
+
+const list=Array.isArray(plans)?plans:[];
+
+list.forEach(p=>{
+const box=E('div');
+box.className='f51box';
+
+const active=p.status==='active'&&
+p.starts_on<=today()&&
+p.expires_on>today();
+
+const days=E('div',
+active?String(p.remaining_days):'0'
+);
+days.className='f51days';
+
+box.append(
+E('h3',p.title),
+E('p','Inizio: '+p.starts_on),
+E('p','Scadenza: '+p.expires_on),
+days,
+E('p','Giorni rimanenti')
+);
+
+if(p.status==='active'){
+const end=field(box,
+'Modifica scadenza',
+date(p.expires_on)
+);
+
+[7,14,30,42].forEach(n=>{
+box.append(btn('Proroga +'+n+' giorni',()=>{
+end.value=plus(
+end.value>today()?end.value:today(),n
+);
+}));
+});
+
+box.append(btn('Salva nuova scadenza',async()=>{
+if(!valid())return;
+if(!end.value||end.value<=p.starts_on){
+throw new Error('Data non valida');
+}
+if(!confirm('Confermi la nuova scadenza?'))return;
+
+const ok=await rpc(
+'forge_v51_update_expiry',{
+p_subscription_id:p.id,
+p_expires_on:end.value
+});
+
+if(!ok)throw new Error('Aggiornamento non riuscito');
+
+alert('Scadenza aggiornata');
+await render();
+},true));
+}
+
+detail.append(box);
+});
+
+const form=E('div');
+form.className='f51box';
+
+form.append(E('h3','Assegna coaching'));
+
+const type=field(form,'Tipologia',select([
+['Coaching online','Coaching online'],
+['Coaching in presenza','Coaching in presenza']
+]));
+
+const next=list.filter(p=>
+p.status==='active'&&p.expires_on>today()
+).map(p=>p.expires_on).sort().pop()||today();
+
+const start=field(form,'Data inizio',date(next));
+
+const duration=field(form,'Durata',select([
+['7','7 giorni'],
+['14','2 settimane'],
+['30','30 giorni'],
+['42','6 settimane'],
+['60','60 giorni'],
+['90','90 giorni'],
+['180','180 giorni'],
+['365','365 giorni'],
+['custom','Personalizzata']
+]));
+
+duration.value='42';
+
+const end=field(form,'Data scadenza',
+date(plus(next,42)));
+
+function calculate(){
+if(start.value&&duration.value!=='custom'){
+end.value=plus(start.value,duration.value);
+}
+}
+
+start.onchange=calculate;
+duration.onchange=calculate;
+end.onchange=()=>duration.value='custom';
+
+form.append(btn(
+access.mode==='pending'?
+'Approva e attiva coaching':
+'Assegna o rinnova coaching',
+async()=>{
+if(!valid())return;
+
+if(!start.value||!end.value||
+end.value<=start.value||
+end.value<=today()){
+throw new Error('Controlla le date');
+}
+
+if(!confirm('Confermi il percorso fino al '+end.value+'?'))return;
+
+await rpc('forge_v51_assign_coaching',{
+p_client_id:id,
+p_title:type.value,
+p_starts_on:start.value,
+p_expires_on:end.value
+});
+
+alert('Coaching assegnato');
+await render();
+},true));
+
+detail.append(form);
+
+const trial=E('div');
+trial.className='f51box';
+
+trial.append(E('h3','FORGE EXPERIENCE'));
+
+const hours=field(trial,'Durata prova',select([
+['24','24 ore'],
+['48','48 ore'],
+['72','72 ore'],
+['168','7 giorni']
+]));
+
+hours.value='48';
+
+trial.append(btn('Attiva prova gratuita',async()=>{
+if(!valid())return;
+if(!confirm('Confermi la prova gratuita?'))return;
+
+await rpc('forge_v41_grant_trial',{
+p_client_id:id,
+p_hours:Number(hours.value),
+p_allow_repeat:false
+});
+
+alert('Prova assegnata');
+await render();
+}));
+
+if(access.mode==='trial_active'){
+trial.append(btn('Proroga prova +24 ore',async()=>{
+if(!valid())return;
+if(!confirm('Aggiungere 24 ore?'))return;
+
+await rpc('forge_v46_extend_trial',{
+p_client_id:id,
+p_hours:24
+});
+
+await render();
+}));
+}
+
+detail.append(trial);
+}
+}
+
+function refresh(){
+const old=document.getElementById('forgeV51');
+
+if(!admin()){
+old?.remove();
+return;
+}
+
+const root=document.getElementById('sectionContent');
+const title=document.getElementById('sectionTitle');
+
+if(!root||!title)return;
+
+const name=title.textContent.trim().toLowerCase();
+
+if(![
+'forge clients',
+'i miei clienti',
+'forge client manager'
+].includes(name)){
+old?.remove();
+return;
+}
+
+mount(root);
+}
+
+setInterval(refresh,800);
+refresh();
+
+console.log('FORGE ACCESS CONTROL V51 ACTIVE');
+})();
+</script>
+<!-- END FORGE ACCESS CONTROL V51 -->
