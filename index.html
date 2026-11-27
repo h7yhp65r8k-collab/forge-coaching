@@ -21755,3 +21755,731 @@ console.info(
 })();
 </script>
 <!-- END FORGE V32 -->
+
+<!-- FORGE V39 PREMIUM INTERFACE -->
+<style>
+#app.f39-open > :not(#sectionCard){
+ display:none!important;
+}
+#sectionCard.f39-screen{
+ width:100%;
+ max-width:100%;
+ padding:15px!important;
+ margin:0!important;
+ overflow:hidden;
+ background:#0e0f12;
+}
+.f39-screen #sectionTitle{
+ font-size:25px!important;
+ font-weight:850;
+ letter-spacing:.7px;
+ text-transform:uppercase;
+ margin:12px 0 18px;
+}
+.f39-screen #sectionText{
+ display:none!important;
+}
+.f39-screen input,
+.f39-screen select{
+ min-width:0!important;
+ max-width:100%!important;
+ box-sizing:border-box!important;
+}
+.f39-screen input[type=date]{
+ display:block;
+ width:100%!important;
+ min-width:0!important;
+ -webkit-appearance:none;
+}
+.f39-screen .f32-back,
+.f39-screen .f39-back{
+ display:block;
+ background:transparent!important;
+ color:var(--gold)!important;
+ text-align:left;
+ padding:8px 0;
+ width:auto;
+ border:0;
+ font-size:13px;
+}
+.f39-screen #closeSectionBtn{
+ display:none!important;
+}
+.f39-nutrition #f27NutritionHeading{
+ display:none!important;
+}
+#forgeNutritionV10{
+ padding:0!important;
+ margin:0!important;
+}
+#forgeNutritionV10 .forge-n10-macros{
+ grid-template-columns:
+ repeat(4,minmax(0,1fr))!important;
+ gap:5px!important;
+ margin:10px 0!important;
+}
+#forgeNutritionV10 .forge-n10-macros>div{
+ padding:10px 3px!important;
+ text-align:center;
+ min-width:0;
+ border-radius:10px!important;
+}
+#forgeNutritionV10 .forge-n10-macros span{
+ font-size:10px!important;
+}
+#forgeNutritionV10 .forge-n10-macros strong{
+ font-size:15px!important;
+ color:var(--gold);
+}
+#forgeNutritionV10 .f27-daily-kcal{
+ width:144px!important;
+ height:144px!important;
+ margin:12px auto!important;
+ font-size:28px!important;
+}
+.f39-date{
+ display:grid;
+ grid-template-columns:36px minmax(0,1fr) 36px;
+ align-items:center;
+ gap:6px;
+}
+.f39-date button{
+ background:#191a1f;
+ color:var(--gold);
+ border:1px solid var(--line);
+ padding:10px 0;
+}
+.f39-search{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) 44px;
+ align-items:center;
+ gap:7px;
+ margin-top:14px;
+}
+.f39-search button{
+ height:46px;
+ padding:0;
+ font-size:21px;
+}
+.f39-meal{
+ background:#191a1f;
+ border:1px solid #51442e;
+ border-radius:13px;
+ margin:8px 0;
+ padding:10px;
+}
+.f39-meal-head{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:8px;
+}
+.f39-meal-head strong{
+ font-size:14px;
+ color:var(--gold);
+}
+.f39-meal-head button{
+ width:34px;
+ height:34px;
+ padding:0;
+ margin:0;
+ border-radius:50%;
+ font-size:21px;
+}
+.f39-meal .forge-n10{
+ padding:8px!important;
+ margin:7px 0!important;
+}
+.f39-meal .small{
+ font-size:11px;
+}
+.f39-screen .stats{
+ gap:5px!important;
+}
+.f39-screen .stat{
+ padding:12px 3px!important;
+ min-width:0;
+ text-align:center;
+}
+.f39-screen .stat span{
+ font-size:10px!important;
+}
+.f39-screen .stat strong{
+ font-size:23px!important;
+}
+.f39-filters{
+ display:flex;
+ gap:5px;
+ margin:10px 0;
+}
+.f39-filters button{
+ flex:1;
+ min-width:0;
+ padding:9px 3px;
+ font-size:11px;
+ border-radius:20px;
+ background:#202126;
+ color:#ccc;
+}
+.f39-filters button.selected{
+ background:var(--gold);
+ color:#111;
+}
+.f39-screen .f30-client{
+ padding:12px!important;
+ border-radius:13px!important;
+ gap:9px!important;
+}
+.f39-screen .f30-info{
+ min-width:0;
+ overflow-wrap:anywhere;
+}
+.f39-screen .f30-avatar{
+ width:42px!important;
+ height:42px!important;
+ flex-shrink:0;
+}
+.f39-screen .f31-preview,
+.f39-screen .f32-preview{
+ overflow:hidden;
+ text-overflow:ellipsis;
+ white-space:nowrap;
+ max-width:100%;
+ font-size:12px;
+}
+.f39-screen .f32-preview~.f32-time{
+ font-size:10px;
+}
+.f39-screen .f31-empty{
+ padding:22px 12px!important;
+}
+.f39-clients .f31-subtitle,
+.f39-chat .f31-subtitle{
+ display:none!important;
+}
+.f39-clients .f31-filters{
+ display:none!important;
+}
+.f39-chat .f31-preview,
+.f39-chat .f31-time{
+ display:none!important;
+}
+.f39-screen .f31-package{
+ font-size:11px;
+}
+.f39-screen .f30-compose{
+ grid-template-columns:minmax(0,1fr) 60px;
+}
+</style>
+
+<script>
+(()=>{
+'use strict';
+
+if(window.forgePremiumV39)return;
+window.forgePremiumV39=true;
+
+const get=id=>document.getElementById(id);
+
+function make(tag,text='',cls=''){
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+}
+
+function normalize(value){
+ return String(value||'')
+ .trim().toLowerCase();
+}
+
+function btn(text,fn){
+ const b=make('button',text);
+ b.type='button';
+ b.onclick=fn;
+ return b;
+}
+
+let previousScreen='';
+let selectedMeal='';
+
+function dateShift(value,amount){
+ const d=new Date(value+'T12:00:00');
+ d.setDate(d.getDate()+amount);
+
+ return d.getFullYear()+'-'+
+ String(d.getMonth()+1).padStart(2,'0')+'-'+
+ String(d.getDate()).padStart(2,'0');
+}
+
+function decorateNutrition(root){
+
+ const panel=root.querySelector(
+ '#forgeNutritionV10'
+ );
+
+ if(!panel)return;
+
+ const date=panel.querySelector(
+ 'input[type=date]'
+ );
+
+ const search=panel.querySelector(
+ 'input[type=search]'
+ );
+
+ if(!date||!search)return;
+
+ [...panel.children].forEach(n=>{
+
+ const text=normalize(n.textContent);
+
+ if(
+ n.tagName==='H3'&&
+ text==='forge nutrition'
+ ||
+ n.tagName==='P'&&
+ text==='diario alimentare personale'
+ ||
+ n.tagName==='LABEL'&&
+ ['data','cerca alimento'].includes(text)
+ ){
+ n.style.display='none';
+ }
+
+ });
+
+ if(!panel.querySelector('.f39-date')){
+
+ const wrap=make('div','','f39-date');
+
+ const change=amount=>{
+
+ const next=dateShift(date.value,amount);
+
+ if(date.max&&next>date.max)return;
+
+ date.value=next;
+
+ date.dispatchEvent(
+ new Event('change',{bubbles:true})
+ );
+
+ };
+
+ date.before(wrap);
+
+ wrap.append(
+ btn('‹',()=>change(-1)),
+ date,
+ btn('›',()=>change(1))
+ );
+
+ }
+
+ search.placeholder='Cerca alimento o marca...';
+
+ const find=[...panel.children].find(n=>
+ n.tagName==='BUTTON'&&
+ normalize(n.textContent)==='cerca alimento'
+ );
+
+ if(find&&!panel.querySelector('.f39-search')){
+
+ const wrap=make('div','','f39-search');
+
+ search.before(wrap);
+
+ find.textContent='⌕';
+
+ find.setAttribute(
+ 'aria-label','Cerca alimento'
+ );
+
+ wrap.append(search,find);
+
+ }
+
+ const heading=[...panel.querySelectorAll('h3')]
+ .find(n=>
+ normalize(n.textContent)==='diario della giornata'
+ );
+
+ if(!heading)return;
+
+ const diary=heading.parentElement;
+
+ const calories=diary.querySelector(
+ '.forge-n10-kcal'
+ );
+
+ const macros=diary.querySelector(
+ '.forge-n10-macros'
+ );
+
+ if(!calories||!macros)return;
+
+ const dateRow=panel.querySelector('.f39-date');
+
+ if(dateRow&&dateRow.nextElementSibling!==diary){
+ dateRow.after(diary);
+ }
+
+ heading.style.display='none';
+
+ if(!diary.querySelector('.f39-meals')){
+
+ const entries=[...diary.children].filter(n=>
+ n.classList.contains('forge-n10')
+ );
+
+ const groups=[
+ ['Colazione',['colazione']],
+ ['Pranzo',['pranzo']],
+ ['Spuntini',['spuntino','spuntini','merenda']],
+ ['Cena',['cena']],
+ ['Extra',['extra','altro']]
+ ];
+
+ const meals=make('div','','f39-meals');
+
+ meals.append(
+ make('h3','Diario alimentare')
+ );
+
+ const used=new Set();
+
+ groups.forEach(([name,aliases])=>{
+
+ const box=make('div','','f39-meal');
+
+ const head=make(
+ 'div','','f39-meal-head'
+ );
+
+ const info=make('div');
+
+ const items=entries.filter(entry=>{
+
+ const detail=entry.querySelector('p');
+
+ const meal=normalize(
+ detail?.textContent.split('•')[0]
+ );
+
+ return aliases.includes(meal);
+
+ });
+
+ let kcal=0;
+
+ items.forEach(entry=>{
+
+ used.add(entry);
+
+ const match=entry.textContent.match(
+ /([\d.,]+)\s*kcal/i
+ );
+
+ if(match){
+
+ const value=match[1]
+ .replace(/\./g,'')
+ .replace(',','.');
+
+ kcal+=Number(value)||0;
+
+ }
+
+ });
+
+ info.append(
+ make('strong',name),
+ make('div',
+ Math.round(kcal)+' kcal',
+ 'small')
+ );
+
+ const add=btn('+',()=>{
+
+ selectedMeal=
+ name==='Spuntini'?'Merenda':name;
+
+ search.scrollIntoView({
+ behavior:'smooth',
+ block:'center'
+ });
+
+ search.focus();
+
+ });
+
+ add.setAttribute(
+ 'aria-label','Aggiungi a '+name
+ );
+
+ head.append(info,add);
+ box.append(head);
+
+ items.forEach(entry=>box.append(entry));
+
+ meals.append(box);
+
+ });
+
+ entries.filter(n=>!used.has(n))
+ .forEach(n=>meals.append(n));
+
+ diary.append(meals);
+
+ }
+
+ if(selectedMeal){
+
+ panel.querySelectorAll('select')
+ .forEach(select=>{
+
+ if(select.dataset.f39Meal)return;
+
+ const values=[...select.options]
+ .map(o=>o.value);
+
+ if(
+ values.includes('Colazione')&&
+ values.includes('Pranzo')
+ ){
+
+ select.dataset.f39Meal='1';
+
+ if(values.includes(selectedMeal)){
+ select.value=selectedMeal;
+ }
+
+ }
+
+ });
+
+ }
+
+}
+
+function decorateClients(root){
+
+ const search=root.querySelector(
+ 'input[type=search]'
+ );
+
+ if(!search)return;
+
+ let filters=root.querySelector(
+ '.f39-filters'
+ );
+
+ if(!filters){
+
+ filters=make('div','','f39-filters');
+
+ filters.dataset.value='Tutti';
+
+ ['Tutti','Attivi','In attesa','Sospesi']
+ .forEach(name=>{
+
+ const b=btn(name,()=>{
+
+ filters.dataset.value=name;
+
+ filters.querySelectorAll('button')
+ .forEach(x=>x.classList.toggle(
+ 'selected',x===b
+ ));
+
+ applyClientFilters(root,filters);
+
+ });
+
+ if(name==='Tutti'){
+ b.classList.add('selected');
+ }
+
+ filters.append(b);
+
+ });
+
+ search.after(filters);
+
+ }
+
+ applyClientFilters(root,filters);
+
+}
+
+function applyClientFilters(root,filters){
+
+ const value=filters.dataset.value;
+
+ root.querySelectorAll('.f30-client')
+ .forEach(card=>{
+
+ const labels=[...card.querySelectorAll(
+ '.f30-info small'
+ )].map(n=>normalize(n.textContent));
+
+ let show=true;
+
+ if(value==='Attivi'){
+ show=labels.some(t=>
+ ['approvato','attivo','approved'].includes(t)
+ );
+ }
+
+ if(value==='In attesa'){
+ show=labels.some(t=>
+ ['in attesa','pending'].includes(t)
+ );
+ }
+
+ if(value==='Sospesi'){
+ show=labels.some(t=>
+ ['sospeso','suspended'].includes(t)
+ );
+ }
+
+ card.style.display=show?'':'none';
+
+ });
+
+}
+
+function refresh(){
+
+ const app=get('app');
+ const card=get('sectionCard');
+ const root=get('sectionContent');
+ const title=get('sectionTitle');
+
+ if(!app||!card||!root||!title)return;
+
+ const visible=
+ !app.classList.contains('hidden')&&
+ !card.classList.contains('hidden');
+
+ const name=normalize(title.textContent);
+
+ const nutrition=name==='forge nutrition';
+
+ const clients=[
+ 'forge clients',
+ 'i miei clienti',
+ 'forge client manager'
+ ].includes(name);
+
+ const chat=name==='forge chat';
+
+ const enabled=visible&&
+ (nutrition||clients||chat);
+
+ app.classList.toggle('f39-open',enabled);
+
+ card.classList.toggle('f39-screen',enabled);
+
+ card.classList.toggle(
+ 'f39-nutrition',enabled&&nutrition
+ );
+
+ card.classList.toggle(
+ 'f39-clients',enabled&&clients
+ );
+
+ card.classList.toggle(
+ 'f39-chat',enabled&&chat
+ );
+
+ const oldBack=card.querySelector('.f39-back');
+
+ if(!enabled){
+
+ if(oldBack)oldBack.remove();
+
+ previousScreen='';
+ selectedMeal='';
+
+ return;
+
+ }
+
+ if(previousScreen!==name){
+
+ previousScreen=name;
+
+ requestAnimationFrame(()=>{
+ window.scrollTo(0,0);
+ });
+
+ }
+
+ const existingBack=card.querySelector(
+ '.f32-back'
+ );
+
+ if(existingBack){
+
+ existingBack.style.display=
+ nutrition?'none':'';
+
+ }
+
+ if(nutrition&&!oldBack){
+
+ const back=btn('‹ Torna alla home',()=>{
+
+ get('closeSectionBtn')?.click();
+
+ app.classList.remove('f39-open');
+
+ window.scrollTo(0,0);
+
+ });
+
+ back.className='f39-back';
+
+ title.before(back);
+
+ }
+
+ if(!nutrition&&oldBack){
+ oldBack.remove();
+ }
+
+ if(nutrition){
+ decorateNutrition(root);
+ }
+
+ if(clients){
+ decorateClients(root);
+ }
+
+}
+
+function safeRefresh(){
+ try{
+ refresh();
+ }catch(e){
+ console.warn('Forge V39:',e);
+ }
+}
+
+document.addEventListener('click',()=>{
+ setTimeout(safeRefresh,80);
+});
+
+safeRefresh();
+
+setInterval(safeRefresh,700);
+
+console.info(
+ 'FORGE V39 PREMIUM INTERFACE ACTIVE'
+);
+
+})();
+</script>
+<!-- END FORGE V39 -->
