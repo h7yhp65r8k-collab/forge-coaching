@@ -26901,3 +26901,627 @@ console.log('FORGE CLIENTS V56 SMART DASHBOARD ACTIVE');
 })();
 </script>
 <!-- END FORGE CLIENTS V56 -->
+
+<!-- FORGE CHECK V57 -->
+<style>
+.f57-panel{
+ background:linear-gradient(145deg,#19191e,#101014);
+ border:1px solid #59492f;
+ border-radius:17px;
+ padding:14px;
+ margin:12px 0;
+}
+.f57-title{
+ color:#e9c675;
+ font-size:12px;
+ font-weight:800;
+ letter-spacing:2px;
+ margin-bottom:12px;
+}
+.f57-date{
+ font-size:25px;
+ font-weight:800;
+ margin:8px 0;
+}
+.f57-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px;
+ margin:12px 0;
+}
+.f57-metric{
+ background:#101115;
+ border:1px solid #39332a;
+ border-radius:11px;
+ padding:10px;
+}
+.f57-metric small{
+ display:block;
+ color:#a4a5ab;
+ margin-bottom:5px;
+}
+.f57-metric strong{
+ color:#e9c675;
+ font-size:15px;
+}
+.f57-panel details{
+ background:#111216;
+ border:1px solid #51442e;
+ border-radius:11px;
+ padding:12px;
+ margin-top:9px;
+}
+.f57-panel summary{
+ color:#e9c675;
+ font-weight:700;
+ font-size:13px;
+ cursor:pointer;
+}
+.f57-panel button{
+ font-size:12px;
+ padding:11px;
+}
+.f57-history{
+ border-bottom:1px solid #39332a;
+ padding:10px 0;
+ font-size:13px;
+}
+.f57-list{
+ display:block;
+ font-size:11px;
+ margin-top:5px;
+ font-weight:700;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_CHECK_V57)return;
+window.FORGE_CHECK_V57=true;
+
+const mounted=new WeakSet();
+const cache=new Map();
+
+const gold='#e9c675';
+const pink='#ed91b8';
+const green='#75d69a';
+const red='#ff7979';
+const gray='#a4a5ab';
+
+function admin(){
+ return typeof user!=='undefined'&&
+ user&&role==='admin';
+}
+
+function E(tag,text='',cls=''){
+ const n=document.createElement(tag);
+ n.textContent=text;
+ if(cls)n.className=cls;
+ return n;
+}
+
+function btn(text,fn,cls='secondary'){
+ const b=E('button',text,cls);
+ b.type='button';
+ b.onclick=async()=>{
+  b.disabled=true;
+  try{await fn();}
+  catch(e){alert(e.message||String(e));}
+  finally{b.disabled=false;}
+ };
+ return b;
+}
+
+function dateFormat(d){
+ if(!d)return 'Non programmato';
+ return new Date(d+'T12:00:00')
+ .toLocaleDateString('it-IT',{
+  day:'numeric',
+  month:'long',
+  year:'numeric'
+ });
+}
+
+function status(s){
+ if(!s)return{
+  text:'Check da configurare',color:gray
+ };
+ if(!s.enabled)return{
+  text:'Check disattivato',color:gray
+ };
+ if(s.days_remaining==null)return{
+  text:'Data da programmare',color:gray
+ };
+
+ const n=Number(s.days_remaining);
+
+ if(n<0)return{
+  text:'Check scaduto da '+Math.abs(n)+' gg',
+  color:red
+ };
+ if(n===0)return{
+  text:'Check previsto oggi',color:pink
+ };
+ if(n<=3)return{
+  text:'Check tra '+n+' gg',color:pink
+ };
+ return{
+  text:'Check tra '+n+' gg',color:green
+ };
+}
+
+async function load(email,force=false){
+ const owner=user.id;
+ const key=owner+':'+email;
+ const old=cache.get(key);
+
+ if(!force&&old&&
+ Date.now()-old.time<30000)return old;
+
+ const {data:p,error:pe}=await db
+ .from('profiles')
+ .select('id,email')
+ .eq('email',email)
+ .neq('id',owner)
+ .limit(2);
+
+ if(pe)throw pe;
+ if(p?.length!==1)
+ throw Error('Profilo non identificato');
+
+ const id=p[0].id;
+
+ const [settings,due]=await Promise.all([
+  db.from('forge_fb_v1_settings')
+   .select('*')
+   .eq('client_id',id)
+   .maybeSingle(),
+
+  db.from('forge_fb_v1_due_checks')
+   .select('*')
+   .eq('client_id',id)
+   .maybeSingle()
+ ]);
+
+ if(settings.error)throw settings.error;
+ if(due.error)throw due.error;
+
+ const value={
+  id,
+  settings:settings.data,
+  due:due.data,
+  time:Date.now()
+ };
+
+ if(admin()&&user.id===owner)
+ cache.set(key,value);
+
+ return value;
+}
+
+function metric(label,value){
+ const n=E('div','','f57-metric');
+ n.append(
+  E('small',label),
+  E('strong',value)
+ );
+ return n;
+}
+
+function field(label,type,value){
+ const box=E('div');
+ const i=E('input');
+ i.type=type;
+ i.value=value??'';
+ box.append(E('label',label),i);
+ return {box,i};
+}
+
+function checkField(label,value){
+ const box=E('label');
+ box.style.display='flex';
+ box.style.alignItems='center';
+ box.style.gap='9px';
+
+ const i=E('input');
+ i.type='checkbox';
+ i.checked=Boolean(value);
+ i.style.width='18px';
+ i.style.accentColor=gold;
+
+ box.append(i,E('span',label));
+ return {box,i};
+}
+
+async function dashboard(panel,email){
+
+ if(mounted.has(panel))return;
+
+ const anchor=panel.querySelector('.f56-summary')
+ ||panel.querySelector('.v52expiry');
+
+ if(!anchor)return;
+
+ mounted.add(panel);
+
+ const owner=user.id;
+ const alive=()=>admin()&&
+ user.id===owner&&panel.isConnected;
+
+ const root=E('div','','f57-panel');
+ anchor.after(root);
+
+ async function render(force=false){
+
+  root.replaceChildren(
+   E('div','FORGE CHECK V57','f57-title'),
+   E('small','Caricamento...')
+  );
+
+  try{
+
+   const data=await load(email,force);
+   if(!alive())return;
+
+   const cfg=data.settings;
+   const due=data.due;
+   const st=status(due||cfg);
+
+   root.replaceChildren(
+    E('div','FORGE CHECK','f57-title'),
+    E('small','PROSSIMO CHECK')
+   );
+
+   const date=E('div',
+    cfg?.enabled?
+    dateFormat(due?.next_check_date):
+    'Non programmato',
+    'f57-date'
+   );
+
+   date.style.color=st.color;
+
+   const state=E('strong',st.text);
+   state.style.color=st.color;
+
+   root.append(date,state);
+
+   const grid=E('div','','f57-grid');
+
+   grid.append(
+    metric('Frequenza',
+     cfg?'Ogni '+cfg.frequency_days+' gg':'—'),
+    metric('Orario',
+     cfg?.preferred_time?.slice(0,5)||'—'),
+    metric('Ultimo check',
+     due?.last_check_date?
+     dateFormat(due.last_check_date):'Nessuno'),
+    metric('Promemoria',
+     cfg?cfg.reminder_enabled?'Attivi':'Disattivati':'—')
+   );
+
+   root.append(grid);
+
+   const details=E('details');
+   details.append(
+    E('summary','Modifica impostazioni check')
+   );
+
+   const enabled=checkField(
+    'Check periodici attivi',
+    cfg?.enabled??true
+   );
+
+   const frequency=field(
+    'Frequenza in giorni','number',
+    cfg?.frequency_days??7
+   );
+
+   frequency.i.min='1';
+   frequency.i.step='1';
+
+   const quick=E('div','','f57-grid');
+
+   [7,14,21,30].forEach(n=>{
+    quick.append(btn(n+' giorni',()=>{
+     frequency.i.value=n;
+    }));
+   });
+
+   const weekday=E('select');
+
+   [
+    ['', 'Qualsiasi giorno'],
+    ['1','Lunedì'],
+    ['2','Martedì'],
+    ['3','Mercoledì'],
+    ['4','Giovedì'],
+    ['5','Venerdì'],
+    ['6','Sabato'],
+    ['0','Domenica']
+   ].forEach(([v,t])=>{
+    const o=E('option',t);
+    o.value=v;
+    weekday.append(o);
+   });
+
+   weekday.value=cfg?.preferred_weekday==null?
+    '':String(cfg.preferred_weekday);
+
+   const time=field(
+    'Orario preferito','time',
+    cfg?.preferred_time?.slice(0,5)||'18:00'
+   );
+
+   const first=field(
+    'Data primo check','date',
+    cfg?.first_check_date||todayRome()
+   );
+
+   const reminder=checkField(
+    'Abilita promemoria',
+    cfg?.reminder_enabled??true
+   );
+
+   details.append(
+    enabled.box,
+    frequency.box,
+    quick,
+    E('label','Giorno preferito'),
+    weekday,
+    time.box,
+    first.box,
+    reminder.box
+   );
+
+   details.append(btn(
+    'Salva impostazioni check',
+    async()=>{
+
+     if(!alive())return;
+
+     const n=Number(frequency.i.value);
+
+     if(!Number.isInteger(n)||n<1)
+      throw Error('Frequenza non valida');
+
+     if(!time.i.value||!first.i.value)
+      throw Error('Inserisci data e orario');
+
+     const {data:ok,error}=await db.rpc(
+      'forge_fb_v1_configure_client',{
+       p_client_id:data.id,
+       p_frequency_days:n,
+       p_enabled:enabled.i.checked,
+       p_weekday:weekday.value===''?
+        null:Number(weekday.value),
+       p_time:time.i.value+':00',
+       p_reminder:reminder.i.checked,
+       p_first_date:first.i.value
+      }
+     );
+
+     if(error)throw error;
+     if(ok!==true)
+      throw Error('Salvataggio non confermato');
+
+     await render(true);
+
+    },''
+   ));
+
+   root.append(details);
+
+   const history=E('details');
+   history.append(E('summary','Storico check cliente'));
+
+   const output=E('div');
+   history.append(output);
+
+   history.ontoggle=async()=>{
+
+    if(!history.open)return;
+
+    output.replaceChildren(
+     E('p','Caricamento...','small')
+    );
+
+    try{
+
+     const {data:rows,error}=await db
+      .from('forge_fb_v1_history')
+      .select('*')
+      .eq('client_id',data.id)
+      .neq('status','archived')
+      .order('check_date',{ascending:false})
+      .limit(30);
+
+     if(error)throw error;
+     if(!alive())return;
+
+     output.replaceChildren();
+
+     if(!rows?.length){
+      output.append(E('p',
+       'Nessun check registrato.','small'));
+      return;
+     }
+
+     for(const r of rows){
+
+      const item=E('details','','f57-history');
+
+      item.append(E('summary',
+       dateFormat(r.check_date)
+      ));
+
+      const labels={
+       submitted:'Inviato',
+       pending:'In attesa',
+       reviewed:'Revisionato',
+       answered:'Risposto'
+      };
+
+      item.append(E('p',
+       'Stato: '+(labels[r.status]||r.status)
+      ));
+
+      const stats=E('div','','f57-grid');
+
+      [
+       ['Benessere',r.wellness_score],
+       ['Aderenza',r.adherence_score],
+       ['Energia',r.energy_score],
+       ['Sonno',r.sleep_score],
+       ['Stress',r.stress_score],
+       ['Recupero',r.recovery_score],
+       ['Motivazione',r.motivation_score],
+       ['Peso',r.weight_kg==null?
+        null:r.weight_kg+' kg']
+      ].forEach(([k,v])=>{
+       stats.append(metric(k,
+        v==null?'—':String(v)));
+      });
+
+      item.append(stats);
+
+      [
+       ['Risultati',r.achievements],
+       ['Difficoltà',r.difficulties],
+       ['Messaggio cliente',r.client_message]
+      ].forEach(([k,v])=>{
+       if(v)item.append(
+        E('strong',k),E('p',v)
+       );
+      });
+
+      output.append(item);
+     }
+
+    }catch(e){
+     output.replaceChildren(
+      E('p',e.message,'error')
+     );
+    }
+   };
+
+   root.append(
+    history,
+    btn('Aggiorna check',()=>render(true))
+   );
+
+  }catch(e){
+
+   if(!alive())return;
+
+   root.replaceChildren(
+    E('div','FORGE CHECK','f57-title'),
+    E('p',e.message,'error'),
+    btn('Riprova',()=>render(true))
+   );
+  }
+ }
+
+ await render();
+}
+
+async function listStatus(row){
+
+ const info=row.querySelector('.f30-info');
+ if(!info)return;
+
+ const email=[...info.querySelectorAll('small')]
+ .map(e=>e.textContent.trim())
+ .find(t=>t.includes('@'));
+
+ if(!email)return;
+
+ let label=info.querySelector('.f57-list');
+
+ if(!label){
+  label=E('small','Check: verifica...','f57-list');
+  info.append(label);
+ }
+
+ if(label.dataset.loading==='1')return;
+
+ if(Date.now()-Number(label.dataset.updated||0)
+ <30000)return;
+
+ label.dataset.loading='1';
+
+ const owner=user.id;
+
+ try{
+
+  const data=await load(email);
+
+  if(!admin()||user.id!==owner||
+   !row.isConnected)return;
+
+  const st=status(data.due||data.settings);
+
+  label.style.color=st.color;
+  label.textContent=st.text;
+
+ }catch(e){
+
+  label.textContent='Check non disponibile';
+  label.style.color=gray;
+
+ }finally{
+
+  label.dataset.loading='0';
+  label.dataset.updated=String(Date.now());
+ }
+}
+
+function refresh(){
+
+ if(!admin()){
+  cache.clear();
+  return;
+ }
+
+ const root=document.getElementById('sectionContent');
+ const title=document.getElementById('sectionTitle');
+ const section=document.getElementById('sectionCard');
+
+ if(!root||!title||!section||
+ section.classList.contains('hidden'))return;
+
+ if(!/^(forge clients|i miei clienti|forge client manager)$/i
+ .test(title.textContent.trim()))return;
+
+ const panel=root.querySelector('#forgeV52');
+
+ if(panel&&panel.querySelector('.v52grid')){
+
+  const card=panel.previousElementSibling;
+
+  if(card&&card.classList.contains('f30-panel')){
+
+   const email=card.querySelector('p')
+   ?.textContent.trim();
+
+   if(email&&email.includes('@'))
+    dashboard(panel,email);
+  }
+
+ }else{
+
+  root.querySelectorAll('.f30-client')
+   .forEach(row=>listStatus(row));
+ }
+}
+
+setInterval(refresh,1500);
+refresh();
+
+console.log('FORGE CHECK V57 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE CHECK V57 -->
