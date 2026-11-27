@@ -23909,3 +23909,792 @@ console.info(
 })();
 </script>
 <!-- END FORGE STUDIO V40 ULTIMATE -->
+
+<!-- FORGE ACCESS CONTROL V50 START -->
+
+<style>
+.f50-panel{
+ background:linear-gradient(145deg,#201c16,#111216);
+ border:1px solid var(--line,#59492f);
+ border-radius:16px;
+ padding:14px;
+ margin:12px 0;
+}
+.f50-panel h3{
+ color:var(--gold,#e9c675);
+ margin:0 0 10px;
+ font-size:16px;
+}
+.f50-grid{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:7px;
+}
+.f50-stat{
+ background:#101115;
+ border:1px solid #51442e;
+ border-radius:10px;
+ padding:10px;
+ font-size:12px;
+ color:#aaa;
+}
+.f50-stat strong{
+ display:block;
+ color:var(--gold,#e9c675);
+ font-size:17px;
+ margin-top:5px;
+}
+.f50-panel button{
+ font-size:12px;
+ padding:11px 6px;
+ margin:4px 0;
+}
+.f50-locked{
+ opacity:.48!important;
+}
+.f50-countdown{
+ font-size:24px;
+ font-weight:800;
+ color:var(--gold,#e9c675);
+ margin:8px 0;
+}
+.f50-warning{
+ color:#f0cd76;
+ font-size:12px;
+}
+.f50-client{
+ border-top:1px solid #51442e;
+ padding:12px 0;
+}
+.f50-client summary{
+ color:var(--gold,#e9c675);
+ font-weight:700;
+ cursor:pointer;
+ padding:8px 0;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_ACCESS_V50)return;
+window.FORGE_ACCESS_V50=true;
+
+const get=id=>document.getElementById(id);
+
+let owner='';
+let access=null;
+let permissions={};
+let loading=false;
+let lastLoad=0;
+let generation=0;
+
+const modules={
+ 'Allenamento':'training',
+ 'Forge Training':'training',
+ 'Forge Performance':'training',
+ 'Forge Nutrition':'nutrition',
+ 'Forge Hydration':'hydration',
+ 'Forge Weight':'weight',
+ 'Progress Evolution':'progress',
+ 'Prenotazioni':'calendar',
+ 'Forge Calendar':'calendar',
+ 'Video esercizi':'videos',
+ 'Forge Premium':'premium',
+ 'Forge Studio':'studio',
+ 'Forge Chat':'chat',
+ 'Feedback':'feedback',
+ 'Pacchetti lezioni':'packages',
+ 'Forge Shop':'shop',
+ 'Profilo':'profile'
+};
+
+const labels={
+ admin:'Amministratore',
+ unlimited:'Illimitato',
+ standard:'Standard',
+ pending:'In attesa',
+ suspended:'Sospeso',
+ expired:'Scaduto',
+ trial:'Prova gratuita',
+ trial_active:'Prova gratuita',
+ coaching:'Coaching attivo',
+ active:'Attivo',
+ demo:'Consultazione',
+ inactive:'Non attivo'
+};
+
+function node(tag,text='',cls=''){
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+}
+
+function visible(){
+ return typeof user!=='undefined' &&
+ user && get('app') &&
+ !get('app').classList.contains('hidden');
+}
+
+function admin(){
+ return visible()&&role==='admin';
+}
+
+async function rpc(name,args={}){
+ const r=await db.rpc(name,args);
+ if(r.error)throw r.error;
+ return r.data;
+}
+
+function button(text,fn,cls='secondary'){
+ const b=node('button',text,cls);
+ b.type='button';
+ b.onclick=async()=>{
+  b.disabled=true;
+  try{
+   await fn();
+  }catch(e){
+   alert(e.message||String(e));
+  }finally{
+   b.disabled=false;
+  }
+ };
+ return b;
+}
+
+function stat(title,value){
+ const n=node('div','','f50-stat');
+ n.append(
+  node('span',title),
+  node('strong',String(value))
+ );
+ return n;
+}
+
+function modeLabel(mode){
+ return labels[mode]||mode||'Da verificare';
+}
+
+function dateText(value){
+ if(!value)return '—';
+ const d=new Date(value);
+ return Number.isFinite(d.getTime())
+ ?d.toLocaleString('it-IT')
+ :'—';
+}
+
+function numberInput(value,min,max){
+ const n=node('input');
+ n.type='number';
+ n.min=String(min);
+ n.max=String(max);
+ n.step='1';
+ n.value=String(value);
+ return n;
+}
+
+function validHours(n,max){
+ const v=Number(n.value);
+ if(!Number.isInteger(v)||v<1||v>max){
+  throw Error('Inserisci una durata valida.');
+ }
+ return v;
+}
+
+async function trialRows(id){
+ const r=await db.from('forge_v41_experience')
+ .select('id,starts_at,expires_at,revoked_at')
+ .eq('client_id',id)
+ .order('starts_at',{ascending:false})
+ .limit(1);
+
+ if(r.error)throw r.error;
+ return r.data?.[0]||null;
+}
+
+function trialEnd(t){
+ if(!t||t.revoked_at)return null;
+ return t.expires_at||null;
+}
+
+function remaining(end){
+ if(!end)return '—';
+
+ const ms=new Date(end).getTime()-Date.now();
+
+ if(!Number.isFinite(ms))return '—';
+ if(ms<=0)return 'Scaduto';
+
+ const hours=Math.ceil(ms/3600000);
+ const days=Math.floor(hours/24);
+
+ return days+' g '+hours%24+' h';
+}
+
+function drawHome(){
+ if(!visible()||admin()||!access)return;
+
+ let panel=get('f50Home');
+
+ if(!panel){
+  panel=node('div','','f50-panel');
+  panel.id='f50Home';
+
+  const nav=get('mainNav');
+  const target=nav?.closest('.card');
+
+  if(!target)return;
+  target.before(panel);
+ }
+
+ panel.replaceChildren();
+
+ panel.append(
+  node('h3','FORGE • IL TUO ACCESSO')
+ );
+
+ const grid=node('div','','f50-grid');
+
+ grid.append(
+  stat('Stato',modeLabel(access.mode)),
+  stat('Lezioni residue',
+   access.remaining_sessions??0),
+  stat('Premium',
+   access.premium_access?'Attivo':'Non attivo'),
+  stat('Coaching',
+   access.full_access?'Attivo':'Non attivo')
+ );
+
+ panel.append(grid);
+
+ if(access.f50TrialEnd){
+  panel.append(
+   node('p','Scadenza prova gratuita','muted'),
+   node('div',
+    remaining(access.f50TrialEnd),
+    'f50-countdown'),
+   node('p',
+    dateText(access.f50TrialEnd),
+    'muted')
+  );
+ }
+
+ if(access.premium_expires_at){
+  panel.append(
+   node('p',
+    'Scadenza Premium: '+
+    dateText(access.premium_expires_at),
+    'muted')
+  );
+ }
+
+ if(!access.full_access){
+  panel.append(
+   node('p',
+    'Le funzionalità disponibili dipendono dal tuo piano.',
+    'f50-warning')
+  );
+
+  if(permissions.shop===true){
+   panel.append(
+    button('Rinnova o acquista',()=>{
+     section('Forge Shop');
+    })
+   );
+  }
+ }
+}
+
+function paintNavigation(){
+ document.querySelectorAll(
+  '#mainNav [data-section]'
+ ).forEach(b=>{
+
+  const key=modules[b.dataset.section];
+
+  const locked=visible()&&!admin()&&
+   key&&permissions[key]===false;
+
+  b.classList.toggle('f50-locked',!!locked);
+
+  if(locked){
+   b.setAttribute('aria-disabled','true');
+   b.dataset.f50Locked='1';
+  }else if(b.dataset.f50Locked){
+   b.removeAttribute('aria-disabled');
+   delete b.dataset.f50Locked;
+  }
+ });
+}
+
+async function refresh(force=false){
+ if(!visible()){
+  if(owner)generation++;
+  owner='';
+  access=null;
+  permissions={};
+  lastLoad=0;
+
+  get('f50Home')?.remove();
+  get('f50AdminButton')?.remove();
+  paintNavigation();
+  return;
+ }
+
+ if(owner!==user.id){
+  generation++;
+  owner=user.id;
+  access=null;
+  permissions={};
+  lastLoad=0;
+  get('f50Home')?.remove();
+ }
+
+ if(admin()){
+  installAdminButton();
+  return;
+ }
+
+ get('f50AdminButton')?.remove();
+
+ if(loading)return;
+
+ if(!force&&Date.now()-lastLoad<30000){
+  paintNavigation();
+  return;
+ }
+
+ loading=true;
+
+ const id=user.id;
+ const g=generation;
+
+ try{
+  const status=await rpc(
+   'forge_v45_access_status',
+   {p_client_id:id}
+  );
+
+  const checks=await Promise.all(
+   [...new Set(Object.values(modules))]
+   .map(async key=>[
+    key,
+    await rpc('forge_v47_can_access',{
+     p_module:key
+    })
+   ])
+  );
+
+  let trial=null;
+
+  try{
+   trial=await trialRows(id);
+  }catch(e){
+   console.warn('Forge trial:',e.message);
+  }
+
+  if(!visible()||user.id!==id||
+   generation!==g)return;
+
+  access={
+   ...status,
+   f50TrialEnd:trialEnd(trial)
+  };
+
+  permissions=Object.fromEntries(checks);
+  lastLoad=Date.now();
+
+  drawHome();
+  paintNavigation();
+
+  const key=modules[active];
+
+  if(key&&permissions[key]===false){
+   get('sectionContent')?.replaceChildren(
+    node('p',
+     'Accesso non disponibile. Contatta il coach o rinnova il tuo piano.',
+     'f50-warning')
+   );
+  }
+
+ }catch(e){
+  console.warn('Forge Access V50:',e.message);
+ }finally{
+  loading=false;
+ }
+}
+
+document.addEventListener('click',e=>{
+ if(!visible()||admin())return;
+
+ const b=e.target.closest('[data-section]');
+ if(!b)return;
+
+ const key=modules[b.dataset.section];
+
+ if(key&&permissions[key]===false){
+  e.preventDefault();
+  e.stopImmediatePropagation();
+
+  alert(
+   'Questa funzione non è disponibile con il tuo accesso attuale.'
+  );
+ }
+},true);
+
+function installAdminButton(){
+ if(!admin()||get('f50AdminButton'))return;
+
+ const nav=get('mainNav');
+ if(!nav)return;
+
+ const b=button(
+  'Gestione accessi',
+  openAdmin
+ );
+
+ b.id='f50AdminButton';
+ nav.append(b);
+}
+
+async function openAdmin(){
+ if(!admin())return;
+
+ serial++;
+ calendarSerial++;
+ active='Forge Access Control';
+
+ const root=get('sectionContent');
+
+ get('sectionTitle').textContent=
+ 'Forge Access Control';
+
+ get('sectionText').textContent=
+ 'Prove gratuite, accessi e scadenze';
+
+ get('sectionCard').classList.remove('hidden');
+
+ root.replaceChildren(
+  node('p','Caricamento clienti...','muted')
+ );
+
+ const id=user.id;
+ const request=serial;
+
+ try{
+  const [profiles,accounts]=await Promise.all([
+   db.from('profiles')
+   .select('id,first_name,last_name,full_name,email')
+   .neq('id',id)
+   .limit(1000),
+
+   db.from('account_access')
+   .select('user_id,status')
+   .limit(1000)
+  ]);
+
+  if(profiles.error)throw profiles.error;
+  if(accounts.error)throw accounts.error;
+
+  if(!admin()||user.id!==id||
+   request!==serial)return;
+
+  const map=new Map(
+   (accounts.data||[])
+   .map(x=>[x.user_id,x.status])
+  );
+
+  const clients=(profiles.data||[]).map(p=>({
+   ...p,
+   name:[p.first_name,p.last_name]
+   .filter(Boolean).join(' ')||
+   p.full_name||p.email||'Cliente',
+   status:map.get(p.id)||'unknown'
+  }));
+
+  root.replaceChildren();
+
+  const panel=node('div','','f50-panel');
+
+  panel.append(
+   node('h3','GESTIONE CLIENTI')
+  );
+
+  const stats=node('div','','f50-grid');
+
+  stats.append(
+   stat('Clienti',clients.length),
+   stat('Approvati',
+    clients.filter(p=>p.status==='approved').length)
+  );
+
+  const search=node('input');
+  search.type='search';
+  search.placeholder='Cerca cliente...';
+
+  const list=node('div');
+
+  panel.append(stats,search,list);
+  root.append(panel);
+
+  function draw(){
+   list.replaceChildren();
+
+   const q=search.value.toLowerCase().trim();
+
+   clients.filter(p=>
+    (p.name+' '+(p.email||''))
+    .toLowerCase().includes(q)
+   ).forEach(p=>{
+
+    const details=node('details','','f50-client');
+
+    details.append(
+     node('summary',p.name),
+     node('p',p.email||'','muted'),
+     node('p','Account: '+p.status,'muted')
+    );
+
+    const body=node('div');
+    details.append(body);
+
+    details.ontoggle=()=>{
+     if(details.open){
+      loadClient(p,body);
+     }
+    };
+
+    list.append(details);
+   });
+
+   if(!list.children.length){
+    list.append(
+     node('p','Nessun cliente trovato.','muted')
+    );
+   }
+  }
+
+  search.oninput=draw;
+  draw();
+
+  get('sectionCard').scrollIntoView({
+   behavior:'smooth'
+  });
+
+ }catch(e){
+  if(request===serial){
+   root.replaceChildren(
+    node('div',e.message,'status error')
+   );
+  }
+ }
+}
+
+async function loadClient(p,root){
+ if(!admin())return;
+
+ root.replaceChildren(
+  node('p','Caricamento accessi...','muted')
+ );
+
+ try{
+  const [s,t]=await Promise.all([
+   rpc('forge_v45_access_status',{
+    p_client_id:p.id
+   }),
+   trialRows(p.id)
+  ]);
+
+  if(!root.isConnected||!admin())return;
+
+  root.replaceChildren();
+
+  const grid=node('div','','f50-grid');
+
+  grid.append(
+   stat('Accesso',modeLabel(s.mode)),
+   stat('Lezioni',s.remaining_sessions??0),
+   stat('Premium',
+    s.premium_access?'Attivo':'Non attivo'),
+   stat('Coaching',
+    s.full_access?'Attivo':'Non attivo')
+  );
+
+  root.append(grid);
+
+  if(t){
+   root.append(
+    node('p',
+     'Ultima prova: '+dateText(t.expires_at),
+     'muted'),
+    node('p',
+     t.revoked_at?'Revocata':
+     remaining(t.expires_at),
+     'f50-countdown')
+   );
+  }
+
+  if(p.status!=='approved'){
+   root.append(
+    node('p',
+     'Approva prima il cliente dalla sezione Forge Clients.',
+     'f50-warning')
+   );
+   return;
+  }
+
+  root.append(
+   node('h3','Prova gratuita')
+  );
+
+  const hours=numberInput(48,1,720);
+  const presets=node('div','','f50-grid');
+
+  [
+   ['24 ore',24],
+   ['48 ore',48],
+   ['72 ore',72],
+   ['7 giorni',168]
+  ].forEach(([label,value])=>{
+   presets.append(
+    button(label,()=>{
+     hours.value=value;
+    })
+   );
+  });
+
+  const repeat=node('input');
+  repeat.type='checkbox';
+  repeat.style.width='20px';
+
+  const repeatLabel=node('label');
+  repeatLabel.append(
+   repeat,
+   document.createTextNode(
+    ' Consenti una nuova prova'
+   )
+  );
+
+  root.append(
+   presets,
+   node('label','Durata personalizzata in ore'),
+   hours,
+   repeatLabel,
+   button('Attiva prova gratuita',async()=>{
+
+    const h=validHours(hours,720);
+
+    if(!confirm(
+     'Attivare '+h+' ore per '+p.name+'?'
+    ))return;
+
+    await rpc('forge_v41_grant_trial',{
+     p_client_id:p.id,
+     p_hours:h,
+     p_allow_repeat:repeat.checked
+    });
+
+    await loadClient(p,root);
+   },'')
+  );
+
+  if(t&&!t.revoked_at){
+
+   const extension=numberInput(24,1,8760);
+
+   root.append(
+    node('label','Ore aggiuntive'),
+    extension,
+
+    button('Proroga prova',async()=>{
+
+     const h=validHours(extension,8760);
+
+     if(!confirm(
+      'Aggiungere '+h+' ore?'
+     ))return;
+
+     await rpc('forge_v46_extend_trial',{
+      p_client_id:p.id,
+      p_hours:h
+     });
+
+     await loadClient(p,root);
+    }),
+
+    button('Revoca prova',async()=>{
+
+     if(!confirm('Revocare la prova gratuita?'))
+      return;
+
+     await rpc('forge_v41_revoke_trial',{
+      p_trial_id:t.id
+     });
+
+     await loadClient(p,root);
+    })
+   );
+  }
+
+  root.append(
+   node('h3','Modalità di accesso')
+  );
+
+  [
+   ['Accesso standard','standard'],
+   ['Accesso illimitato','unlimited'],
+   ['Sospendi accesso','suspended']
+  ].forEach(([label,mode])=>{
+
+   root.append(
+    button(label,async()=>{
+
+     if(!confirm(label+' per '+p.name+'?'))
+      return;
+
+     await rpc('forge_v43_set_access',{
+      p_client_id:p.id,
+      p_mode:mode
+     });
+
+     await loadClient(p,root);
+    })
+   );
+  });
+
+ }catch(e){
+  root.replaceChildren(
+   node('div',e.message,'status error')
+  );
+ }
+}
+
+function safeRefresh(force=false){
+ refresh(force).catch(e=>{
+  console.warn('Forge V50:',e.message);
+ });
+}
+
+setInterval(()=>{
+ safeRefresh();
+},2000);
+
+document.addEventListener(
+ 'visibilitychange',
+ ()=>{
+  if(!document.hidden)safeRefresh(true);
+ }
+);
+
+safeRefresh(true);
+
+console.info(
+ 'FORGE ACCESS CONTROL V50 ACTIVE'
+);
+
+})();
+</script>
+
+<!-- FORGE ACCESS CONTROL V50 END -->
