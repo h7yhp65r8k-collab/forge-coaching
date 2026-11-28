@@ -28069,3 +28069,472 @@ console.log('FORGE MENU FIX V64 ACTIVE');
 })();
 </script>
 <!-- END FORGE MENU FIX V64 -->
+
+<!-- FORGE PROGRESS V67 -->
+<style>
+.f67folder{
+ border:1px solid #756039;
+ border-radius:14px;
+ background:#151519;
+ padding:14px;
+ margin:10px 0;
+}
+.f67folder summary{
+ color:#e9c675;
+ font-weight:800;
+ cursor:pointer;
+}
+.f67grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;
+ margin-top:12px;
+}
+.f67photo{
+ width:100%;
+ aspect-ratio:3/4;
+ object-fit:contain;
+ border-radius:10px;
+ background:#090909;
+ cursor:zoom-in;
+}
+.f67cell{
+ min-width:0;
+ padding:6px;
+ background:#202024;
+ border-radius:10px;
+ text-align:center;
+}
+.f67cell button{
+ font-size:11px;
+ padding:9px 3px;
+}
+.f67compare{
+ border:1px solid #e9c675;
+ padding:12px;
+ border-radius:14px;
+ margin:12px 0;
+}
+.f67compare label{
+ display:flex;
+ align-items:center;
+ gap:10px;
+ padding:7px;
+}
+.f67compare input{
+ width:20px!important;
+ margin:0;
+ accent-color:#e9c675;
+}
+.f67modal{
+ background:#090909;
+ color:white;
+ border:1px solid #e9c675;
+ border-radius:15px;
+ width:94vw;
+ max-width:750px;
+ padding:10px;
+}
+.f67modal::backdrop{
+ background:rgba(0,0,0,.92);
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_PROGRESS_V67)return;
+window.FORGE_PROGRESS_V67=true;
+
+const E=(tag,text='',cls='')=>{
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+};
+
+const names={
+ front:'Fronte',
+ back:'Retro',
+ left:'Lato sinistro',
+ right:'Lato destro'
+};
+
+const pose=p=>String(
+ p.photo_angle||p.pose||p.angle||'Foto'
+).toLowerCase();
+
+const label=p=>names[pose(p)]||pose(p);
+
+const date=d=>new Date(
+ String(d).slice(0,10)+'T12:00:00'
+).toLocaleDateString('it-IT');
+
+const admin=()=>
+ typeof user!=='undefined'&&
+ user&&
+ typeof role!=='undefined'&&
+ role==='admin';
+
+function button(text,fn){
+ const b=E('button',text,'secondary');
+ b.type='button';
+ b.onclick=fn;
+ return b;
+}
+
+async function result(q){
+ const {data,error}=await q;
+ if(error)throw error;
+ return data;
+}
+
+function zoom(src,title){
+
+ const modal=E('dialog','','f67modal');
+ const img=E('img');
+
+ img.src=src;
+ img.alt=title;
+ img.style.cssText=
+ 'width:100%;max-height:78vh;object-fit:contain';
+
+ modal.append(
+ button('✕ Chiudi',()=>modal.close()),
+ E('h3',title),
+ img
+ );
+
+ modal.addEventListener('close',()=>{
+  modal.remove();
+ },{once:true});
+
+ document.body.append(modal);
+ modal.showModal();
+}
+
+async function photo(p,cell,alive){
+
+ const status=E('p','Caricamento...','small');
+
+ cell.append(
+ E('strong',label(p)),
+ status
+ );
+
+ try{
+
+  const bucket=p.bucket_name||
+  'forge-progress-private';
+
+  if(![
+   'forge-progress-private',
+   'forge-pe-v1-private'
+  ].includes(bucket)){
+   throw Error('Archivio non disponibile');
+  }
+
+  const data=await result(
+   db.storage.from(bucket)
+   .createSignedUrl(p.storage_path,900)
+  );
+
+  if(!alive()||!cell.isConnected)return;
+
+  const img=E('img','','f67photo');
+
+  img.alt=label(p);
+  img.loading='lazy';
+  img.decoding='async';
+
+  img.onload=()=>status.remove();
+
+  img.onerror=()=>{
+   status.textContent='Foto non disponibile';
+   img.remove();
+  };
+
+  img.onclick=()=>zoom(
+   img.src,
+   label(p)+' • '+date(p.photo_date)
+  );
+
+  img.src=data.signedUrl;
+  cell.append(img);
+
+ }catch(e){
+  status.textContent=e.message;
+ }
+}
+
+async function openGallery(panel,tile){
+
+ if(!admin())return;
+
+ const owner=user.id;
+ const card=panel.previousElementSibling;
+ const email=card?.querySelector('p')
+ ?.textContent.trim();
+
+ const output=panel.querySelector('.v52output');
+
+ if(!output||!email)return;
+
+ const host=E('div');
+ host.id='forgeV67Gallery';
+
+ const alive=()=>admin()&&
+ user.id===owner&&
+ host.isConnected&&
+ panel.isConnected&&
+ !document.getElementById('sectionCard')
+ ?.classList.contains('hidden');
+
+ panel.querySelectorAll('.v52tile')
+ .forEach(b=>b.classList.remove('selected'));
+
+ tile.classList.add('selected');
+
+ output.replaceChildren(
+ E('h3','📸 Archivio check'),
+ button('Chiudi dettaglio',()=>{
+  output.replaceChildren();
+  tile.classList.remove('selected');
+ }),
+ host
+ );
+
+ host.append(
+ E('p','Caricamento archivio...','small')
+ );
+
+ try{
+
+  const profiles=await result(
+   db.from('profiles')
+   .select('id')
+   .eq('email',email)
+   .neq('id',owner)
+   .limit(2)
+  );
+
+  if(!alive())return;
+
+  if(profiles.length!==1){
+   throw Error('Cliente non identificato');
+  }
+
+  const photos=[];
+
+  for(let offset=0;;offset+=200){
+
+   const rows=await result(
+    db.from('progress_photos')
+    .select('*')
+    .eq('client_id',profiles[0].id)
+    .eq('archived',false)
+    .order('photo_date',{ascending:false})
+    .order('id')
+    .range(offset,offset+199)
+   );
+
+   if(!alive())return;
+
+   photos.push(...(rows||[]));
+
+   if(!rows||rows.length<200)break;
+  }
+
+  host.replaceChildren();
+
+  if(!photos.length){
+   host.append(
+    E('p','Nessuna foto disponibile','small')
+   );
+   return;
+  }
+
+  const groups=new Map();
+
+  for(const p of photos){
+
+   const day=String(p.photo_date)
+   .slice(0,10);
+
+   if(!groups.has(day)){
+    groups.set(day,[]);
+   }
+
+   groups.get(day).push(p);
+  }
+
+  host.append(
+   E('p',
+   groups.size+' check • '+
+   photos.length+' fotografie',
+   'small')
+  );
+
+  const compare=E('div');
+  host.append(compare);
+
+  function comparison(p,day){
+
+   compare.className='f67compare';
+
+   compare.replaceChildren(
+    E('h3','Confronto '+label(p)),
+    button('Chiudi confronto',()=>{
+     compare.replaceChildren();
+     compare.className='';
+    }),
+    E('p','Seleziona da 2 a 5 date','small')
+   );
+
+   const picks=[];
+
+   for(const [d,items] of groups){
+
+    const match=d===day?p:
+    items.find(x=>pose(x)===pose(p));
+
+    if(!match)continue;
+
+    const row=E('label');
+    const cb=E('input');
+
+    cb.type='checkbox';
+    cb.checked=d===day;
+
+    row.append(
+     cb,
+     document.createTextNode(date(d))
+    );
+
+    compare.append(row);
+    picks.push({cb,d,match});
+   }
+
+   const grid=E('div','','f67grid');
+
+   compare.append(
+    button('Confronta fotografie',async()=>{
+
+     const chosen=picks
+     .filter(x=>x.cb.checked)
+     .sort((a,b)=>a.d.localeCompare(b.d));
+
+     if(chosen.length<2||
+        chosen.length>5){
+      alert('Seleziona da 2 a 5 date');
+      return;
+     }
+
+     grid.replaceChildren();
+
+     await Promise.all(
+      chosen.map(async x=>{
+
+       const cell=E('div','','f67cell');
+
+       cell.append(E('h3',date(x.d)));
+       grid.append(cell);
+
+       await photo(x.match,cell,alive);
+      })
+     );
+
+    }),
+    grid
+   );
+
+   compare.scrollIntoView({
+    behavior:'smooth',
+    block:'start'
+   });
+  }
+
+  for(const [day,items] of groups){
+
+   const folder=E('details','','f67folder');
+
+   const summary=E(
+    'summary',
+    '📁 Check del '+date(day)+
+    ' • '+items.length+' foto'
+   );
+
+   const grid=E('div','','f67grid');
+
+   folder.append(summary,grid);
+   host.append(folder);
+
+   folder.ontoggle=async()=>{
+
+    if(!folder.open||!alive())return;
+
+    grid.replaceChildren();
+
+    await Promise.all(
+     items.map(async p=>{
+
+      const cell=E('div','','f67cell');
+
+      grid.append(cell);
+
+      cell.append(
+       button('Confronta posa',()=>{
+        comparison(p,day);
+       })
+      );
+
+      await photo(p,cell,alive);
+     })
+    );
+   };
+  }
+
+  output.scrollIntoView({
+   behavior:'smooth',
+   block:'nearest'
+  });
+
+ }catch(e){
+
+  if(alive()){
+   host.replaceChildren(
+    E('p',e.message,'status error')
+   );
+  }
+ }
+}
+
+document.addEventListener('click',event=>{
+
+ const tile=event.target.closest(
+  '#forgeV52 .v52tile'
+ );
+
+ if(!tile||!admin())return;
+
+ if(!tile.textContent.includes(
+  'Foto progressi'
+ ))return;
+
+ const panel=tile.closest('#forgeV52');
+
+ if(!panel)return;
+
+ event.preventDefault();
+ event.stopImmediatePropagation();
+
+ openGallery(panel,tile);
+
+},true);
+
+console.log('FORGE PROGRESS V67 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE PROGRESS V67 -->
