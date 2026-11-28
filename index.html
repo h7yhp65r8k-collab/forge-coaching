@@ -30818,3 +30818,51 @@ setInterval(()=>{
 })();
 </script>
 <!-- FINE FORGE V80 -->
+
+<!-- FORGE V80 STUDIO FIX -->
+<style>
+html[data-forge-studio40]
+[data-f64-visible="1"] {
+  filter:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  text-shadow:none!important;
+}
+
+html[data-forge-studio40]
+[data-f64-visible="1"]:not(:active) {
+  transform:none!important;
+}
+
+html[data-forge-studio40]
+[data-f64-visible="1"] {
+  background:linear-gradient(
+    145deg,
+    var(--gold),
+    var(--panel)
+  )!important;
+  border:1px solid var(--gold)!important;
+  color:#fff!important;
+  box-shadow:
+    inset 0 1px 1px #ffffff55,
+    0 4px 0 #0008,
+    0 7px 12px #0005!important;
+}
+
+html[data-forge-luxury79="1"]
+#mainNav button[data-f64-visible="1"] {
+  background:linear-gradient(
+    145deg,#30291d,#111
+  )!important;
+  color:#f4dc95!important;
+  border-color:#c6a45c!important;
+}
+
+#fs40 .fs-choice,
+#fs40 .fs-preview {
+  filter:none!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+</style>
+<!-- FINE FORGE V80 -->
