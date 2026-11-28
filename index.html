@@ -12447,7 +12447,7 @@ const model=await rpc(
 p_days:1,p_rows:1
 });
 
-days=model.days;
+days=Array.isArray(model?.days)?model.days:[{title:"Giorno 1",exercises:[blank()]}];
 draftId=null;
 source="blank";
 filename=null;
@@ -13194,6 +13194,21 @@ B(videos,"Apri libreria video",()=>{
 section("Video esercizi");
 });
 
+window.forgeV71TrainingNodes={editor,programs,performance,videos,importBox};
+window.forgeV71OpenTraining=async function(clientId,mode){
+ await account();
+ if(accountRole!=="admin")throw Error("Accesso riservato al coach.");
+ section("Allenamento");
+ await initialize();
+ await loadClients();
+ if(!Array.from(target.options).some(o=>o.value===clientId))throw Error("Cliente non disponibile.");
+ if(days.length && !confirm("Aprire una nuova scheda per questo cliente? La bozza non salvata verrà sostituita."))return;
+ days=[];draftId=null;linkedDocument=null;filename=null;source="blank";title.value="Nuova scheda";description.value="";renderEditor();
+ target.value=clientId;
+ if(mode==="blank" && !days.length){days=[{title:"Giorno 1",exercises:[blank()]}];renderEditor();}
+ const open=()=>{const d=document.getElementById(mode==="import"?"f18-pdf":"f18-editor");if(d){d.open=true;d.scrollIntoView({block:"start"});}};
+ requestAnimationFrame(()=>requestAnimationFrame(open));
+};
 /* INTEGRAZIONE CON ALLENAMENTO ESISTENTE */
 
 let initializedUser=null;
@@ -13269,7 +13284,7 @@ if(panel.parentElement)panel.remove();
 return;
 }
 
-if(panel.parentElement!==root){
+if(!root.contains(panel)){
 root.append(panel);
 initialize().catch(e=>console.warn(e));
 }
@@ -13705,11 +13720,11 @@ const smartSummary=findSummary(
 v17,"Forge Smart Import"
 );
 
-const editorBlock=editorSummary?.parentElement;
-const programsBlock=programsSummary?.parentElement;
-const performanceBlock=performanceSummary?.parentElement;
-const videoBlock=videoSummary?.parentElement;
-const smartBlock=smartSummary?.parentElement;
+const editorBlock=window.forgeV71TrainingNodes?.editor||editorSummary?.parentElement;
+const programsBlock=window.forgeV71TrainingNodes?.programs||programsSummary?.parentElement;
+const performanceBlock=window.forgeV71TrainingNodes?.performance||performanceSummary?.parentElement;
+const videoBlock=window.forgeV71TrainingNodes?.videos||videoSummary?.parentElement;
+const smartBlock=window.forgeV71TrainingNodes?.importBox||smartSummary?.parentElement;
 
 /* Conserva i nodi V17 nel contenitore originale */
 
@@ -25662,6 +25677,8 @@ async function mount(card,root){
  });
 
  tile('🏋️','Schede allenamento',async r=>{
+  r.append(btn('Crea allenamento',()=>window.forgeV71OpenTraining(id,'blank')),btn('Importa allenamento PDF',()=>window.forgeV71OpenTraining(id,'import')));
+  window.forgeV71TrainingPDF(r,id);
 
   const list=await result(
    db.from('forge_v4_programs')
@@ -25685,6 +25702,8 @@ async function mount(card,root){
  });
 
  tile('🍽️','Piano alimentare',async r=>{
+  await window.forgeV71Nutrition(r,id,true);
+  return;
 
   const list=await result(
    db.from('forge_nutrition_plans')
@@ -30292,3 +30311,30 @@ console.log(
 })();
 </script>
 <!-- END FORGE NOTIFICATIONS V69 -->
+
+<script>
+(function(){
+'use strict';
+const c=window.forgeSupabase;
+const E=(tag,text,parent)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(parent)parent.append(n);return n;};
+const B=(p,t,f)=>{const b=E('button',t,p);b.type='button';b.onclick=async()=>{b.disabled=true;try{await f();}catch(e){alert(e.message||String(e));}finally{b.disabled=false;}};return b;};
+const F=(p,label,type='text')=>{E('label',label,p);const n=E(type==='textarea'?'textarea':'input',null,p);if(type!=='textarea')n.type=type;return n;};
+const R=async q=>{const r=await q;if(r.error)throw r.error;return r.data;};
+async function upload(bucket,id,file){if(!file||file.size>20971520||file.size<5)throw Error('Seleziona un PDF valido, massimo 20 MB.');if(await file.slice(0,5).text()!=='%PDF-')throw Error('Il file non è un PDF.');const path=id+'/'+crypto.randomUUID()+'.pdf';await R(c.storage.from(bucket).upload(path,file,{contentType:'application/pdf',upsert:false}));return path;}
+function openPDF(p,bucket,path){B(p,'Apri PDF',async()=>{const data=await R(c.storage.from(bucket).createSignedUrl(path,300));const a=E('a','Visualizza PDF (link valido 5 minuti)',p);a.href=data.signedUrl;a.target='_blank';a.rel='noopener noreferrer';});}
+let loading;function library(){if(window.jspdf)return Promise.resolve(window.jspdf.jsPDF);if(!loading)loading=new Promise((resolve,reject)=>{const s=E('script',null,document.head);s.src='https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';s.onload=()=>resolve(window.jspdf.jsPDF);s.onerror=()=>{loading=null;reject(Error('Libreria PDF non disponibile. Riprova.'));};});return loading;}
+window.forgeV71Nutrition=async function(root,id,admin){
+ const box=E('div',null,root);box.className='f71box';E('h3','Piani alimentari PDF',box);
+ const list=E('div',null,box);
+ async function refresh(){const rows=await R(c.from('forge_nutrition_plans').select('id,title,description,daily_calorie_target,status,pdf_path,created_at').eq('client_id',id).order('created_at',{ascending:false}));list.replaceChildren();if(!rows.length)E('p','Nessun piano disponibile.',list);for(const x of rows){const item=E('div',null,list);item.className='f71box';E('strong',x.title,item);E('p',new Date(x.created_at).toLocaleDateString('it-IT')+' · '+x.status+(x.daily_calorie_target?' · '+x.daily_calorie_target+' kcal':''),item);if(x.pdf_path)openPDF(item,'forge-nutrition-pdf',x.pdf_path);}}
+ if(admin){const editor=E('details',null,box);E('summary','Crea dieta / Importa dieta PDF',editor);const title=F(editor,'Titolo');const kcal=F(editor,'Calorie giornaliere (facoltativo)','number');const notes=F(editor,'Note','textarea');const meals=E('div',null,editor);function add(){const d=E('div',null,meals);d.className='f71box';const name=F(d,'Pasto');const food=F(d,'Alimenti e grammature (una riga per alimento)','textarea');food.rows=4;B(d,'Rimuovi pasto',()=>d.remove());d.fields=[name,food];}add();B(editor,'+ Aggiungi pasto',add);const file=F(editor,'Oppure seleziona PDF esistente','file');file.accept='application/pdf';
+ async function save(pdf){if(!title.value.trim())throw Error('Inserisci il titolo.');if(kcal.value&&(!Number.isFinite(+kcal.value)||+kcal.value<=0))throw Error('Calorie non valide.');if(!confirm('Assegnare il PDF a questo cliente?'))return;const path=await upload('forge-nutrition-pdf',id,pdf);try{await R(c.from('forge_nutrition_plans').insert({client_id:id,title:title.value.trim(),description:notes.value||null,daily_calorie_target:kcal.value?+kcal.value:null,pdf_path:path,status:'active'}));}catch(e){await c.storage.from('forge-nutrition-pdf').remove([path]);throw e;}alert('Dieta assegnata.');await refresh();}
+ B(editor,'Genera PDF e assegna',async()=>{const data=Array.from(meals.children).map(d=>d.fields.map(f=>f.value.trim())).filter(x=>x[0]&&x[1]);if(!data.length)throw Error('Compila almeno un pasto.');const PDF=await library();const doc=new PDF();let y=20;function line(t,size=11){doc.setFontSize(size);for(const l of doc.splitTextToSize(t,174)){if(y>278){doc.addPage();y=20;}doc.text(l,18,y);y+=size*.45+2;}}line('FORGE NUTRITION',20);line(title.value,16);if(kcal.value)line(kcal.value+' kcal');for(const [name,food] of data){y+=4;line(name,14);for(const l of food.split('\n'))line(l);}if(notes.value){y+=5;line('Note',14);line(notes.value);}await save(doc.output('blob'));});B(editor,'Importa PDF e assegna',()=>save(file.files[0]));}
+ await refresh();
+};
+window.forgeV71TrainingPDF=function(root,id){const d=E('details',null,root);E('summary','Assegna PDF originale (solo consultazione)',d);const title=F(d,'Titolo');const file=F(d,'PDF','file');file.accept='application/pdf';B(d,'Carica e assegna PDF',async()=>{if(!title.value.trim())throw Error('Inserisci il titolo.');const f=file.files[0];const path=await upload('forge-training-pdf',id,f);try{await R(c.rpc('forge_v11_assign_pdf',{p_client_id:id,p_title:title.value.trim(),p_storage_path:path,p_original_filename:f.name,p_file_size_bytes:f.size,p_archive_previous:false}));}catch(e){await c.storage.from('forge-training-pdf').remove([path]);throw e;}alert('PDF assegnato. Per allenamento interattivo usa Smart Import.');});};
+function mount(){const root=document.getElementById('sectionContent');const card=document.getElementById('sectionCard');if(!root||!card||card.classList.contains('hidden')||document.getElementById('sectionTitle')?.textContent.trim()!=='Forge Nutrition'||!user||root.querySelector('#forgeV71MyNutrition'))return;const box=E('div',null);box.id='forgeV71MyNutrition';root.prepend(box);const id=user.id;window.forgeV71Nutrition(box,id,false).catch(e=>{E('p',e.message,box);B(box,'Riprova',()=>{box.remove();mount();});});}
+setInterval(mount,800);
+})();
+</script>
+<style>.f71box{border:1px solid #59492f;border-radius:12px;padding:12px;margin:10px 0}.f71box textarea,.f71box input{width:100%;box-sizing:border-box}.f71box button{margin:5px 0}.f71box summary{color:#e9c675;font-weight:700}</style>
