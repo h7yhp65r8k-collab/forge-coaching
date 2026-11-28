@@ -29274,3 +29274,647 @@ console.log(
 })();
 </script>
 <!-- END FORGE PROGRESS V67.2 -->
+<!-- FORGE CHECK V68 -->
+<style>
+#forgeV52 .v52tile.f68-hide,
+#forgeV52 .f68-hide{
+ display:none!important;
+}
+.f68-day{
+ background:#15161a;
+ border:1px solid #806638;
+ border-radius:14px;
+ padding:13px;
+ margin:10px 0;
+}
+.f68-day summary{
+ color:#e9c675;
+ font-weight:750;
+ cursor:pointer;
+}
+.f68-done{
+ color:#75d69a;
+ font-weight:700;
+ font-size:13px;
+ margin:8px 0;
+}
+.f68-grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:9px;
+ margin:12px 0;
+}
+.f68-photo{
+ min-width:0;
+ padding:7px;
+ background:#101115;
+ border:1px solid #59492f;
+ border-radius:10px;
+ text-align:center;
+}
+.f68-photo img{
+ width:100%;
+ height:190px;
+ object-fit:contain;
+ border-radius:8px;
+ cursor:pointer;
+}
+.f68-photo button{
+ font-size:11px;
+ padding:9px 3px;
+}
+.f68-modal{
+ background:#101115;
+ color:white;
+ border:1px solid #e9c675;
+ border-radius:15px;
+ width:94%;
+ max-width:700px;
+}
+.f68-modal::backdrop{
+ background:rgba(0,0,0,.88);
+}
+.f68-modal img{
+ width:100%;
+ max-height:75vh;
+ object-fit:contain;
+}
+</style>
+
+<script>
+(function(){
+'use strict';
+
+if(window.FORGE_CHECK_V68)return;
+window.FORGE_CHECK_V68=true;
+
+const E=(tag,text='',cls='')=>{
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+};
+
+function B(text,fn){
+ const b=E('button',text,'secondary');
+ b.type='button';
+ b.onclick=fn;
+ return b;
+}
+
+function admin(){
+ return typeof user!=='undefined'
+ &&user&&role==='admin';
+}
+
+async function read(q){
+ const r=await q;
+ if(r.error)throw r.error;
+ return r.data||[];
+}
+
+function day(v){
+ return String(v||'').slice(0,10);
+}
+
+function date(v){
+ return /^\d{4}-\d{2}-\d{2}$/.test(v)
+ ?v.split('-').reverse().join('/')
+ :'Data non disponibile';
+}
+
+function pose(p){
+ const v=String(
+ p.photo_angle||p.photo_type||
+ p.pose||p.angle||'unknown'
+ ).toLowerCase().trim();
+
+ return ({
+ frontale:'front',
+ fronte:'front',
+ rear:'back',
+ retro:'back',
+ posteriore:'back',
+ left_side:'left',
+ side_left:'left',
+ sinistra:'left',
+ sinistro:'left',
+ 'lato sinistro':'left',
+ right_side:'right',
+ side_right:'right',
+ destra:'right',
+ destro:'right',
+ 'lato destro':'right'
+ })[v]||v;
+}
+
+function label(p){
+ return ({
+ front:'Frontale',
+ back:'Posteriore',
+ left:'Lato sinistro',
+ right:'Lato destro'
+ })[pose(p)]||'Fotografia';
+}
+
+function zoom(src,title){
+ const modal=E('dialog','','f68-modal');
+ const img=E('img');
+ img.src=src;
+ img.alt=title;
+
+ modal.append(
+ B('Chiudi',()=>modal.close()),
+ E('h3',title),
+ img
+ );
+
+ modal.addEventListener('close',
+ ()=>modal.remove(),{once:true});
+
+ document.body.append(modal);
+ modal.showModal();
+}
+
+async function photo(p,cell,alive){
+
+ cell.append(E('strong',label(p)));
+
+ const status=E('p',
+ 'Caricamento...','small');
+
+ cell.append(status);
+
+ try{
+
+ const bucket=p.bucket_name||
+ 'forge-progress-private';
+
+ if(![
+ 'forge-progress-private',
+ 'forge-pe-v1-private'
+ ].includes(bucket)){
+ throw Error('Archivio non autorizzato');
+ }
+
+ const {data,error}=await db.storage
+ .from(bucket)
+ .createSignedUrl(p.storage_path,900);
+
+ if(error)throw error;
+ if(!alive()||!cell.isConnected)return;
+
+ const img=E('img');
+ img.alt=label(p);
+ img.decoding='async';
+
+ img.onload=()=>status.remove();
+
+ img.onerror=()=>{
+ status.textContent='Foto non disponibile';
+ img.remove();
+ };
+
+ img.onclick=()=>{
+ if(alive())zoom(
+ img.src,
+ label(p)+' - '+date(day(p.photo_date))
+ );
+ };
+
+ img.src=data.signedUrl;
+ cell.append(img);
+
+ }catch(e){
+ if(alive())status.textContent=e.message;
+ }
+}
+
+async function allPhotos(id){
+
+ const photos=[];
+
+ for(let offset=0;;offset+=200){
+
+ const rows=await read(
+ db.from('progress_photos')
+ .select('*')
+ .eq('client_id',id)
+ .eq('archived',false)
+ .order('photo_date',{ascending:false})
+ .order('id')
+ .range(offset,offset+199)
+ );
+
+ photos.push(...rows);
+
+ if(rows.length<200)break;
+ }
+
+ return photos;
+}
+
+async function archive(panel,host){
+
+ const owner=user.id;
+ const alive=()=>admin()&&
+ user.id===owner&&
+ panel.isConnected&&host.isConnected;
+
+ host.replaceChildren(
+ E('p','Caricamento storico check...','small')
+ );
+
+ try{
+
+ const email=panel.previousElementSibling
+ ?.querySelector('p')?.textContent.trim();
+
+ if(!email)throw Error(
+ 'Cliente non identificato'
+ );
+
+ const profiles=await read(
+ db.from('profiles')
+ .select('id')
+ .eq('email',email)
+ .neq('id',owner)
+ .limit(2)
+ );
+
+ if(profiles.length!==1){
+ throw Error('Profilo cliente non identificato');
+ }
+
+ const id=profiles[0].id;
+
+ const results=await Promise.allSettled([
+ allPhotos(id),
+ read(
+ db.from('forge_fb_v1_history')
+ .select('*')
+ .eq('client_id',id)
+ .neq('status','archived')
+ .order('check_date',{ascending:false})
+ .limit(200)
+ ),
+ read(
+ db.from('forge_client_checkins')
+ .select('*')
+ .eq('client_id',id)
+ .order('checkin_date',{ascending:false})
+ .limit(200)
+ )
+ ]);
+
+ if(!alive())return;
+
+ const photos=results[0].status==='fulfilled'
+ ?results[0].value:[];
+
+ const checks=results[1].status==='fulfilled'
+ ?results[1].value:[];
+
+ const legacy=results[2].status==='fulfilled'
+ ?results[2].value:[];
+
+ const groups=new Map();
+
+ function group(d){
+ if(!groups.has(d)){
+ groups.set(d,{
+ photos:[],
+ checks:[],
+ legacy:[]
+ });
+ }
+ return groups.get(d);
+ }
+
+ photos.forEach(p=>
+ group(day(p.photo_date)).photos.push(p)
+ );
+
+ checks.forEach(c=>
+ group(day(c.check_date)).checks.push(c)
+ );
+
+ legacy.forEach(c=>
+ group(day(c.checkin_date)).legacy.push(c)
+ );
+
+ const dates=[...groups.keys()]
+ .sort((a,b)=>b.localeCompare(a));
+
+ host.replaceChildren();
+
+ if(results.some(r=>r.status==='rejected')){
+ host.append(E('p',
+ 'Alcuni dati non sono disponibili. Riprova con Aggiorna.',
+ 'small'));
+ }
+
+ host.append(
+ E('p',
+ dates.length+' giornate • '+
+ photos.length+' fotografie',
+ 'small'),
+ B('Aggiorna storico',()=>archive(panel,host))
+ );
+
+ if(!dates.length){
+ host.append(E('p',
+ 'Nessun check disponibile.','small'));
+ return;
+ }
+
+ const comparison=E('div');
+ host.append(comparison);
+
+ function compare(p,current){
+
+ comparison.className='f68-day';
+
+ comparison.replaceChildren(
+ E('h3','Confronto - '+label(p)),
+ B('Chiudi confronto',()=>{
+ comparison.replaceChildren();
+ comparison.className='';
+ }),
+ E('p','Seleziona da 2 a 5 date.','small')
+ );
+
+ const choices=[];
+
+ for(const d of dates){
+
+ const match=d===current?p:
+ groups.get(d).photos.find(
+ x=>pose(x)===pose(p)
+ );
+
+ if(!match)continue;
+
+ const row=E('label');
+ row.style.cssText=
+ 'display:flex;align-items:center;gap:10px';
+
+ const cb=E('input');
+ cb.type='checkbox';
+ cb.checked=d===current;
+ cb.style.width='18px';
+
+ row.append(cb,E('span',date(d)));
+ comparison.append(row);
+
+ choices.push({cb,d,match});
+ }
+
+ if(choices.length<2){
+ comparison.append(E('p',
+ 'Non ci sono altre date con questa posa.',
+ 'small'));
+ }
+
+ const grid=E('div','','f68-grid');
+
+ comparison.append(
+ B('Confronta fotografie',async()=>{
+
+ const selected=choices.filter(
+ x=>x.cb.checked
+ ).sort((a,b)=>a.d.localeCompare(b.d));
+
+ if(selected.length<2||selected.length>5){
+ alert('Seleziona da 2 a 5 date.');
+ return;
+ }
+
+ grid.replaceChildren();
+
+ await Promise.all(selected.map(async x=>{
+
+ const cell=E('div','','f68-photo');
+ cell.append(E('p',date(x.d)));
+ grid.append(cell);
+
+ await photo(x.match,cell,alive);
+
+ }));
+
+ }),
+ grid
+ );
+
+ comparison.scrollIntoView({
+ behavior:'smooth',
+ block:'start'
+ });
+ }
+
+ const labels={
+ wellness_score:'Benessere',
+ adherence_score:'Aderenza',
+ energy_score:'Energia',
+ sleep_score:'Sonno',
+ stress_score:'Stress',
+ recovery_score:'Recupero',
+ motivation_score:'Motivazione',
+ weight_kg:'Peso (kg)',
+ achievements:'Risultati',
+ difficulties:'Difficoltà',
+ client_message:'Messaggio cliente',
+ notes:'Note'
+ };
+
+ for(const d of dates){
+
+ const g=groups.get(d);
+
+ const folder=E('details','','f68-day');
+
+ const completed=g.checks.some(c=>
+ ['submitted','reviewed','answered']
+ .includes(c.status)
+ );
+
+ const state=completed?
+ '✓ Check eseguito':
+ g.photos.length?
+ '✓ Check eseguito - foto ricevute':
+ g.legacy.length?
+ 'Check registrato':
+ 'Check in attesa';
+
+ folder.append(
+ E('summary',
+ 'Check del '+date(d)+
+ ' • '+g.photos.length+' foto'),
+ E('div',state,
+ completed||g.photos.length?
+ 'f68-done':'small')
+ );
+
+ const details=E('div');
+
+ for(const c of [...g.checks,...g.legacy]){
+
+ const box=E('div','','item');
+
+ for(const [key,title] of
+ Object.entries(labels)){
+
+ if(c[key]!=null&&c[key]!==''){
+ box.append(E('p',
+ title+': '+c[key]));
+ }
+ }
+
+ if(box.childNodes.length){
+ details.append(box);
+ }
+ }
+
+ folder.append(details);
+
+ if(g.photos.length){
+
+ const gallery=E('details');
+
+ gallery.append(
+ E('summary',
+ 'Visualizza fotografie ('+
+ g.photos.length+')')
+ );
+
+ const grid=E('div','','f68-grid');
+
+ gallery.append(grid);
+ folder.append(gallery);
+
+ let run=0;
+
+ gallery.ontoggle=async()=>{
+
+ const request=++run;
+
+ grid.replaceChildren();
+
+ if(!gallery.open||!alive())return;
+
+ const order={
+ front:0,back:1,left:2,right:3
+ };
+
+ const sorted=g.photos.slice().sort(
+ (a,b)=>(order[pose(a)]??9)-
+ (order[pose(b)]??9)
+ );
+
+ await Promise.all(sorted.map(async p=>{
+
+ const cell=E('div','','f68-photo');
+
+ grid.append(cell);
+
+ const valid=()=>alive()&&
+ gallery.open&&run===request;
+
+ await photo(p,cell,valid);
+
+ if(!valid())return;
+
+ if(pose(p)!=='unknown'){
+ cell.append(
+ B('Confronta posa',()=>compare(p,d))
+ );
+ }
+
+ }));
+
+ };
+
+ }
+
+ host.append(folder);
+ }
+
+ }catch(e){
+
+ if(alive()){
+ host.replaceChildren(
+ E('p',e.message,'status error'),
+ B('Riprova',()=>archive(panel,host))
+ );
+ }
+
+ }
+}
+
+function refresh(){
+
+ if(!admin())return;
+
+ const panel=document.querySelector(
+ '#forgeV52'
+ );
+
+ if(!panel)return;
+
+ const check=panel.querySelector(
+ '.f57-panel'
+ );
+
+ if(!check)return;
+
+ const old=[...check.querySelectorAll(
+ 'details'
+ )].find(x=>
+ x.querySelector('summary')
+ ?.textContent.trim()==='Storico check cliente'
+ );
+
+ if(!old)return;
+
+ if(!check.querySelector('.f68-archive')){
+
+ const section=E('details','','f68-archive');
+
+ section.append(E('summary',
+ 'Storico check e fotografie'));
+
+ const host=E('div');
+
+ section.append(host);
+
+ section.ontoggle=()=>{
+ if(section.open)archive(panel,host);
+ };
+
+ old.after(section);
+ }
+
+ old.classList.add('f68-hide');
+
+ panel.querySelectorAll('.v52tile')
+ .forEach(b=>{
+
+ const t=b.textContent.trim();
+
+ if(t.includes('Foto progressi')||
+ t.includes('Progress Evolution')){
+ b.classList.add('f68-hide');
+ }
+
+ });
+
+}
+
+setInterval(refresh,1000);
+refresh();
+
+console.log('FORGE CHECK V68 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE CHECK V68 -->
