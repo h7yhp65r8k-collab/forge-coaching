@@ -30430,3 +30430,195 @@ setInterval(mountCardio,800);
 <!-- FORGE V77: eliminazione dieta integrata nel rendering originale -->
 
 <!-- FORGE V78: Cardio integrato nel menu Training; dashboard coach e fix dieta V77 conservati. -->
+
+<!-- FORGE V79 ADD-ON -->
+<style>
+html[data-forge-studio40] #mainNav button[data-f64-visible="1"] {
+ background:linear-gradient(135deg,var(--gold),var(--gold))!important;
+ border-color:var(--gold)!important;
+}
+html[data-forge-luxury79="1"] body {
+ background:radial-gradient(ellipse at top,#30271a,#080808 65%)!important;
+}
+html[data-forge-luxury79="1"] #mainNav button[data-f64-visible="1"] {
+ background:linear-gradient(145deg,#39332a,#171615 45%,#090909)!important;
+ color:#f4dc95!important;
+ border:1px solid #b39455!important;
+ border-radius:16px!important;
+ min-height:86px;
+ box-shadow:inset 0 1px 2px #ffe6a655,inset 0 -3px 4px #000,0 4px 0 #59421e,0 8px 12px #0009;
+ flex-direction:column;
+ gap:6px;
+}
+html[data-forge-luxury79="1"] #mainNav button[data-f64-visible="1"]::before {
+ content:attr(data-f79-icon)!important;
+ display:grid;
+ place-items:center;
+ width:36px;
+ height:36px;
+ border-radius:10px;
+ background:linear-gradient(145deg,#fff0b4,#b88a37 48%,#78531e)!important;
+ color:#201609;
+ font-size:22px;
+ line-height:1;
+ box-shadow:inset 0 1px 2px #fff8d2,inset 0 -3px 3px #5e3b13,0 4px 6px #000;
+}
+html[data-forge-luxury79="1"] #mainNav button:active {
+ transform:translateY(2px)
+}
+html[data-forge-luxury79="1"] .card:not(.f27-cover) {
+ background:linear-gradient(145deg,#25221e,#101010 65%)!important;
+ border-color:#8c713d;
+ box-shadow:inset 0 1px 0 #ffffff18,0 8px 18px #0009;
+}
+</style>
+<script>
+(function(){
+'use strict';
+if(window.FORGE_ADDON79)return;
+window.FORGE_ADDON79=true;
+
+const get=id=>document.getElementById(id);
+const html=document.documentElement;
+const key=()=> 'forge_luxury79_'+user.id;
+const icons=['◆','◉','◈','▣','↗','▦','▶','♛','✦','✎','▤','◇','●'];
+
+function logged(){
+ return typeof user!=='undefined'&&!!user&&!get('app')?.classList.contains('hidden');
+}
+
+function admin(){
+ return logged()&&role==='admin';
+}
+
+function luxury(){
+ try{
+ return localStorage.getItem(key())==='1';
+ }catch(e){return false;}
+}
+
+function sync(){
+ html.dataset.forgeLuxury79=logged()&&luxury()?'1':'0';
+}
+
+function button(text,fn){
+ const b=document.createElement('button');
+ b.type='button';
+ b.textContent=text;
+ b.onclick=fn;
+ return b;
+}
+
+async function cardio(){
+ if(!admin())return;
+ const id=user.id;
+ serial++;
+ calendarSerial++;
+ active='Forge Cardio';
+ const request=serial,root=get('sectionContent');
+ get('sectionTitle').textContent='Forge Cardio';
+ get('sectionText').textContent='Attività, minuti e storico personale';
+ get('sectionCard').classList.remove('hidden');
+ const panel=document.createElement('div');
+ root.replaceChildren(panel);
+ get('sectionCard').scrollIntoView({block:'start'});
+
+ try{
+ await window.forgeV73Cardio(panel,id,true);
+ }catch(e){
+ if(admin()&&user.id===id&&serial===request){
+ panel.textContent=e.message||String(e);
+ panel.append(button('Riprova',cardio));
+ }
+ }
+}
+
+function mount(){
+ sync();
+ const nav=get('mainNav');
+ if(!nav)return;
+ let c=get('forgeAddon79Cardio');
+
+ if(!admin()){
+ if(c)c.remove();
+ }else if(!c&&typeof window.forgeV73Cardio==='function'){
+ c=button('Forge Cardio',cardio);
+ c.id='forgeAddon79Cardio';
+ c.dataset.f64Visible='1';
+ nav.append(c);
+ }
+
+ nav.querySelectorAll('button').forEach((b,i)=>{
+ b.dataset.f79Icon=b===c?'♥':icons[i%icons.length];
+ });
+
+ const studio=get('fs40');
+ if(!logged()||!studio||get('forgeAddon79Studio'))return;
+
+ const box=document.createElement('div');
+ box.id='forgeAddon79Studio';
+ box.className='fs-content';
+
+ const toggle=button(
+ luxury()?'Disattiva Luxury 3D':'Attiva Luxury 3D',
+ ()=>{
+ try{
+ localStorage.setItem(key(),luxury()?'0':'1');
+ sync();
+ toggle.textContent=luxury()?'Disattiva Luxury 3D':'Attiva Luxury 3D';
+ }catch(e){
+ alert('Preferenza non salvata');
+ }
+ });
+
+ const recover=button('Recupera tema precedente',()=>{
+ try{
+ const old=JSON.parse(
+ localStorage.getItem('forge_personalization_v27_'+user.id)||'{}'
+ );
+
+ if(!old.theme&&!old.color){
+ alert('Nessun tema V27 trovato. Controlla My Presets.');
+ return;
+ }
+
+ const target=Array.from(
+ studio.querySelectorAll('[data-fs-theme]')
+ ).find(b=>b.dataset.fsTheme===(old.theme||'gold'));
+
+ if(!target){
+ alert('Tema precedente non disponibile nella raccolta.');
+ return;
+ }
+
+ localStorage.setItem(key(),'0');
+ sync();
+ toggle.textContent='Attiva Luxury 3D';
+ target.click();
+
+ const color=get('fs40Color');
+
+ if(color&&/^#[0-9a-f]{6}$/i.test(old.color||'')){
+ color.value=old.color;
+ color.dispatchEvent(new Event('input',{bubbles:true}));
+ }
+
+ alert('Tema precedente in anteprima. Premi SALVA PERSONALIZZAZIONE per confermare.');
+
+ }catch(e){
+ alert('Recupero non riuscito: '+e.message);
+ }
+ });
+
+ box.append(toggle,recover);
+ studio.prepend(box);
+}
+
+setInterval(()=>{
+ try{mount();}
+ catch(e){console.warn('Forge V79',e);}
+},800);
+
+})();
+</script>
+<!-- FINE FORGE V79 ADD-ON -->
