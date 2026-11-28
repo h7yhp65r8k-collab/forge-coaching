@@ -30622,3 +30622,199 @@ setInterval(()=>{
 })();
 </script>
 <!-- FINE FORGE V79 ADD-ON -->
+
+<!-- FORGE V80 LUXURY THEME FIX -->
+<style>
+html[data-forge-studio40] body {
+ background:var(--bg)!important;
+ filter:none!important;
+}
+html[data-forge-studio40] #app {
+ filter:none!important;
+ backdrop-filter:none!important;
+}
+html[data-forge-studio40] #mainNav button[data-f64-visible="1"] {
+ background:linear-gradient(
+ 145deg,#fff4d0,var(--gold) 45%,#9c783b
+ )!important;
+ color:#17130d!important;
+ border:1px solid var(--gold)!important;
+ border-radius:16px!important;
+ min-height:78px;
+ font-weight:800;
+ text-shadow:none!important;
+ filter:none!important;
+ box-shadow:
+ inset 0 2px 2px #ffffff66,
+ inset 0 -3px 4px #00000033,
+ 0 4px 0 #705323,
+ 0 8px 14px #00000066!important;
+}
+html[data-forge-studio40] #app .card:not(.f27-cover) {
+ background:var(--panel)!important;
+ border-color:var(--line)!important;
+ backdrop-filter:none!important;
+}
+html[data-forge-full80="1"] body {
+ background-image:var(--forge-wall80)!important;
+ background-size:cover!important;
+ background-position:center!important;
+ background-attachment:fixed!important;
+ background-repeat:no-repeat!important;
+}
+html[data-forge-full80="1"] #app .card {
+ background:rgba(12,12,14,.90)!important;
+}
+html[data-forge-full80="1"] #app {
+ color:#fff!important;
+}
+</style>
+
+<script>
+(function(){
+if(window.FORGE_V80)return;
+window.FORGE_V80=true;
+
+const h=document.documentElement;
+const get=id=>document.getElementById(id);
+
+function logged(){
+ return typeof user!=='undefined'
+ && !!user
+ && !get('app')?.classList.contains('hidden');
+}
+
+function key(){
+ return 'forge_wallpaper80_'+user.id;
+}
+
+let current=null;
+let wallpaper='';
+
+function apply(){
+ if(!logged()){
+  current=null;
+  wallpaper='';
+  h.removeAttribute('data-forge-full80');
+  h.style.removeProperty('--forge-wall80');
+  return;
+ }
+
+ if(current!==user.id){
+  current=user.id;
+  wallpaper=localStorage.getItem(key())||'';
+ }
+
+ if(wallpaper){
+  h.style.setProperty('--forge-wall80',
+   'url('+JSON.stringify(wallpaper)+')');
+  h.dataset.forgeFull80='1';
+ }else{
+  h.removeAttribute('data-forge-full80');
+  h.style.removeProperty('--forge-wall80');
+ }
+
+ const cardio=get('forgeAddon79Cardio');
+
+ if(cardio&&role==='admin'){
+  cardio.classList.remove('hidden');
+  cardio.dataset.f64Visible='1';
+  cardio.style.setProperty(
+   'display','flex','important'
+  );
+ }
+
+ const studio=get('fs40');
+
+ if(!studio||get('forgeWall80'))return;
+
+ const box=document.createElement('div');
+ box.id='forgeWall80';
+ box.className='fs-content';
+
+ const title=document.createElement('h3');
+ title.textContent='FORGE • FULL SCREEN';
+ box.append(title);
+
+ function btn(text,fn){
+  const b=document.createElement('button');
+  b.type='button';
+  b.textContent=text;
+  b.onclick=fn;
+  box.append(b);
+ }
+
+ function save(value){
+  try{
+   if(value){
+    localStorage.setItem(key(),value);
+   }else{
+    localStorage.removeItem(key());
+   }
+   wallpaper=value;
+   apply();
+  }catch(e){
+   alert('Immagine troppo grande per la memoria disponibile.');
+  }
+ }
+
+ btn('Recupera sfondo precedente',()=>{
+  const old=JSON.parse(
+   localStorage.getItem(
+    'forge_personalization_v27_'+user.id
+   )||'{}'
+  );
+
+  if(old.cover){
+   save(old.cover);
+  }else{
+   alert('Nessuna copertina precedente salvata.');
+  }
+ });
+
+ btn('Imposta sfondo a schermo intero',()=>{
+  const input=document.createElement('input');
+  input.type='file';
+  input.accept='image/*';
+
+  input.onchange=()=>{
+   const file=input.files[0];
+   if(!file)return;
+   const owner=user.id;
+   const reader=new FileReader();
+
+   reader.onload=()=>{
+    if(logged()&&user.id===owner){
+     save(String(reader.result));
+    }
+   };
+
+   reader.readAsDataURL(file);
+  };
+
+  input.click();
+ });
+
+ btn('Rimuovi sfondo a schermo intero',()=>{
+  save('');
+ });
+
+ btn('Ripristina colori Forge Studio',()=>{
+  localStorage.setItem(
+   'forge_luxury79_'+user.id,'0'
+  );
+  h.dataset.forgeLuxury79='0';
+  alert('Colori Forge Studio ripristinati.');
+ });
+
+ studio.prepend(box);
+}
+
+setInterval(()=>{
+ try{apply();}
+ catch(e){console.warn('Forge V80',e);}
+},800);
+
+})();
+</script>
+<!-- FINE FORGE V80 -->
