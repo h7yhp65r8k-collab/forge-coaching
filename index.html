@@ -29918,3 +29918,377 @@ console.log('FORGE CHECK V68 ACTIVE');
 })();
 </script>
 <!-- END FORGE CHECK V68 -->
+<!-- FORGE NOTIFICATIONS V69 -->
+<style>
+
+#forgeV61Notifications .f69-delete{
+ background:#2b191b!important;
+ color:#f18b8b!important;
+ border:1px solid #754747!important;
+ border-radius:10px;
+ font-size:12px;
+ padding:10px;
+}
+
+#forgeV61Notifications .f69-read{
+ color:#75d69a;
+ font-size:12px;
+ font-weight:700;
+ margin-top:8px;
+}
+
+#forgeV61Notifications .f69-actions{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px;
+ margin:10px 0;
+}
+
+#forgeV61Notifications .f69-actions button{
+ font-size:12px;
+ margin:0;
+}
+
+</style>
+
+<script>
+(function(){
+
+'use strict';
+
+if(window.FORGE_NOTIFICATIONS_V69)return;
+
+window.FORGE_NOTIFICATIONS_V69=true;
+
+const E=(tag,text='',cls='')=>{
+ const n=document.createElement(tag);
+ n.textContent=text;
+ n.className=cls;
+ return n;
+};
+
+function logged(){
+
+ return typeof user!=='undefined'
+ &&!!user
+ &&!document.getElementById('app')
+ ?.classList.contains('hidden');
+
+}
+
+function button69(text,fn,cls=''){
+
+ const b=E('button',text,cls);
+
+ b.type='button';
+
+ b.onclick=async()=>{
+
+ if(b.disabled)return;
+
+ b.disabled=true;
+
+ try{
+
+ await fn();
+
+ }catch(e){
+
+ alert(e.message||String(e));
+
+ }finally{
+
+ b.disabled=false;
+
+ }
+
+ };
+
+ return b;
+
+}
+
+async function rpc69(name,args={}){
+
+ const r=await db.rpc(name,args);
+
+ if(r.error)throw r.error;
+
+ return r.data;
+
+}
+
+let request=0;
+
+async function open69(){
+
+ if(!logged())return;
+
+ const id=user.id;
+ const run=++request;
+
+ const panel=document.getElementById(
+ 'forgeV61Notifications'
+ );
+
+ if(!panel)return;
+
+ const valid=()=>logged()
+ &&user.id===id
+ &&run===request
+ &&panel.style.display!=='none';
+
+ panel.style.display='block';
+
+ panel.replaceChildren(
+ E('h2','FORGE NOTIFICATIONS'),
+ button69('‹ Torna alla home',()=>{
+
+ request++;
+ panel.style.display='none';
+
+ }),
+ E('p','Caricamento notifiche...','small')
+ );
+
+ try{
+
+ const r=await db
+ .from('forge_v60_notifications')
+ .select('*')
+ .eq('recipient_id',id)
+ .order('created_at',{ascending:false})
+ .limit(100);
+
+ if(r.error)throw r.error;
+
+ if(!valid())return;
+
+ const rows=r.data||[];
+
+ const unread=rows.filter(
+ x=>!x.is_read
+ ).length;
+
+ const read=rows.filter(
+ x=>x.is_read
+ ).length;
+
+ panel.lastElementChild.remove();
+
+ panel.append(E(
+ 'p',
+ unread+' non lette • '+read+' lette',
+ 'small'
+ ));
+
+ const actions=E(
+ 'div','','f69-actions'
+ );
+
+ const markAll=button69(
+ '✓ Segna tutte lette',
+ async()=>{
+
+ await rpc69(
+ 'forge_v60_mark_read',
+ {p_id:null}
+ );
+
+ if(valid())await open69();
+
+ }
+ );
+
+ const deleteAll=button69(
+ '🗑 Elimina tutte le lette',
+ async()=>{
+
+ if(!confirm(
+ 'Eliminare tutte le notifiche già lette?'
+ ))return;
+
+ const n=await rpc69(
+ 'forge_v66_delete_all_notifications'
+ );
+
+ if(valid())await open69();
+
+ alert(n+' notifiche eliminate.');
+
+ },
+ 'f69-delete'
+ );
+
+ actions.append(markAll,deleteAll);
+
+ panel.append(actions);
+
+ if(!rows.length){
+
+ panel.append(E(
+ 'p',
+ 'Nessuna notifica presente.',
+ 'small'
+ ));
+
+ }
+
+ for(const x of rows){
+
+ const card=E(
+ 'div','',
+ 'f61-notice'+
+ (!x.is_read?' f61-unread':'')
+ );
+
+ card.append(
+ E('strong',x.title||'Forge Coaching'),
+ E('p',x.message||''),
+ E('small',
+ new Date(x.created_at)
+ .toLocaleString('it-IT')
+ )
+ );
+
+ if(x.is_read){
+
+ card.append(
+ E('div','✓ Letta','f69-read'),
+
+ button69(
+ '🗑 Elimina notifica',
+ async()=>{
+
+ const ok=await rpc69(
+ 'forge_v66_delete_notification',
+ {p_notification_id:x.id}
+ );
+
+ if(!ok){
+
+ throw Error(
+ 'Notifica non eliminata. Aggiorna e riprova.'
+ );
+
+ }
+
+ if(valid())await open69();
+
+ },
+ 'f69-delete'
+ )
+
+ );
+
+ }else{
+
+ card.append(button69(
+ 'Segna come letta',
+ async()=>{
+
+ await rpc69(
+ 'forge_v60_mark_read',
+ {p_id:x.id}
+ );
+
+ if(valid())await open69();
+
+ }
+ ));
+
+ }
+
+ if(x.target_section){
+
+ const nav=[...
+ document.querySelectorAll(
+ '#mainNav button'
+ )
+ ].find(b=>
+
+ String(
+ b.dataset.section||
+ b.textContent
+ ).trim().toLowerCase()
+ ===
+ String(x.target_section)
+ .trim().toLowerCase()
+
+ );
+
+ if(nav
+ &&nav.getClientRects().length
+ &&!nav.disabled
+ &&nav.dataset.f50Locked!=='1'){
+
+ card.append(button69(
+ 'Apri sezione',
+ async()=>{
+
+ await rpc69(
+ 'forge_v60_mark_read',
+ {p_id:x.id}
+ );
+
+ if(!valid())return;
+
+ request++;
+
+ panel.style.display='none';
+
+ nav.click();
+
+ }
+ ));
+
+ }
+
+ }
+
+ panel.append(card);
+
+ }
+
+ }catch(e){
+
+ if(valid()){
+
+ panel.append(
+ E('p',e.message,'status error'),
+ button69('Riprova',open69)
+ );
+
+ }
+
+ }
+
+}
+
+function install69(){
+
+ const bell=document.getElementById(
+ 'forgeV61Bell'
+ );
+
+ if(!bell)return;
+
+ if(bell.dataset.f69==='1')return;
+
+ bell.dataset.f69='1';
+
+ bell.onclick=open69;
+
+}
+
+install69();
+
+setInterval(install69,1000);
+
+console.log(
+ 'FORGE NOTIFICATIONS V69 ACTIVE'
+);
+
+})();
+</script>
+<!-- END FORGE NOTIFICATIONS V69 -->
