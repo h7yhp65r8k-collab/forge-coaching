@@ -28538,3 +28538,170 @@ console.log('FORGE PROGRESS V67 ACTIVE');
 })();
 </script>
 <!-- END FORGE PROGRESS V67 -->
+
+<!-- FORGE PROGRESS V67.1 -->
+<style>
+.f671folder{
+ background:#151519;
+ border:1px solid #9b793d;
+ border-radius:15px;
+ padding:13px;
+ margin:10px 0;
+}
+.f671folder summary{
+ color:#e9c675;
+ font-size:15px;
+ font-weight:800;
+ cursor:pointer;
+}
+.f671grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:8px;
+ margin-top:12px;
+}
+.f671grid .v52row{
+ min-width:0;
+ margin:0!important;
+ padding:8px!important;
+}
+.f671grid img{
+ width:100%;
+ height:auto;
+ border-radius:9px;
+}
+.f671grid button{
+ font-size:11px;
+ padding:8px 3px;
+}
+</style>
+
+<script>
+(function(){
+
+'use strict';
+
+if(window.FORGE_PROGRESS_V671)return;
+window.FORGE_PROGRESS_V671=true;
+
+function groupPhotos(){
+
+ document.querySelectorAll(
+ '#forgeV52 .v52output'
+ ).forEach(output=>{
+
+  const title=output.querySelector('h3');
+
+  if(!title||
+   title.textContent.trim()!=='Foto progressi')
+   return;
+
+  const rows=[...output.querySelectorAll(
+   '.v52row'
+  )].filter(row=>
+   !row.closest('.f671folder')&&
+   [...row.querySelectorAll('button')]
+   .some(b=>b.textContent.trim()==='Visualizza foto')
+  );
+
+  if(!rows.length)return;
+
+  const groups=new Map();
+
+  rows.forEach(row=>{
+
+   const date=row.querySelector('strong')
+   ?.textContent.trim();
+
+   if(!date)return;
+
+   if(!groups.has(date))
+    groups.set(date,[]);
+
+   groups.get(date).push(row);
+
+  });
+
+  for(const [date,items] of groups){
+
+   const folder=document.createElement('details');
+   folder.className='f671folder';
+
+   const summary=document.createElement('summary');
+
+   summary.textContent=
+    '📁 Check del '+date+
+    ' • '+items.length+' foto';
+
+   const grid=document.createElement('div');
+   grid.className='f671grid';
+
+   items[0].before(folder);
+
+   folder.append(summary,grid);
+
+   items.forEach(row=>{
+
+    const heading=row.querySelector('strong');
+
+    if(heading)heading.remove();
+
+    grid.append(row);
+
+   });
+
+   folder.addEventListener('toggle',()=>{
+
+    if(!folder.open)return;
+
+    grid.querySelectorAll('.v52row')
+    .forEach(row=>{
+
+     if(row.querySelector('img'))return;
+
+     const b=[...row.querySelectorAll('button')]
+     .find(x=>
+      x.textContent.trim()==='Visualizza foto'
+     );
+
+     if(b)b.click();
+
+    });
+
+   });
+
+  }
+
+ });
+
+}
+
+let queued=false;
+
+const observer=new MutationObserver(()=>{
+
+ if(queued)return;
+
+ queued=true;
+
+ requestAnimationFrame(()=>{
+
+  queued=false;
+  groupPhotos();
+
+ });
+
+});
+
+observer.observe(document.body,{
+ childList:true,
+ subtree:true
+});
+
+groupPhotos();
+
+console.log('FORGE PROGRESS V67.1 ACTIVE');
+
+})();
+</script>
+<!-- END FORGE PROGRESS V67.1 -->
